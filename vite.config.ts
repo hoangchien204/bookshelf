@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: true, // cho phép truy cập qua network hoặc domain
-    allowedHosts: ['.ngrok-free.app'], // cho phép tất cả domain ngrok
+    host: true, 
+    allowedHosts: ['bookshelf-8x8x.onrender.com'], 
   }
 })
