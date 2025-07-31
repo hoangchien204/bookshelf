@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Document, Page, pdfjs } from 'react-pdf';
 import API from '../services/API';
 import Loading from './Loading';
+import type { Book } from '../types/Book';
 
 import 'react-pdf/dist/Page/TextLayer.css';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -12,15 +13,6 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url
 ).toString();
 
-interface Book {
-  id: string;
-  name: string;
-  author: string;
-  description?: string;
-  genre?: string;
-  coverUrl: string;
-  fileUrl: string;
-}
 
 const BookReaderPage: React.FC = () => {
   const { slugAndId } = useParams();

@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import API from '../services/API';
 
 const LoginPage: React.FC = () => {
   const [emailOrUsername, setEmailOrUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  
   const navigate = useNavigate();
-    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
-    return !!localStorage.getItem('accessToken'); // Kiểm tra token đã lưu
-    });
   const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -30,7 +26,6 @@ const LoginPage: React.FC = () => {
             localStorage.setItem('userId', data.userId);
             localStorage.setItem('role', data.role);
             
-            setIsLoggedIn(true);
             alert('Đăng nhập thành công');
             navigate('/');
         } else {
@@ -61,9 +56,6 @@ const LoginPage: React.FC = () => {
             required
           />
 
-          {error && (
-            <p className="text-red-500 text-sm text-center">{error}</p>
-          )}
 
           <button
             type="submit"

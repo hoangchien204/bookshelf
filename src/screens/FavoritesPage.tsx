@@ -5,12 +5,8 @@ import API from '../services/API';
 import BookCard from '../components/BookCard';
 import { Link } from 'react-router-dom';
 import Loading from '../components/Loading';
+import type { Book } from '../types/Book';
 
-interface Book {
-  id: number;
-  title: string;
-  coverUrl: string;
-}
 
 const FavoritesPage: React.FC = () => {
   const [favoriteBooks, setFavoriteBooks] = useState<Book[]>([]);
@@ -37,10 +33,10 @@ const FavoritesPage: React.FC = () => {
   fetchFavorites();
 }, [userId]);
 
-  const handleRead = (bookId: number) => {
-    window.location.href = `/reader/${bookId}`;
-  };
-const handleToggleFavorite = async (bookId: number) => {
+ const handleRead = (book: Book) => {
+  window.location.href = `/reader/${book.id}`;
+};
+const handleToggleFavorite = async (bookId: string) => {
   try {
     await axios.post(
       API.favorites, // toggle favorite

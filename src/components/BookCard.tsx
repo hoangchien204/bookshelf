@@ -3,24 +3,18 @@ import { motion } from "framer-motion";
 import { slugify } from "../utils/slug";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import type { Book } from '../types/Book';
 
-interface Book {
-  id: string;
-  name: string;
-  author: string;
-  coverUrl: string;
-}
 
 interface BookCardProps {
   book: Book;
-  onRead: (book: Book) => void;
+  onRead: (book: Book) => void | Promise<void>;
   onToggleFavorite: (bookId: string) => void;
   isFavorite: boolean; // ✅ truyền từ component cha theo user
 }
 
 const BookCard: React.FC<BookCardProps> = ({
   book,
-  onRead,
   onToggleFavorite,
   isFavorite,
 }) => {

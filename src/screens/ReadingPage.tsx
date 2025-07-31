@@ -5,7 +5,7 @@ import API from '../services/API';
 import BookCard from '../components/BookCard';
 import { useNavigate } from 'react-router-dom';
 import Loading from '../components/Loading';
-
+import type { Book } from '../types/Book';
 interface Activity {
   id: string;
   book: Book;
@@ -15,13 +15,7 @@ interface Activity {
 interface User {
   id: string;
 }
-interface Book {
-  id: string;
-  name: string;
-  author: string;
-  coverUrl?: string;
-  description?: string;
-}
+
 const ReadingPage: React.FC = () => {
   const [readingBooks, setReadingBooks] = useState<Book[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -68,9 +62,9 @@ const ReadingPage: React.FC = () => {
     fetchFavorites();
   }, [userId]);
 
-  const handleRead = (bookId: string) => {
-    navigate(`/read/${bookId}`);
-  };
+ const handleRead = (book: Book) => {
+  window.location.href = `/reader/${book.id}`;
+};
 
   const handleToggleFavorite = async (bookId: string) => {
     try {

@@ -14,6 +14,7 @@ interface Book {
   coverUrl: string;
   fileUrl: string;
   fileType?: string;
+  createdAt: string;
 }
 
 const BookshelfApp: React.FC = () => {
