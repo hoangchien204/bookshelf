@@ -51,13 +51,13 @@ const BookManagement = () => {
       .catch((err) => console.error('Lỗi khi lấy genres:', err));
   }, []);
 
-  // Lấy danh sách sách
+
   const fetchBooks = async () => {
     try {
       const response = await axios.get(API.books);
       setBooks(response.data);
     } catch (error) {
-      console.error('Lỗi khi lấy danh sách sách:', error);
+      console.error(error);
     }
   };
 
@@ -106,7 +106,7 @@ const BookManagement = () => {
     setShowAddModal(false);
     fetchBooks();
   } catch (error) {
-    console.error('Lỗi khi lưu sách:', error);
+    console.error(error);
   }
 };
 
@@ -118,7 +118,7 @@ const BookManagement = () => {
         setBooks(books.filter((b) => b.id !== id));
         setShowDeleteSuccessModal(true);
       } catch (error) {
-        console.error('Lỗi khi xóa sách:', error);
+        console.error(error);
       }
     }
   };
@@ -130,7 +130,7 @@ const BookManagement = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">📚 Quản lý sách</h1>
+      <h1 className="text-2xl font-bold mb-4">Quản lý sách</h1>
 
       <div className="flex items-center gap-4 mb-4">
         <div className="flex items-center border rounded px-2 py-1">

@@ -31,7 +31,6 @@ const LoginPage: React.FC = () => {
             localStorage.setItem('role', data.role);
             
             setIsLoggedIn(true);
-          console.log(localStorage.getItem('role'))
             alert('Đăng nhập thành công');
             navigate('/');
         } else {

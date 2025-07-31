@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Document, Page, pdfjs } from 'react-pdf';
 import API from '../services/API';
+import Loading from './Loading';
 
 import 'react-pdf/dist/Page/TextLayer.css';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -30,7 +31,7 @@ const BookReaderPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [screenType, setScreenType] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
-
+const [isLightOff, setIsLightOff] = useState(false);
   const bookId = slugAndId?.split('-').slice(-1)[0];
   useEffect(() => {
     const detectDevice = () => {
@@ -60,7 +61,7 @@ const BookReaderPage: React.FC = () => {
 
         setBook(matched);
       } catch (err) {
-        console.error('❌ Lỗi khi lấy sách:', err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -93,7 +94,7 @@ const BookReaderPage: React.FC = () => {
             });
 
           } catch (error) {
-            console.error('❌ Gửi hoạt động đọc thất bại:', error);
+            console.error(error);
           }
         }
       }
@@ -115,17 +116,19 @@ const BookReaderPage: React.FC = () => {
         const lastPage = res.data.page;
         setCurrentPage(lastPage);
       } catch (err) {
-        console.error('Lỗi lấy trạng thái đọc:', err);
+        console.error(err);
 
       }
     };
 
     fetchReadingProgress();
   }, [book?.id, userId]);
-  if (loading) return <div className="p-5">📖 Đang tải sách...</div>;
-  if (!book) return <div className="p-5 text-red-500">❌ Không tìm thấy sách.</div>;
+  if (loading) return <Loading />;
+  if (!book) return <div className="p-5 text-red-500">Không tìm thấy sách.</div>;
 
   return (
+    
+    
     <div className="fixed inset-0 bg-white z-[9999] flex flex-col">
       <div className="p-5">
         <button
@@ -134,9 +137,15 @@ const BookReaderPage: React.FC = () => {
         >
           Đóng
         </button>
+        <button
+  onClick={() => setIsLightOff(!isLightOff)}
+  className={`ml-4 px-3 py-2 rounded ${isLightOff ? 'bg-yellow-500' : 'bg-gray-800 text-white'}`}
+>
+  {isLightOff ? 'Bật đèn' : 'Tắt đèn'}
+</button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 pb-5">
+      <div className="flex-1 overflow-y-auto px-5 pb-5 relative z-[10000]">
         {book.fileUrl ? (
           <Document
             file={book.fileUrl}
@@ -192,6 +201,9 @@ const BookReaderPage: React.FC = () => {
           </button>
         </div>
       </div>
+      {isLightOff && (
+      <div className="fixed inset-0 bg-black opacity-70 z-[9998] pointer-events-none"></div>
+    )}
     </div>
 
   );

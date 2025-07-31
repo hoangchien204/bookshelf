@@ -41,7 +41,7 @@ const AddBookModal: React.FC<AddBookModalProps> = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl p-6 w-[360px] shadow-xl">
-        <h2 className="text-xl font-semibold text-center mb-4">📚 Thêm sách mới</h2>
+        <h2 className="text-xl font-semibold text-center mb-4">Thêm sách mới</h2>
 
         <input
           type="file"
@@ -93,7 +93,7 @@ const AddBookModal: React.FC<AddBookModalProps> = ({
         <div className="flex justify-between">
           <button
             onClick={() => onSave(bookData)}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+            className="px-4 py-2 bg-blue-600 hover:bg-green-700 text-white rounded"
           >
             Lưu
           </button>

@@ -40,10 +40,13 @@
 .read-the-docs {
   color: #888;
 }
-
+body.dashboard-mode{
+  display: flex;
+}
 body.dashboard-mode #root {
   margin: 0 !important;
   padding: 0 !important;
+  
 }
 @tailwind base;
 @tailwind components;

@@ -4,6 +4,7 @@ import axios from 'axios';
 import API from '../services/API';
 import BookCard from '../components/BookCard';
 import { Link } from 'react-router-dom';
+import Loading from '../components/Loading';
 
 interface Book {
   id: number;
@@ -49,16 +50,15 @@ const handleToggleFavorite = async (bookId: number) => {
       }
     );
 
-    // Sau khi toggle xong, gọi lại API GET để lấy danh sách mới
     const res = await axios.get(API.favorites, {
       headers: { 'x-user-id': userId },
     });
 
-    const updatedBooks = res.data; // bạn có thể kiểm tra res.data dạng gì
+    const updatedBooks = res.data;
 
-    setFavoriteBooks(updatedBooks); // cập nhật lại state
+    setFavoriteBooks(updatedBooks); 
   } catch (err) {
-    console.error('Lỗi khi cập nhật trạng thái yêu thích:', err);
+    console.error(err);
   }
 };
 if (!userId) {
@@ -72,6 +72,8 @@ if (!userId) {
     </div>
   );
 }
+if (loading) return <Loading />;
+
   return (
   <div className="p-6 font-sans max-w-7xl mx-auto">
     <div className="flex justify-between items-center mb-6">

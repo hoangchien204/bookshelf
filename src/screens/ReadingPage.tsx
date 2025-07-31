@@ -4,6 +4,7 @@ import axios from 'axios';
 import API from '../services/API';
 import BookCard from '../components/BookCard';
 import { useNavigate } from 'react-router-dom';
+import Loading from '../components/Loading';
 
 interface Activity {
   id: string;
@@ -59,7 +60,7 @@ const ReadingPage: React.FC = () => {
         });
         setFavorites(res.data.map((book: Book) => book.id));
       } catch (err) {
-        console.error('Không thể tải sách yêu thích.');
+        
       }
     };
 
@@ -80,7 +81,7 @@ const ReadingPage: React.FC = () => {
         prev.includes(bookId) ? prev.filter((id) => id !== bookId) : [...prev, bookId]
       );
     } catch (err) {
-      console.error('Lỗi khi thay đổi yêu thích');
+      
     }
   };
 
@@ -100,6 +101,7 @@ const ReadingPage: React.FC = () => {
       </div>
     );
   }
+if (loading) return <Loading />;
 
   return (
     <div className="px-4 sm:px-6 lg:px-10 py-8">
