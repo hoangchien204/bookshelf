@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "vite preview --port 3000"
+    "start": "vite preview  --port $PORT"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.0.0",
