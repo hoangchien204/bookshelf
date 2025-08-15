@@ -10,7 +10,7 @@ interface BookCardProps {
   book: Book;
   onRead: (book: Book) => void | Promise<void>;
   onToggleFavorite: (bookId: string) => void;
-  isFavorite: boolean; // ✅ truyền từ component cha theo user
+  isFavorite: boolean; 
 }
 
 const BookCard: React.FC<BookCardProps> = ({
@@ -30,7 +30,9 @@ const BookCard: React.FC<BookCardProps> = ({
     }
 
     const slug = slugify(book.name);
-    navigate(`/read/${slug}-${book.id}`);
+     navigate(`/book/${slug}-${book.id}`,{
+      state: {book},
+     });
   };
 
   

@@ -12,6 +12,8 @@ import NotFoundPage from './screens/NotFoundPage';
 import FavoritesPage from './screens/FavoritesPage';
 import ReadingPage from './screens/ReadingPage';
 import GenreBook from './adminScreens/page/GenreBook';
+import BookDetailPage from './components/BookDetailPage';
+import ToastProvider from './components/ToastProvider';
 
 function AppRoutes() {
   const location = useLocation();
@@ -28,10 +30,12 @@ function AppRoutes() {
 
   return (
     <>
+      <ToastProvider />
       {!isDashboard && <TabBar />}
    <Routes>
    <Route path="/" element={<BookshelfApp />} />
   <Route path="/read/:slugAndId" element={<BookReaderPage />} />
+  <Route path="/book/:slugAndId" element={<BookDetailPage />} />
   <Route path="/favorites" element={<FavoritesPage />} />
   <Route path="/reading" element={<ReadingPage />} />
   <Route path="/login" element={<LoginPage />} />

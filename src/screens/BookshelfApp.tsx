@@ -4,26 +4,19 @@ import BookCard from '../components/BookCard';
 import API from '../services/API';
 import axios from 'axios';
 import Loading from '../components/Loading';
+import type { Book } from '../types/Book';
+import toast from 'react-hot-toast';
 
-interface Book {
-  id: string;
-  name: string;
-  author: string;
-  description?: string;
-  genre?: string;
-  coverUrl: string;
-  fileUrl: string;
-  fileType?: string;
-  createdAt: string;
-}
 
 const BookshelfApp: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const navigate = useNavigate();
   const userId = localStorage.getItem("userId");
-const location = useLocation();
- const [loadingBooks, setLoadingBooks] = useState(true);
+  const location = useLocation();
+  const [loadingBooks, setLoadingBooks] = useState(true);
+  const [processingBookId, setProcessingBookId] = useState<string | null>(null);
+
   useEffect(() => {
   const fetchFavorites = async () => {
     const userId = localStorage.getItem("userId");
@@ -64,27 +57,46 @@ const location = useLocation();
     fetchBooks();
   }, []);
 
- const handleToggleFavorite = async (bookId: string) => {
-  try {
-    if (!userId) return;
+const handleToggleFavorite = async (bookId: string) => {
+  if (!userId || processingBookId === bookId) return; // đang xử lý thì bỏ qua
 
+  setProcessingBookId(bookId);
+
+  setFavorites(prev =>
+    prev.includes(bookId)
+      ? prev.filter(id => id !== bookId)
+      : [...prev, bookId]
+  );
+
+  try {
     const response = await axios.post(
       API.favorites,
       { bookId },
-      {
-        headers: { 'x-user-id': userId },
-      }
+      { headers: { 'x-user-id': userId } }
     );
 
-    const { isFavorite } = response.data;
-
-    const updatedFavorites = isFavorite
-      ? [...favorites, bookId]
-      : favorites.filter((id) => id !== bookId);
-
-    setFavorites(updatedFavorites);
+    if (typeof response.data.isFavorite !== "undefined") {
+      setFavorites(prev =>
+        response.data.isFavorite
+          ? [...new Set([...prev, bookId])]
+          : prev.filter(id => id !== bookId)
+      );
+      
+    }
+    if (response.data.isFavorite) {
+    toast.success("Yêu thích thành công");
+  } else {
+    toast.success("Bỏ yêu thích thành công"); // hoặc đổi màu/icon tùy bạn
+  }
   } catch (error) {
     console.error(error);
+    setFavorites(prev =>
+      prev.includes(bookId)
+        ? prev.filter(id => id !== bookId)
+        : [...prev, bookId]
+    );
+  } finally {
+    setTimeout(() => setProcessingBookId(null), 500);
   }
 };
 
@@ -101,10 +113,10 @@ const location = useLocation();
       const slug = book.name
         .toLowerCase()
         .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') // loại bỏ dấu tiếng Việt
-        .replace(/[^a-z0-9 ]/g, '')      // loại bỏ ký tự đặc biệt
+        .replace(/[\u0300-\u036f]/g, '') 
+        .replace(/[^a-z0-9 ]/g, '')     
         .trim()
-        .replace(/\s+/g, '-');           // thay space bằng dấu "-"
+        .replace(/\s+/g, '-');           
       navigate(`/book/${slug}-${book.id}`, { state: { startPage: lastPage } });
     } catch (err: any) {
       console.error(err);
@@ -138,15 +150,17 @@ const location = useLocation();
       <p className="text-center text-gray-500">Người này quá lười để thêm sách</p>
     ) : (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8 md:gap-x-10 md:gap-y-10 xl:gap-x-[100px] xl:gap-y-12">
-        {books.map((book) => (
-          <BookCard
-            key={book.id}
-            book={book}
-            onRead={handleRead}
-            onToggleFavorite={handleToggleFavorite}
-            isFavorite={favorites.includes(book.id)}
-          />
-        ))}
+      {books
+  .filter(book => !book.isSeries || book.volumeNumber === 1)
+  .map(book => (
+    <BookCard
+      key={book.id}
+      book={book}
+      onRead={handleRead}
+      onToggleFavorite={handleToggleFavorite}
+      isFavorite={favorites.includes(book.id)}
+    />
+))}
       </div>
     )}
 

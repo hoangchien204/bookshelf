@@ -118,9 +118,7 @@ const [isLightOff, setIsLightOff] = useState(false);
   if (loading) return <Loading />;
   if (!book) return <div className="p-5 text-red-500">Không tìm thấy sách.</div>;
 
-  return (
-    
-    
+  return (  
     <div className="fixed inset-0 bg-white z-[9999] flex flex-col">
       <div className="p-5">
         <button
@@ -155,16 +153,16 @@ const [isLightOff, setIsLightOff] = useState(false);
                     screenType === 'tablet' ? 520 :
                       650
                 }
-                renderTextLayer={false}
-                renderAnnotationLayer={false}
+                renderTextLayer={true}
+                renderAnnotationLayer={true}
               />
               {screenType === 'desktop' && currentPage + 1 <= numPages && (
                 <Page
                   className="border border-gray-300 rounded-md shadow-sm"
                   pageNumber={currentPage + 1}
                   width={650}
-                  renderTextLayer={false}
-                  renderAnnotationLayer={false}
+                  renderTextLayer={true}
+                  renderAnnotationLayer={true}
                 />
               )}
             </div>
