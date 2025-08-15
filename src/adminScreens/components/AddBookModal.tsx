@@ -17,6 +17,9 @@ interface SeriesOption {
 interface AddBookModalProps {
   show: boolean;
   onCancel: () => void;
+  bookData: BookData; // ✅ Thêm
+  setBookData: React.Dispatch<React.SetStateAction<BookData>>; // ✅ Thêm
+  onSave: (newBookData: BookData) => Promise<void>; // ✅ Thêm
   genreOptions: GenreOption[];
   onSuccess?: () => void; 
 }
