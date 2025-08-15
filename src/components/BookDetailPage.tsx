@@ -3,7 +3,7 @@ import { slugify } from "../utils/slug";
 import type { Book } from "../types/Book";
 import API from "../services/API";
 import { useEffect, useState } from "react";
-import { FaHeart, FaRegHeart, FaLink, FaHeartBroken } from "react-icons/fa";
+import { FaHeart, FaRegHeart, FaLink } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
 
