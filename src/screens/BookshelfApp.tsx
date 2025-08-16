@@ -18,28 +18,28 @@ const BookshelfApp: React.FC = () => {
   const [processingBookId, setProcessingBookId] = useState<string | null>(null);
 
   useEffect(() => {
-  const fetchFavorites = async () => {
-    const userId = localStorage.getItem("userId");
-    if (!userId) return;
+    const fetchFavorites = async () => {
+      const userId = localStorage.getItem("userId");
+      if (!userId) return;
 
-    try {
-      const res = await axios.get(API.favorites, {
-        headers: { "x-user-id": userId },
-      });
+      try {
+        const res = await axios.get(API.favorites, {
+          headers: { "x-user-id": userId },
+        });
 
-      if (Array.isArray(res.data)) {
-        const favoriteIds = res.data.map((book: any) => book.id);
-        setFavorites(favoriteIds);
-      } else {
-        console.warn(res.data);
+        if (Array.isArray(res.data)) {
+          const favoriteIds = res.data.map((book: any) => book.id);
+          setFavorites(favoriteIds);
+        } else {
+          console.warn(res.data);
+        }
+      } catch (error) {
+        console.error(error);
       }
-    } catch (error) {
-      console.error(error);
-    }
-  };
+    };
 
-  fetchFavorites();
-}, [location]);
+    fetchFavorites();
+  }, [location]);
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -50,55 +50,55 @@ const BookshelfApp: React.FC = () => {
         setBooks(res.data);
       } catch (err) {
         console.error(err);
-      }finally {
-        setLoadingBooks(false); 
+      } finally {
+        setLoadingBooks(false);
       }
     };
     fetchBooks();
   }, []);
 
-const handleToggleFavorite = async (bookId: string) => {
-  if (!userId || processingBookId === bookId) return; // đang xử lý thì bỏ qua
+  const handleToggleFavorite = async (bookId: string) => {
+    if (!userId || processingBookId === bookId) return; // đang xử lý thì bỏ qua
 
-  setProcessingBookId(bookId);
+    setProcessingBookId(bookId);
 
-  setFavorites(prev =>
-    prev.includes(bookId)
-      ? prev.filter(id => id !== bookId)
-      : [...prev, bookId]
-  );
-
-  try {
-    const response = await axios.post(
-      API.favorites,
-      { bookId },
-      { headers: { 'x-user-id': userId } }
-    );
-
-    if (typeof response.data.isFavorite !== "undefined") {
-      setFavorites(prev =>
-        response.data.isFavorite
-          ? [...new Set([...prev, bookId])]
-          : prev.filter(id => id !== bookId)
-      );
-      
-    }
-    if (response.data.isFavorite) {
-    toast.success("Yêu thích thành công");
-  } else {
-    toast.success("Bỏ yêu thích thành công"); // hoặc đổi màu/icon tùy bạn
-  }
-  } catch (error) {
-    console.error(error);
     setFavorites(prev =>
       prev.includes(bookId)
         ? prev.filter(id => id !== bookId)
         : [...prev, bookId]
     );
-  } finally {
-    setTimeout(() => setProcessingBookId(null), 500);
-  }
-};
+
+    try {
+      const response = await axios.post(
+        API.favorites,
+        { bookId },
+        { headers: { 'x-user-id': userId } }
+      );
+
+      if (typeof response.data.isFavorite !== "undefined") {
+        setFavorites(prev =>
+          response.data.isFavorite
+            ? [...new Set([...prev, bookId])]
+            : prev.filter(id => id !== bookId)
+        );
+
+      }
+      if (response.data.isFavorite) {
+        toast.success("Yêu thích thành công");
+      } else {
+        toast.success("Bỏ yêu thích thành công"); // hoặc đổi màu/icon tùy bạn
+      }
+    } catch (error) {
+      console.error(error);
+      setFavorites(prev =>
+        prev.includes(bookId)
+          ? prev.filter(id => id !== bookId)
+          : [...prev, bookId]
+      );
+    } finally {
+      setTimeout(() => setProcessingBookId(null), 500);
+    }
+  };
 
   const handleRead = async (book: Book) => {
     try {
@@ -113,10 +113,10 @@ const handleToggleFavorite = async (bookId: string) => {
       const slug = book.name
         .toLowerCase()
         .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') 
-        .replace(/[^a-z0-9 ]/g, '')     
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9 ]/g, '')
         .trim()
-        .replace(/\s+/g, '-');           
+        .replace(/\s+/g, '-');
       navigate(`/book/${slug}-${book.id}`, { state: { startPage: lastPage } });
     } catch (err: any) {
       console.error(err);
@@ -135,58 +135,71 @@ const handleToggleFavorite = async (bookId: string) => {
     const createdDate = new Date(book.createdAt);
     return createdDate >= twoWeeksAgo;
   });
-   if (loadingBooks) return <Loading />;
+
 
   return (
-  <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-6 font-sans">
-  <div className="flex justify-between items-center mb-6">
-    <h1 className="text-3xl font-bold text-gray-800">Kệ sách của bạn</h1>
-  </div>
+    <>
+      {loadingBooks ? (
 
-  <section>
+        <Loading />
+      ) : (
+        // layout chính chỉ hiện sau khi load xong
+        <div className="w-full min-h-screen bg-black text-white font-sans px-2 sm:px-4 md:px-6 lg:px-8 py-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold">Kệ sách của bạn</h1>
+          </div>
 
-     {recentBooks.length > 0 && (
-  <section className="mb-10">
-   <h1 className="text-xl font-semibold mb-4 text-gray-700 mt-10 text-left">Mới nhất</h1>
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8 md:gap-x-10 md:gap-y-10 xl:gap-x-[100px] xl:gap-y-12">
-      {recentBooks.map((book) => (
-        <BookCard
-          key={book.id}
-          book={book}
-          onRead={handleRead}
-          onToggleFavorite={handleToggleFavorite}
-          isFavorite={favorites.includes(book.id)}
-        />
-      ))}
-    </div>
-  </section>
-)}
-    <h1 className="text-xl font-semibold mb-4 text-gray-700 text-left">Kho sách</h1>
+          <section>
+            {recentBooks.length > 0 && (
+              <section className="mb-10">
+                <h1 className="text-xl font-semibold mb-4 mt-10 text-left">
+                  Mới nhất
+                </h1>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 
+                              gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8 md:gap-x-10 md:gap-y-10 
+                              xl:gap-x-[100px] xl:gap-y-12">
+                  {recentBooks.map((book) => (
+                    <BookCard
+                      key={book.id}
+                      book={book}
+                      onRead={handleRead}
+                      onToggleFavorite={handleToggleFavorite}
+                      isFavorite={favorites.includes(book.id)}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
 
-    {books.length === 0 ? (
-      <p className="text-center text-gray-500">Người này quá lười để thêm sách</p>
-    ) : (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8 md:gap-x-10 md:gap-y-7 xl:gap-x-[55px] xl:gap-y-12">
-      {books
-      .filter(book => !book.isSeries || book.volumeNumber === 1)
-      .map(book => (
-        <BookCard
-          key={book.id}
-          book={book}
-          onRead={handleRead}
-          onToggleFavorite={handleToggleFavorite}
-          isFavorite={favorites.includes(book.id)}
-        />
-    ))}
-      </div>
-    )}
+            <h1 className="text-xl font-semibold mb-4 text-left">Kho sách</h1>
 
-   
+            {books.length === 0 ? (
+              <p className="text-center text-gray-400">
+                Người này quá lười để thêm sách
+              </p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 
+                            gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8 md:gap-x-10 md:gap-y-7 
+                            xl:gap-x-[55px] xl:gap-y-12">
+                {books
+                  .filter((book) => !book.isSeries || book.volumeNumber === 1)
+                  .map((book) => (
+                    <BookCard
+                      key={book.id}
+                      book={book}
+                      onRead={handleRead}
+                      onToggleFavorite={handleToggleFavorite}
+                      isFavorite={favorites.includes(book.id)}
+                    />
+                  ))}
+              </div>
+            )}
+          </section>
+        </div>
+      )}
+    </>
+  );
 
-    
-  </section>
-</div>
-);
 };
 
 export default BookshelfApp;

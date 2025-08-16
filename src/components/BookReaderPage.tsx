@@ -29,7 +29,7 @@ const BookReaderPage: React.FC = () => {
   );
   const [isLightOff, setIsLightOff] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [pageWidth, setPageWidth] = useState<number>();
+  const [pageWidth, setPageWidth] = useState<number>(600);
 
   /** 📌 Detect screen size */
   useEffect(() => {
@@ -112,11 +112,8 @@ const BookReaderPage: React.FC = () => {
     const handleResize = () => {
       const container = document.getElementById("pdf-container");
       if (container) {
-        const style = getComputedStyle(container);
-        const paddingLeft = parseInt(style.paddingLeft, 10);
-        const paddingRight = parseInt(style.paddingRight, 10);
-        const innerWidth =
-          container.clientWidth - paddingLeft - paddingRight - 8;
+        // clientWidth đã là chiều rộng bên trong padding rồi
+        const innerWidth = container.clientWidth - 4;
         setPageWidth(Math.max(innerWidth, 0));
       }
     };
@@ -125,6 +122,7 @@ const BookReaderPage: React.FC = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
 
   /** 📌 Handle page navigation */
   const handlePageChange = async (offset: number) => {
@@ -188,7 +186,7 @@ const BookReaderPage: React.FC = () => {
       <div className="p-5">
         <button
           onClick={() => navigate(-1)}
-          className="mb-2 bg-red-500 text-white px-3 py-2 rounded cursor-pointer"
+          className="mb-2 bg-red-500 text-white px-2 py-2 rounded cursor-pointer"
         >
           Đóng
         </button>
@@ -204,7 +202,7 @@ const BookReaderPage: React.FC = () => {
       {/* PDF viewer */}
       <div
         id="pdf-container"
-        className="flex-1 overflow-y-auto overflow-x-hidden px-5 pb-5 relative z-[10000] w-full"
+        className="flex-1 overflow-y-auto overflow-x-hidden px-2 pb-2 relative z-[10000] w-full"
       >
         {book.fileUrl ? (
           <Document
@@ -222,7 +220,13 @@ const BookReaderPage: React.FC = () => {
               <Page
                 className="border border-gray-300 rounded-md shadow-sm"
                 pageNumber={currentPage}
-                width={pageWidth}
+                width={
+                  screenType === "desktop"
+                    ? Math.min(pageWidth * 0.9, 600) // desktop: tối đa 600px cho mỗi trang
+                    : screenType === "tablet"
+                      ? Math.min(pageWidth * 1.1, 500) // tablet: tối đa 500px
+                      : pageWidth // mobile: full width
+                }
                 renderTextLayer={true}
                 renderAnnotationLayer={true}
               />
@@ -230,7 +234,7 @@ const BookReaderPage: React.FC = () => {
                 <Page
                   className="border border-gray-300 rounded-md shadow-sm"
                   pageNumber={currentPage + 1}
-                  width={pageWidth}
+                  width={Math.min(pageWidth * 0.9, 600)}
                   renderTextLayer={true}
                   renderAnnotationLayer={true}
                 />

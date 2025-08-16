@@ -71,40 +71,58 @@ if (!userId) {
 if (loading) return <Loading />;
 
   return (
-  <div className="p-6 font-sans max-w-7xl mx-auto">
-    <div className="flex justify-between items-center mb-6">
-      <h1 className="text-3xl font-bold text-gray-800">Kệ sách yêu thích của bạn</h1>
-    </div>
-
-
-    {loading && (
-      <p className="text-center text-gray-500 italic">Đang tải sách yêu thích...</p>
-    )}
-    {error && <p className="text-center text-red-500">{error}</p>}
-    {!loading && favoriteBooks.length === 0 && (
-      <p className="text-center text-gray-500 italic">
-        Bạn chưa có sách yêu thích nào. Hãy thêm vài quyển nhé!
-      </p>
-    )}
-
-    <section>
-      <h2 className="text-xl font-semibold mb-4 text-gray-700">Danh sách yêu thích</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
-        {Array.isArray(favoriteBooks) &&
-          favoriteBooks.map((book) => (
-            <BookCard
-              key={book.id}
-              book={book}
-              onRead={handleRead}
-              onToggleFavorite={handleToggleFavorite}
-              isFavorite={true}
-            />
-          ))}
+    <div
+      className="w-full min-h-screen bg-black text-white font-sans 
+                 px-2 sm:px-4 md:px-6 lg:px-8 py-6"
+    >
+      {/* Tiêu đề */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Kệ sách yêu thích của bạn</h1>
       </div>
-    </section>
-  </div>
-);
 
+      {/* Loading */}
+      {loading && (
+        <p className="text-center text-gray-400 italic">
+          Đang tải sách yêu thích...
+        </p>
+      )}
+
+      {/* Error */}
+      {error && <p className="text-center text-red-400">{error}</p>}
+
+      {/* Trường hợp chưa có sách */}
+      {!loading && favoriteBooks.length === 0 && (
+        <p className="text-center text-gray-400 italic">
+          Bạn chưa có sách yêu thích nào. Hãy thêm vài quyển nhé!
+        </p>
+      )}
+
+      {/* Danh sách yêu thích */}
+      {favoriteBooks.length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-xl font-semibold mb-4">Danh sách yêu thích</h2>
+
+          <div
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 
+                       gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8 
+                       md:gap-x-10 md:gap-y-10 
+                       xl:gap-x-[100px] xl:gap-y-12"
+          >
+            {Array.isArray(favoriteBooks) &&
+              favoriteBooks.map((book) => (
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  onRead={handleRead}
+                  onToggleFavorite={handleToggleFavorite}
+                  isFavorite={true}
+                />
+              ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
 };
 
 export default FavoritesPage;

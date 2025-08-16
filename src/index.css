@@ -28,6 +28,8 @@ html, body {
 body {
   margin: 0;
   /* display: flex; */
+   background-color: #000;   /* nền đen */
+  /* color: #fff;    */
   place-items: center;
   min-width: 320px;
   min-height: 100vh;

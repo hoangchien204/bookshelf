@@ -98,30 +98,49 @@ const ReadingPage: React.FC = () => {
 if (loading) return <Loading />;
 
   return (
-    <div className="px-4 sm:px-6 lg:px-10 py-8">
-      <h2 className="text-2xl font-semibold mb-6">Sách đang đọc</h2>
+  <div
+    className="w-full min-h-screen bg-black text-white font-sans 
+               px-2 sm:px-4 md:px-6 lg:px-8 py-6"
+  >
+    {/* Tiêu đề */}
+    <h2 className="text-2xl font-semibold mb-6">Sách đang đọc</h2>
 
-      {loading ? (
-        <p>Đang tải...</p>
-      ) : error ? (
-        <p className="text-red-600">{error}</p>
-      ) : readingBooks.length === 0 ? (
-        <p>Bạn chưa đọc cuốn sách nào.</p>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 md:gap-8 lg:gap-10">
-          {readingBooks.map((book) => (
-            <BookCard
-              key={book.id}
-              book={book}
-              onRead={handleRead}
-              onToggleFavorite={handleToggleFavorite}
-              isFavorite={favorites.includes(book.id)}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
+    {/* Loading */}
+    {loading && (
+      <p className="text-center text-gray-400 italic">Đang tải...</p>
+    )}
+
+    {/* Error */}
+    {error && <p className="text-center text-red-400">{error}</p>}
+
+    {/* Chưa có sách */}
+    {!loading && readingBooks.length === 0 && (
+      <p className="text-center text-gray-400 italic">
+        Bạn chưa đọc cuốn sách nào.
+      </p>
+    )}
+
+    {/* Danh sách sách đang đọc */}
+    {readingBooks.length > 0 && (
+      <div
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 
+                   gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8 
+                   md:gap-x-10 md:gap-y-10 
+                   xl:gap-x-[100px] xl:gap-y-12"
+      >
+        {readingBooks.map((book) => (
+          <BookCard
+            key={book.id}
+            book={book}
+            onRead={handleRead}
+            onToggleFavorite={handleToggleFavorite}
+            isFavorite={favorites.includes(book.id)}
+          />
+        ))}
+      </div>
+    )}
+  </div>
+);
 };
 
 export default ReadingPage;

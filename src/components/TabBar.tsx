@@ -15,11 +15,11 @@ const TabBar = () => {
     } hover:text-blue-600 hover:bg-gray-100 transition`;
 
   return (
-    <div className="sticky top-0 bg-white shadow z-50 w-full">
+    <div className="tabbar sticky top-0 bg-white shadow z-50 w-full">
       {/* Chào mừng user */}
       {isLoggedIn && username && (
         <div className="border-b border-gray-200">
-          <div className="max-w-7xl mx-auto flex justify-end px-4 sm:px-6 lg:px-8 pt-2 pb-1 text-sm text-gray-500 italic">
+          <div className="w-full flex justify-end pr-2 pt-2 pb-1 text-sm text-gray-500 italic">
             Chào mừng,{" "}
             <span className="ml-1 font-semibold text-blue-600">{username}</span>!
           </div>
@@ -28,7 +28,7 @@ const TabBar = () => {
 
       {/* Navigation tabs */}
       <div className="border-b border-gray-200">
-        <div className="max-w-7xl mx-auto flex justify-between items-center h-12 px-4 sm:px-6 lg:px-8">
+        <div className="w-full flex justify-between items-center h-12">
           <Link
             to="/"
             className={`flex-1 text-center ${tabClass(pathname === "/")}`}

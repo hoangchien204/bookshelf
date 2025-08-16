@@ -14,6 +14,7 @@ import ReadingPage from './screens/ReadingPage';
 import GenreBook from './adminScreens/page/GenreBook';
 import BookDetailPage from './components/BookDetailPage';
 import ToastProvider from './components/ToastProvider';
+import Loading from './components/Loading';
 
 function AppRoutes() {
   const location = useLocation();

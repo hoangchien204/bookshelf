@@ -64,9 +64,11 @@ body.dashboard-mode #root {
   max-width: 100% !important;
   height: auto !important;
   margin: 0 auto;
-  /* canh giữa */
 }
 
+body.loading-mode .tabbar {
+  display: none !important;
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
