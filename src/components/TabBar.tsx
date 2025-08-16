@@ -15,37 +15,53 @@ const TabBar = () => {
       active ? 'border-blue-600 text-blue-600 font-semibold' : 'border-transparent text-gray-600'
     } hover:text-blue-600 hover:bg-gray-100 transition`;
 
-  return (
-    <div className="sticky top-0 bg-white shadow z-50">
-      {/* Chào mừng user */}
-      {isLoggedIn && username && (
-        <div className="flex justify-end px-4 pt-2 pb-1 text-sm text-gray-500 italic border-b border-gray-200">
-          Chào mừng, <span className="ml-1 font-semibold text-blue-600">{username}</span>!
+return (
+  <div className="sticky top-0 bg-white shadow z-50 w-full">
+    {/* Chào mừng user */}
+    {isLoggedIn && username && (
+      <div className="border-b border-gray-200">
+        <div className="max-w-7xl mx-auto flex justify-end px-4 sm:px-6 lg:px-8 pt-2 pb-1 text-sm text-gray-500 italic">
+          Chào mừng,{" "}
+          <span className="ml-1 font-semibold text-blue-600">{username}</span>!
         </div>
-      )}
+      </div>
+    )}
 
-      {/* Navigation tabs */}
-      <div className="flex justify-around items-center h-12 border-b border-gray-200">
-        <Link to="/" className={tabClass(pathname === '/')}>
+    {/* Navigation tabs */}
+    <div className="border-b border-gray-200">
+      <div className="max-w-7xl mx-auto flex justify-between items-center h-12 px-4 sm:px-6 lg:px-8">
+        <Link
+          to="/"
+          className={`flex-1 text-center ${tabClass(pathname === "/")}`}
+        >
           <FontAwesomeIcon icon={faHome} />
-          <span>Trang chủ</span>
+          <span className="block text-xs">Trang chủ</span>
         </Link>
 
-        <Link to="/favorites" className={tabClass(pathname === '/favorites')}>
+        <Link
+          to="/favorites"
+          className={`flex-1 text-center ${tabClass(pathname === "/favorites")}`}
+        >
           <FontAwesomeIcon icon={faHeart} />
-          <span>Yêu thích</span>
+          <span className="block text-xs">Yêu thích</span>
         </Link>
 
-        <Link to="/reading" className={tabClass(pathname === '/reading')}>
+        <Link
+          to="/reading"
+          className={`flex-1 text-center ${tabClass(pathname === "/reading")}`}
+        >
           <FontAwesomeIcon icon={faBookOpen} />
-          <span>Đang đọc</span>
+          <span className="block text-xs">Đang đọc</span>
         </Link>
 
         {isLoggedIn ? (
           <>
-            <button onClick={() => setShowModal(true)} className={tabClass(false)}>
+            <button
+              onClick={() => setShowModal(true)}
+              className={`flex-1 text-center ${tabClass(false)}`}
+            >
               <FontAwesomeIcon icon={faRightToBracket} />
-              <span>Đăng xuất</span>
+              <span className="block text-xs">Đăng xuất</span>
             </button>
             {showModal && (
               <LogoutConfirmModal
@@ -58,14 +74,18 @@ const TabBar = () => {
             )}
           </>
         ) : (
-          <Link to="/login" className={tabClass(pathname === '/login')}>
+          <Link
+            to="/login"
+            className={`flex-1 text-center ${tabClass(pathname === "/login")}`}
+          >
             <FontAwesomeIcon icon={faUser} />
-            <span>Đăng nhập</span>
+            <span className="block text-xs">Đăng nhập</span>
           </Link>
         )}
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default TabBar;

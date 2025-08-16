@@ -34,7 +34,7 @@ const UserManagement = () => {
   const deleteUser = async (id: string) => {
     if (confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
       try {
-        await axios(`${API.users}${id}`, {
+        await axios(`${API.users}/${id}`, {
           method: 'DELETE',
         });
         setUsers(users.filter((u) => u.id !== id));

@@ -1,6 +1,6 @@
 // components/AddUserModal.tsx
 import React, { useState } from 'react';
-
+import API from '../../services/API';
 interface AddUserModalProps {
   onClose: () => void;
   onUserAdded: () => void;
@@ -22,7 +22,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onUserAdded }) => 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await fetch('http://localhost:3000/users', {
+      await fetch(API.users, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

@@ -144,29 +144,10 @@ const handleToggleFavorite = async (bookId: string) => {
   </div>
 
   <section>
-    <h2 className="text-xl font-semibold mb-4 text-gray-700">Kho sách</h2>
 
-    {books.length === 0 ? (
-      <p className="text-center text-gray-500">Người này quá lười để thêm sách</p>
-    ) : (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8 md:gap-x-10 md:gap-y-10 xl:gap-x-[100px] xl:gap-y-12">
-      {books
-  .filter(book => !book.isSeries || book.volumeNumber === 1)
-  .map(book => (
-    <BookCard
-      key={book.id}
-      book={book}
-      onRead={handleRead}
-      onToggleFavorite={handleToggleFavorite}
-      isFavorite={favorites.includes(book.id)}
-    />
-))}
-      </div>
-    )}
-
-    {recentBooks.length > 0 && (
+     {recentBooks.length > 0 && (
   <section className="mb-10">
-   <h2 className="text-xl font-semibold mb-4 text-gray-700 mt-10">Sách mới cập nhật</h2>
+   <h1 className="text-xl font-semibold mb-4 text-gray-700 mt-10 text-left">Mới nhất</h1>
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8 md:gap-x-10 md:gap-y-10 xl:gap-x-[100px] xl:gap-y-12">
       {recentBooks.map((book) => (
         <BookCard
@@ -180,6 +161,27 @@ const handleToggleFavorite = async (bookId: string) => {
     </div>
   </section>
 )}
+    <h1 className="text-xl font-semibold mb-4 text-gray-700 text-left">Kho sách</h1>
+
+    {books.length === 0 ? (
+      <p className="text-center text-gray-500">Người này quá lười để thêm sách</p>
+    ) : (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8 md:gap-x-10 md:gap-y-7 xl:gap-x-[55px] xl:gap-y-12">
+      {books
+      .filter(book => !book.isSeries || book.volumeNumber === 1)
+      .map(book => (
+        <BookCard
+          key={book.id}
+          book={book}
+          onRead={handleRead}
+          onToggleFavorite={handleToggleFavorite}
+          isFavorite={favorites.includes(book.id)}
+        />
+    ))}
+      </div>
+    )}
+
+   
 
     
   </section>
