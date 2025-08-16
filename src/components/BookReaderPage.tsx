@@ -61,16 +61,10 @@ const BookReaderPage: React.FC = () => {
           return;
         }
         setBook(matched);
-console.log("🟡 FE userId:", userId);
-console.log("🟡 FE bookId:", matched.id);
-
-        // 1. Restore từ localStorage
         let restoredPage =
           parseInt(localStorage.getItem(`book-${matched.id}-page`) || "1", 10) ||
           1;
         console.log("📂 LocalStorage restore:", restoredPage);
-
-        // 2. Sync với server (ưu tiên local nếu local mới hơn)
         if (userId) {
           try {
             const res = await axios.get(`${API.activities}/read/${matched.id}`, {
@@ -80,14 +74,12 @@ console.log("🟡 FE bookId:", matched.id);
             console.log("🌐 Server restore:", serverPage);
 
             if (serverPage && serverPage > restoredPage) {
-              // Server mới hơn → dùng server
               restoredPage = serverPage;
               localStorage.setItem(
                 `book-${matched.id}-page`,
                 restoredPage.toString()
               );
             } else if (serverPage && serverPage < restoredPage) {
-              // Local mới hơn → cập nhật ngược server
               await axios.post(
                 API.read,
                 { bookId: matched.id, page: restoredPage },
@@ -104,7 +96,6 @@ console.log("🟡 FE bookId:", matched.id);
             console.error("Sync server error:", err);
           }
         }
-
         setCurrentPage(restoredPage);
       } catch (err) {
         console.error(err);
@@ -116,7 +107,6 @@ console.log("🟡 FE bookId:", matched.id);
     fetchBook();
   }, [bookId, navigate, userId, accessToken]);
 
-  /** 📌 Handle page resize */
   useEffect(() => {
     const handleResize = () => {
       const container = document.getElementById("pdf-container");
@@ -204,9 +194,8 @@ console.log("🟡 FE bookId:", matched.id);
         </button>
         <button
           onClick={() => setIsLightOff(!isLightOff)}
-          className={`ml-4 px-3 py-2 rounded ${
-            isLightOff ? "bg-yellow-500" : "bg-gray-800 text-white"
-          }`}
+          className={`ml-4 px-3 py-2 rounded ${isLightOff ? "bg-yellow-500" : "bg-gray-800 text-white"
+            }`}
         >
           {isLightOff ? "Bật đèn" : "Tắt đèn"}
         </button>

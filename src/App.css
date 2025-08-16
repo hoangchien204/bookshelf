@@ -11,9 +11,11 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -22,6 +24,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -40,25 +43,30 @@
 .read-the-docs {
   color: #888;
 }
-body.dashboard-mode{
+
+body.dashboard-mode {
   display: flex;
 }
+
 body.dashboard-mode #root {
   margin: 0 !important;
   padding: 0 !important;
-  
+
 }
+
 #pdf-container {
   overflow-x: hidden;
-  overflow-y: auto;  
+  overflow-y: auto;
 }
 
 .react-pdf__Page__canvas {
   display: block;
   max-width: 100% !important;
   height: auto !important;
-  margin: 0 auto; /* canh giữa */
+  margin: 0 auto;
+  /* canh giữa */
 }
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
