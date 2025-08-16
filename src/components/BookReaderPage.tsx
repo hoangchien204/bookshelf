@@ -44,13 +44,14 @@ const BookReaderPage: React.FC = () => {
     return () => window.removeEventListener("resize", detectDevice);
   }, []);
 
-  /** 📌 Fetch book info + Restore progress */
   useEffect(() => {
     const fetchBook = async () => {
       try {
         setLoading(true);
-
-        // Lấy danh sách sách
+        if (!userId || !accessToken) {
+          setShowLoginModal(true);
+          return;
+        }
         const res = await fetch(API.books, {
           headers: { "ngrok-skip-browser-warning": "true" },
         });
@@ -134,7 +135,6 @@ const BookReaderPage: React.FC = () => {
       setCurrentPage(newPage);
 
       if (book) {
-        // Lưu localStorage
         localStorage.setItem(`book-${book.id}-page`, newPage.toString());
 
         // Gửi lên server nếu có login
