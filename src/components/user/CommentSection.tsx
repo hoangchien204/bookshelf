@@ -20,7 +20,7 @@ interface CommentSectionProps {
   bookId: string;
 }
 
-const CommentSection: React.FC<CommentSectionProps> = ({ bookId }) => {
+const CommentSection: React.FC<CommentSectionProps> = () => {
   // 🟡 Dữ liệu mock
   const [comments, setComments] = useState<Comment[]>([
     {
