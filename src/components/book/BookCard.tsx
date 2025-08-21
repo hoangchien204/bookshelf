@@ -1,9 +1,9 @@
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { slugify } from "../utils/slug";
+import { slugify } from "../../utils/slug";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import type { Book } from '../types/Book';
+import type { Book } from '../../types/Book';
 
 
 interface BookCardProps {
@@ -22,13 +22,6 @@ const BookCard: React.FC<BookCardProps> = ({
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   const handleNavigate = () => {
-    const token = localStorage.getItem("accessToken");
-    const username = localStorage.getItem("username");
-    if (!token || !username) {
-      setShowLoginModal(true);
-      return;
-    }
-
     const slug = slugify(book.name);
     navigate(`/book/${slug}-${book.id}`, {
       state: { book },
@@ -43,7 +36,7 @@ const BookCard: React.FC<BookCardProps> = ({
       setShowLoginModal(true);
       return;
     }
-
+    
     onToggleFavorite(book.id); // ✅ gọi hàm từ cha truyền xuống
   };
 

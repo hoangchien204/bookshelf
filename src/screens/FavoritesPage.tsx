@@ -2,9 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import API from '../services/API';
-import BookCard from '../components/BookCard';
+import BookCard from '../components/book/BookCard';
 import { Link } from 'react-router-dom';
-import Loading from '../components/Loading';
+import Loading from '../components/common/Loading';
 import type { Book } from '../types/Book';
 
 

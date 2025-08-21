@@ -1,11 +1,12 @@
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { slugify } from "../utils/slug";
-import type { Book } from "../types/Book";
-import API from "../services/API";
+import { slugify } from "../../utils/slug";
+import type { Book } from "../../types/Book";
+import API from "../../services/API";
 import { useEffect, useState } from "react";
 import { FaHeart, FaRegHeart, FaLink } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
+import CommentSection from "../user/CommentSection";
 
 const BookDetailPage = () => {
   const navigate = useNavigate();
@@ -28,11 +29,6 @@ const BookDetailPage = () => {
   const [showFullDescription, setShowFullDescription] = useState(false);
 
   const MAX_LENGTH = 200;
-  useEffect(() => {
-    if (!userId) {
-      setShowLoginModal(true);
-    }
-  }, [userId]);
 
 
   useEffect(() => {
@@ -111,9 +107,15 @@ const BookDetailPage = () => {
   };
   const handleReadClick = () => {
     if (!book) return;
+
+    if (!userId) {
+      setShowLoginModal(true); // chỉ set state
+      return;
+    }
     const slug = slugify(book.name);
     navigate(`/read/${slug}-${book.id}`);
   };
+
   useEffect(() => {
     document.body.style.placeItems = "unset";
     document.body.style.display = "block";
@@ -131,23 +133,7 @@ const BookDetailPage = () => {
     ? description
     : description.slice(0, MAX_LENGTH) + (isLong ? "..." : "");
 
-  if (showLoginModal) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
-          <h2 className="text-lg font-semibold mb-4">
-            Bạn cần đăng nhập để xem chi tiết sách
-          </h2>
-          <button
-            onClick={() => navigate("/login")}
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold"
-          >
-            Đăng nhập ngay
-          </button>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="book-detail-page w-screen flex flex-col md:flex-row bg-gradient-to-br from-gray-900 to-gray-800 text-white">
@@ -281,9 +267,46 @@ const BookDetailPage = () => {
 
         {/* Danh sách tập */}
         <div>
-          <h2 className="text-xl font-semibold mb-2">Danh sách tập</h2>
+          {book.volumeNumber ? (
+            <>
+              <h2 className="text-xl font-semibold mb-2">Danh sách tập</h2>
+              {/* render danh sách tập ở đây */}
+            </>
+          ) : (
+            <>
+              <h2 className="text-xl font-semibold mb-2">Bình luận của độc giả</h2>
+              {/* render component CommentSection */}
+              <CommentSection bookId={book.id} />
+            </>
+          )}
         </div>
+
       </div>
+
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
+            <h2 className="text-lg font-semibold mb-4 text-black">
+              Bạn cần đăng nhập để xem chi tiết sách
+            </h2>
+            <div className="flex gap-3 justify-center mt-4">
+              <button
+                onClick={() => navigate("/login")}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold"
+              >
+                Đăng nhập ngay
+              </button>
+              <button
+                onClick={() => setShowLoginModal(false)}
+                className="bg-red-300 hover:bg-red-400 px-4 py-2 rounded-lg"
+              >
+                Đóng
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 };

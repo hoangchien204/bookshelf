@@ -3,7 +3,7 @@ import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import API from '../../services/API';
 import type { BookData } from '../../types/BookData';
-import Loading from '../../components/Loading';
+import Loading from '../../components/common/Loading';
 
 interface GenreOption { label: string; value: string; }
 interface SeriesOption {

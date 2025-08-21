@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import BookCard from '../components/BookCard';
+import BookCard from '../components/book/BookCard';
 import API from '../services/API';
 import axios from 'axios';
-import Loading from '../components/Loading';
+import Loading from '../components/common/Loading';
 import type { Book } from '../types/Book';
 import toast from 'react-hot-toast';
 

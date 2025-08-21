@@ -1,6 +1,6 @@
 
-const URL_LINK = "http://localhost:3000";
-// const URL_LINK = "https://be-bookshelf.onrender.com";
+// const URL_LINK = "http://localhost:3000";
+const URL_LINK = "https://be-bookshelf.onrender.com";
 
 
 
@@ -8,6 +8,7 @@ const URL_LINK = "http://localhost:3000";
 const API = {
     books: `${URL_LINK}/books`,
     users: `${URL_LINK}/users`,
+    profile: `${URL_LINK}/profile`,
     login: `${URL_LINK}/auth/login`,
     activities: `${URL_LINK}/activities`,
     read: `${URL_LINK}/activities/read`,

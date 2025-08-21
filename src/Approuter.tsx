@@ -1,7 +1,7 @@
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import TabBar from './components/TabBar';
+import TabBar from './components/common/TabBar';
 import BookshelfApp from './screens/BookshelfApp';
-import BookReaderPage from './components/BookReaderPage';
+import BookReaderPage from './components/book/BookReaderPage';
 import LoginPage from './screens/login';
 import DashboardLayout from './adminScreens/page/DashboardLayout';
 import UserManagement from './adminScreens/page/UserManagement';
@@ -12,8 +12,9 @@ import NotFoundPage from './screens/NotFoundPage';
 import FavoritesPage from './screens/FavoritesPage';
 import ReadingPage from './screens/ReadingPage';
 import GenreBook from './adminScreens/page/GenreBook';
-import BookDetailPage from './components/BookDetailPage';
-import ToastProvider from './components/ToastProvider';
+import BookDetailPage from './components/book/BookDetailPage';
+import ToastProvider from './components/common/ToastProvider';
+import ProfilePage from './components/user/ProfilePage';
 
 
 function AppRoutes() {
@@ -39,6 +40,7 @@ function AppRoutes() {
   <Route path="/book/:slugAndId" element={<BookDetailPage />} />
   <Route path="/favorites" element={<FavoritesPage />} />
   <Route path="/reading" element={<ReadingPage />} />
+  <Route path="/profile" element={<ProfilePage />} />
   <Route path="/login" element={<LoginPage />} />
 
   {isAdmin && (

@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import ReactDOM from "react-dom";
-import "../assets/loading.css";
+import "../../assets/loading.css";
 
 const Loading: React.FC = () => {
   useEffect(() => {
