@@ -8,9 +8,6 @@ import API from "../../services/API";
 import type { Book } from "../../types/Book";
 import axios from "axios";
 
-
-
-
 const TabBar = () => {
   const { pathname } = useLocation();
   const isLoggedIn = !!localStorage.getItem("accessToken");
