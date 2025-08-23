@@ -10,7 +10,7 @@ interface TabBarProps {
   onShare: () => void;
 }
 
-export default function MobileTabBar({ bookTitle, onBack, onLike, onShare }: TabBarProps) {
+export default function MobileTabBar({ bookTitle, onBack }: TabBarProps) {
   const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
 
