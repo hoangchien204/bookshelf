@@ -7,6 +7,7 @@ import type { User } from "../../types/user";
 import API from "../../services/API";
 import type { Book } from "../../types/Book";
 import axios from "axios";
+import { motion } from "framer-motion";
 
 const TabBar = () => {
   const { pathname } = useLocation();
@@ -17,6 +18,8 @@ const TabBar = () => {
   const [books, setBooks] = useState<Book[]>([]);  // 🔹 fetch ở đây
   const [menuOpen, setMenuOpen] = useState(false);
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
+   const [showTabs, setShowTabs] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
   const tabClass = (active: boolean) =>
     `flex-1 text-center py-2 ${active ? "text-blue-400" : "text-gray-300"
     } transition`;
@@ -56,7 +59,6 @@ const TabBar = () => {
       setFilteredBooks([]);
       return;
     }
-
     const lower = searchValue.toLowerCase();
     const filtered = books.filter(
       (b) =>
@@ -65,10 +67,24 @@ const TabBar = () => {
     );
     setFilteredBooks(filtered);
   }, [searchValue, books]);
+   useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > lastScrollY) {
+        setShowTabs(false);
+      } else {
+        setShowTabs(true);
+      }
+      setLastScrollY(window.scrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
+
   return (
     <div className="w-full">
       {/* 🔹 Desktop */}
-      <div className="hidden md:flex items-center justify-between h-16 w-full px-8">
+      <div className="hidden md:flex items-center justify-between h-16 w-full px-8 fixed top-0 left-0 z-50 bg-black/80">
         {/* Nhóm trái */}
         <div className="flex-1 flex items-center gap-6">
           <Link to="/" className="text-2xl font-bold text-green-400">
@@ -132,41 +148,45 @@ const TabBar = () => {
           )}
         </div>
       </div>
+      {/* Mobi */}
+     
+<div className="flex flex-col md:hidden w-full fixed top-0 left-0 z-50">
+  {/* Dòng trên */}
+<div className="flex items-center justify-between h-14 px-4 text-white bg-black/80 backdrop-blur-sm">
+    <button onClick={() => setMenuOpen(true)}>☰</button>
+    {searchOpen ? (
+      <input
+        type="text"
+        value={searchValue}
+        onChange={(e) => setSearchValue(e.target.value)}
+        onBlur={() => {
+          setSearchOpen(false);
+          setSearchValue("");
+        }}
+        placeholder="Tìm sách..."
+        className="w-40 px-3 py-1 rounded bg-gray-800 text-white text-sm outline-none"
+      />
+    ) : (
+      <button onClick={() => setSearchOpen(true)}>
+        <FontAwesomeIcon icon={faSearch} />
+      </button>
+    )}
+  </div>
 
-      {/* 🔹 Mobile */}
-      <div className="flex flex-col md:hidden w-full">
-        {/* Dòng trên: menu + search */}
-        <div className="flex items-center justify-between h-14 px-4 bg-black text-white">
-          <button onClick={() => setMenuOpen(true)}>☰</button>
-          {searchOpen ? (
-    <input
-      type="text"
-      value={searchValue}
-      onChange={(e) => setSearchValue(e.target.value)}
-      onBlur={() => {
-        setSearchOpen(false);
-        setSearchValue("");
-      }}
-      placeholder="Tìm sách..."
-      className="w-40 px-3 py-1 rounded bg-gray-800 text-white text-sm outline-none"
-    />
-  ) : (
-    <button onClick={() => setSearchOpen(true)}>
-      <FontAwesomeIcon icon={faSearch} />
-    </button>
-  )}
-        </div>
+  {/* Dòng dưới: tabs (ẩn/hiện khi scroll) */}
+  <motion.div
+    initial={{ y: 0 }}
+    animate={{ y: showTabs ? 0 : -50, opacity: showTabs ? 1 : 0 }}
+    transition={{ duration: 0.3 }}
+    className="flex overflow-x-auto gap-4 px-4 py-2 bg-gray-800 text-white hide-scrollbar text-sm"
+  >
+    <Link to="/" className={tabClass(pathname === "/")}>Trang chủ</Link>
+    <Link to="/genres" className={tabClass(pathname === "/genres")}>Thể loại</Link>
+    <Link to="/reading" className={tabClass(pathname === "/reading")}>Đang đọc</Link>
+    <Link to="/favorites" className={tabClass(pathname === "/favorites")}>Yêu thích</Link>
+  </motion.div>
+</div>
 
-        {/* Dòng dưới: tabs scroll ngang */}
-        <div className="flex overflow-x-auto gap-4 px-4 py-2 bg-gray-800 text-white hide-scrollbar">
-          <Link to="/" className={tabClass(pathname === "/")}>Trang chủ</Link>
-          <Link to="/genres" className={tabClass(pathname === "/genres")}>Thể loại</Link>
-          <Link to="/reading" className={tabClass(pathname === "/reading")}>Đang đọc</Link>
-          <Link to="/favorites" className={tabClass(pathname === "/favorites")}>Yêu thích</Link>
-        </div>
-      </div>
-
-      {/* 🔹 Dropdown search result */}
       {searchOpen && filteredBooks.length > 0 && (
         <ul className="absolute right-4 top-16 bg-gray-800 text-white rounded shadow-lg w-64 max-h-64 overflow-y-auto z-50 hide-scrollbar">
           {filteredBooks.map((book) => (
@@ -182,59 +202,59 @@ const TabBar = () => {
         </ul>
       )}
       {menuOpen && (
-  <div className="fixed inset-0 z-50 flex">
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50"
-      onClick={() => setMenuOpen(false)}
-    />
+        <div className="fixed inset-0 z-50 flex">
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50"
+            onClick={() => setMenuOpen(false)}
+          />
 
-    {/* Sidebar */}
-    <div className="relative w-64 bg-gray-900 text-white h-full p-6 flex flex-col">
-      <div className="flex items-center gap-3 mb-6">
-        <img
-          src={user?.avatarUrl || "/default-avatar.png"}
-          alt="avatar"
-          className="w-12 h-12 rounded-full border"
-        />
-        <div>
-          <p className="font-semibold">{user?.fullName || "Khách"}</p>
-          <button
-            onClick={() => {
-              setMenuOpen(false);
-              window.location.href = "/profile";
-            }}
-            className="text-sm text-blue-400 hover:underline"
-          >
-            Xem hồ sơ
-          </button>
+          {/* Sidebar */}
+          <div className="relative w-64 bg-gray-900 text-white h-full p-6 flex flex-col">
+            <div className="flex items-center gap-3 mb-6">
+              <img
+                src={user?.avatarUrl || "/default-avatar.png"}
+                alt="avatar"
+                className="w-12 h-12 rounded-full border"
+              />
+              <div>
+                <p className="font-semibold">{user?.fullName || "Khách"}</p>
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    window.location.href = "/profile";
+                  }}
+                  className="text-sm text-blue-400 hover:underline"
+                >
+                  Xem hồ sơ
+                </button>
+              </div>
+            </div>
+
+            <nav className="flex flex-col gap-4">
+              <Link to="/" onClick={() => setMenuOpen(false)}>Trang chủ</Link>
+              <Link to="/genres" onClick={() => setMenuOpen(false)}>Thể loại</Link>
+              <Link to="/reading" onClick={() => setMenuOpen(false)}>Đang đọc</Link>
+              <Link to="/favorites" onClick={() => setMenuOpen(false)}>Yêu thích</Link>
+              {isLoggedIn ? (
+                <button
+                  onClick={() => {
+                    localStorage.clear();
+                    setMenuOpen(false);
+                    window.location.href = "/";
+                  }}
+                  className="text-left text-red-400"
+                >
+                  Đăng xuất
+                </button>
+              ) : (
+                <Link to="/login" onClick={() => setMenuOpen(false)}>
+                  Đăng nhập
+                </Link>
+              )}
+            </nav>
+          </div>
         </div>
-      </div>
-
-      <nav className="flex flex-col gap-4">
-        <Link to="/" onClick={() => setMenuOpen(false)}>Trang chủ</Link>
-        <Link to="/genres" onClick={() => setMenuOpen(false)}>Thể loại</Link>
-        <Link to="/reading" onClick={() => setMenuOpen(false)}>Đang đọc</Link>
-        <Link to="/favorites" onClick={() => setMenuOpen(false)}>Yêu thích</Link>
-        {isLoggedIn ? (
-          <button
-            onClick={() => {
-              localStorage.clear();
-              setMenuOpen(false);
-              window.location.href = "/";
-            }}
-            className="text-left text-red-400"
-          >
-            Đăng xuất
-          </button>
-        ) : (
-          <Link to="/login" onClick={() => setMenuOpen(false)}>
-            Đăng nhập
-          </Link>
-        )}
-      </nav>
-    </div>
-  </div>
-)}
+      )}
     </div>
   );
 

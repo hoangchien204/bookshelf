@@ -3,7 +3,7 @@ import { slugify } from "../../utils/slug";
 import type { Book } from "../../types/Book";
 import API from "../../services/API";
 import { useEffect, useState } from "react";
-import { FaHeart, FaRegHeart, FaLink } from "react-icons/fa";
+import { FaHeart, FaRegHeart, FaLink, FaStar } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
 import CommentSection from "../user/CommentSection";
@@ -12,6 +12,7 @@ const BookDetailPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { slugAndId } = useParams();
+  const [rating, setRating] = useState<number>(0);
 
   // Lấy id từ URL
   const id =
@@ -61,6 +62,24 @@ const BookDetailPage = () => {
       }
     })();
   }, [id, userId]);
+
+  useEffect(() => {
+  if (!book?.id) return;
+
+  const fetchRating = async () => {
+    try {
+      const res = await axios.get(`${API.books}/${book.id}/average`);
+      const avg = res.data; // server trả về số
+      setRating(avg > 0 ? avg : 5); // nếu chưa có thì mặc định 5★
+    } catch (err) {
+      console.error("Lỗi khi lấy rating:", err);
+      setRating(5); // fallback
+    }
+  };
+
+  fetchRating();
+}, [book?.id]);
+
   const handleCopyLink = () => {
     const link = window.location.href;
     navigator.clipboard.writeText(link)
@@ -125,6 +144,16 @@ const BookDetailPage = () => {
       document.body.style.display = "grid"; // hoặc flex
     };
   }, []);
+const RatingBadge: React.FC<{ score: number }> = ({ score }) => {
+  return (
+    <div className="flex items-center gap-1 bg-gray-700 text-white text-sm px-3 py-1 rounded-full">
+      <FaStar className="text-yellow-400" />
+      <span>{score.toFixed(1)}/5</span>
+    </div>
+  );
+};
+
+
   if (loading) return <div className="text-center py-8">Đang tải...</div>;
   if (!book) return <div className="text-center py-8">Không tìm thấy sách</div>;
   const description = book.description || "Chưa có mô tả";
@@ -136,10 +165,9 @@ const BookDetailPage = () => {
 
 
   return (
-    <div className="book-detail-page w-screen flex flex-col md:flex-row bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+    <div className="book-detail-page w-screen flex flex-col md:flex-row bg-gradient-to-br from-gray-900 to-gray-800 text-white pt-0 sm:pt-20">
       {/* mobi */}
       <div className="w-full md:hidden relative flex flex-col items-center pb-6">
-        {/* Ảnh nền full width */}
         <img
           src={book.coverUrl}
           alt="background"
@@ -147,11 +175,13 @@ const BookDetailPage = () => {
         />
         {/* lớp phủ */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/40"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-transparent"></div>
+
         <img
           src={book.coverUrl}
           alt={book.name}
-          className="relative w-40 sm:w-48 rounded-lg shadow-lg object-cover z-10 mt-8"
+          className="relative w-[180px] h-[265px] rounded-lg shadow-lg object-cover z-10 mt-8"
         />
         <div className="relative z-10 text-center px-4 mt-4">
           <h1 className="text-lg font-bold">{book.name}</h1>
@@ -179,6 +209,9 @@ const BookDetailPage = () => {
         </div>
       </div>
       <div className="md:hidden px-6 mt-4 flex flex-wrap gap-2">
+        <span className="flex items-center bg-gray-700 text-white text-base px-3 py-1 rounded-full">
+        <RatingBadge score={rating} />
+        </span>
         <span className="bg-gray-700 text-white text-sm px-3 py-1 rounded-full">
           {book.genre || "Không rõ"}
         </span>
@@ -190,7 +223,7 @@ const BookDetailPage = () => {
           <img
             src={book.coverUrl}
             alt={book.name}
-            className="w-full rounded-lg shadow-lg object-cover"
+            className="w-[340] h-[235] rounded-lg shadow-lg object-cover"
           />
         </div>
       </div>
@@ -275,7 +308,6 @@ const BookDetailPage = () => {
           ) : (
             <>
               <h2 className="text-xl font-semibold mb-2">Bình luận của độc giả</h2>
-              {/* render component CommentSection */}
               <CommentSection bookId={book.id} />
             </>
           )}

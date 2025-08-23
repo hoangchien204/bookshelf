@@ -1,4 +1,3 @@
-
 // const URL_LINK = "http://localhost:3000";
 const URL_LINK = "https://be-bookshelf.onrender.com";
 
@@ -15,6 +14,8 @@ const API = {
     favorites: `${URL_LINK}/activities/favorites`,
     genres: `${URL_LINK}/genres`,
     series: `${URL_LINK}/series`,
+    ratings: `${URL_LINK}/ratings`,
+    comments: `${URL_LINK}/comments`,
     local: `${URL_LINK}`
 }
 export default API;

@@ -6,7 +6,7 @@ import axios from 'axios';
 import Loading from '../components/common/Loading';
 import type { Book } from '../types/Book';
 import toast from 'react-hot-toast';
-
+import banner from '../assets/banner.jpg'
 
 const BookshelfApp: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
@@ -144,9 +144,12 @@ const BookshelfApp: React.FC = () => {
         <Loading />
       ) : (
         // layout chính chỉ hiện sau khi load xong
-        <div className="w-full min-h-screen bg-black text-white font-sans px-2 sm:px-4 md:px-6 lg:px-8 py-6">
+        <div className="w-full min-h-screen bg-black text-white font-sans px-2 sm:px-4 md:px-6 lg:px-8 py-6 pt-32 sm:pt-20">
+
+       
+
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">Kệ sách của bạn</h1>
+            <h1 className="text-3xl font-bold ">Kệ sách của bạn</h1>
           </div>
 
           <section>
