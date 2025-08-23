@@ -6,7 +6,6 @@ import axios from 'axios';
 import Loading from '../components/common/Loading';
 import type { Book } from '../types/Book';
 import toast from 'react-hot-toast';
-import banner from '../assets/banner.jpg'
 
 const BookshelfApp: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
