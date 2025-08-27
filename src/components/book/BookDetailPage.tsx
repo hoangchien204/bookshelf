@@ -3,7 +3,7 @@ import { slugify } from "../../utils/slug";
 import type { Book } from "../../types/Book";
 import API from "../../services/API";
 import { useEffect, useState } from "react";
-import { FaHeart, FaRegHeart, FaLink, FaStar } from "react-icons/fa";
+import { FaHeart, FaRegHeart, FaStar, FaBookOpen, FaShareAlt } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
 import CommentSection from "../user/CommentSection";
@@ -64,21 +64,21 @@ const BookDetailPage = () => {
   }, [id, userId]);
 
   useEffect(() => {
-  if (!book?.id) return;
+    if (!book?.id) return;
 
-  const fetchRating = async () => {
-    try {
-      const res = await axios.get(`${API.books}/${book.id}/average`);
-      const avg = res.data; // server trả về số
-      setRating(avg > 0 ? avg : 5); // nếu chưa có thì mặc định 5★
-    } catch (err) {
-      console.error("Lỗi khi lấy rating:", err);
-      setRating(5); // fallback
-    }
-  };
+    const fetchRating = async () => {
+      try {
+        const res = await axios.get(`${API.books}/${book.id}/average`);
+        const avg = res.data;
+        setRating(avg > 0 ? avg : 5);
+      } catch (err) {
+        console.error("Lỗi khi lấy rating:", err);
+        setRating(5);
+      }
+    };
 
-  fetchRating();
-}, [book?.id]);
+    fetchRating();
+  }, [book?.id]);
 
   const handleCopyLink = () => {
     const link = window.location.href;
@@ -140,18 +140,18 @@ const BookDetailPage = () => {
     document.body.style.display = "block";
 
     return () => {
-      document.body.style.placeItems = "center"; // hoặc giá trị cũ
-      document.body.style.display = "grid"; // hoặc flex
+      document.body.style.placeItems = "center";
+      document.body.style.display = "grid";
     };
   }, []);
-const RatingBadge: React.FC<{ score: number }> = ({ score }) => {
-  return (
-    <div className="flex items-center gap-1 bg-gray-700 text-white text-sm px-3 py-1 rounded-full">
-      <FaStar className="text-yellow-400" />
-      <span>{score.toFixed(1)}/5</span>
-    </div>
-  );
-};
+  const RatingBadge: React.FC<{ score: number }> = ({ score }) => {
+    return (
+      <div className="flex items-center gap-1 bg-gray-700 text-white text-sm px-3 py-1 rounded-full">
+        <FaStar className="text-yellow-400" />
+        <span>{score.toFixed(1)}/5</span>
+      </div>
+    );
+  };
 
 
   if (loading) return <div className="text-center py-8">Đang tải...</div>;
@@ -165,7 +165,9 @@ const RatingBadge: React.FC<{ score: number }> = ({ score }) => {
 
 
   return (
-    <div className="book-detail-page w-screen flex flex-col md:flex-row bg-gradient-to-br from-gray-900 to-gray-800 text-white pt-0 sm:pt-20">
+    <div className="">
+    <div className="book-detail-page w-screen flex flex-col md:flex-row bg-gradient-to-br 
+                    from-gray-900 to-gray-800 text-white pt-0 sm:pt-20 roboto-slab">
       {/* mobi */}
       <div className="w-full md:hidden relative flex flex-col items-center pb-6">
         <img
@@ -190,29 +192,31 @@ const RatingBadge: React.FC<{ score: number }> = ({ score }) => {
         <div className="relative z-10 flex items-center gap-3 mt-4 px-6 w-full">
           <button
             onClick={handleReadClick}
-            className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition"
+            className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 flex text-center justify-center items-center
+            rounded-3xl font-semibold transition gap-2 text-lg"
           >
-            Đọc sách
+            <FaBookOpen /> Đọc sách
           </button>
           <button
             onClick={handleToggleFavorite}
-            className="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition"
+            className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full transition text-lg"
           >
             {isFavorite ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
           </button>
           <button
             onClick={handleCopyLink}
-            className="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition"
+            className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full transition text-lg"
           >
-            <FaLink />
+            <FaShareAlt />
           </button>
         </div>
       </div>
+
       <div className="md:hidden px-6 mt-4 flex flex-wrap gap-2">
         <span className="flex items-center bg-gray-700 text-white text-base px-3 py-1 rounded-full">
-        <RatingBadge score={rating} />
+          <RatingBadge score={rating} />
         </span>
-        <span className="bg-gray-700 text-white text-sm px-3 py-1 rounded-full">
+        <span className="bg-gray-700 text-white text-sm px-3 py-1 rounded-full flex justify-center items-center">
           {book.genre || "Không rõ"}
         </span>
       </div>
@@ -223,13 +227,13 @@ const RatingBadge: React.FC<{ score: number }> = ({ score }) => {
           <img
             src={book.coverUrl}
             alt={book.name}
-            className="w-[340] h-[235] rounded-lg shadow-lg object-cover"
+            className="w-[330px] h-[528px] rounded-lg shadow-lg object-cover"
           />
         </div>
       </div>
 
       {/* Nội dung Desktop */}
-      <div className="flex-1 p-6 space-y-6 overflow-y-auto text-left">
+      <div className="flex-1 p-6 space-y-6 overflow-y-auto text-left max-w-3xl">
 
         {/* Thông tin chung - chỉ Desktop */}
         <div className="hidden md:block">
@@ -264,21 +268,22 @@ const RatingBadge: React.FC<{ score: number }> = ({ score }) => {
         <div className="hidden md:flex items-center gap-3 flex-wrap">
           <button
             onClick={handleReadClick}
-            className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold transition"
+            className="bg-green-500 hover:bg-green-600 text-white flex text-center justify-center items-center gap-2 px-6 py-2 
+                        rounded-2xl font-semibold transition w-[201px]"
           >
-            Đọc sách
+            <FaBookOpen />Đọc sách
           </button>
           <button
             onClick={handleToggleFavorite}
-            className="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition"
+            className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full transition text-2xl"
           >
             {isFavorite ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
           </button>
           <button
             onClick={handleCopyLink}
-            className="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition"
+            className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full transition text-2xl"
           >
-            <FaLink />
+            <FaShareAlt />
           </button>
         </div>
 
@@ -307,12 +312,11 @@ const RatingBadge: React.FC<{ score: number }> = ({ score }) => {
             </>
           ) : (
             <>
-              <h2 className="text-xl font-semibold mb-2">Bình luận của độc giả</h2>
-              <CommentSection bookId={book.id} />
+              <h2 className="text-xl font-semibold mb-2">Độc giả nói gì về "{book.name}"</h2>
+             { <CommentSection bookId={book.id} />}
             </>
           )}
         </div>
-
       </div>
 
       {showLoginModal && (
@@ -339,6 +343,13 @@ const RatingBadge: React.FC<{ score: number }> = ({ score }) => {
           </div>
         </div>
       )}
+    </div>
+    <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-2 text-3xl text-white">Cùng tác giả</h2>
+          <p className="text-gray-300">
+            Các tác phẩm khác của <span className="font-semibold">{book.author}</span> sẽ hiển thị ở đây.
+          </p>
+        </div>
     </div>
   );
 };

@@ -1,7 +1,6 @@
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import TabBar from './components/common/TabBar';
 import BookshelfApp from './screens/BookshelfApp';
-import BookReaderPage from './components/book/BookReaderPage';
 import LoginPage from './screens/login';
 import DashboardLayout from './adminScreens/page/DashboardLayout';
 import UserManagement from './adminScreens/page/UserManagement';
@@ -16,6 +15,7 @@ import BookDetailPage from './components/book/BookDetailPage';
 import ToastProvider from './components/common/ToastProvider';
 import ProfilePage from './components/user/ProfilePage';
 import MobileTabBar from './components/common/TabBarMobi';
+import BookReaderWrapper from './components/book/BookReaderWrapper';
 
 
 function AppRoutes() {
@@ -57,7 +57,7 @@ useEffect(() => {
       )}
       <Routes>
         <Route path="/" element={<BookshelfApp />} />
-        <Route path="/read/:slugAndId" element={<BookReaderPage />} />
+        <Route path="/read/:slugAndId" element={<BookReaderWrapper />} />
         <Route path="/book/:slugAndId" element={<BookDetailPage />} />
         <Route path="/favorites" element={<FavoritesPage />} />
         <Route path="/reading" element={<ReadingPage />} />
