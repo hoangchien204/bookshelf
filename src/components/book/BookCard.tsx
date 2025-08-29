@@ -36,18 +36,17 @@ const BookCard: React.FC<BookCardProps> = ({
       setShowLoginModal(true);
       return;
     }
-    
-    onToggleFavorite(book.id); // ✅ gọi hàm từ cha truyền xuống
+    onToggleFavorite(book.id);
   };
 
   return (
     <motion.div
-  className="flex flex-col items-center w-[160px] md:w-[180px] lg:w-[200px]"
+  className="flex flex-col items-center w-[160px] md:w-[180px] lg:w-[200px] text-white"
 >
   {/* Card ảnh */}
   <div
     onClick={handleNavigate}
-    className="w-full h-[260px] bg-white rounded shadow relative group hover:shadow-lg cursor-pointer"
+    className="w-[208px] h-[306px] bg-white rounded shadow relative group hover:shadow-lg cursor-pointer"
   >
     <img
       src={book.coverUrl}

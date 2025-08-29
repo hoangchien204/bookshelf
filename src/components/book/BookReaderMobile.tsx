@@ -47,7 +47,10 @@ const BookReaderMobile: React.FC<Props> = ({
 
         axios
             .get(`${API.activities}/read/${book.id}`, {
-                headers: { "x-user-id": userId },
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                },
             })
             .then((res) => {
                 const serverPage = res.data?.page;

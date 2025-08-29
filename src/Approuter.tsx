@@ -1,21 +1,21 @@
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import TabBar from './components/common/TabBar';
-import BookshelfApp from './screens/BookshelfApp';
+import { useEffect, useState } from 'react';
+import NotFoundPage from './screens/NotFoundPage';
 import LoginPage from './screens/login';
 import DashboardLayout from './adminScreens/page/DashboardLayout';
 import UserManagement from './adminScreens/page/UserManagement';
 import BookManagement from './adminScreens/page/BookManagement';
+import GenreBook from './adminScreens/page/GenreBook';
 
-import { useEffect, useState } from 'react';
-import NotFoundPage from './screens/NotFoundPage';
+import TabBar from './components/common/TabBar';
+import MobileTabBar from './components/common/TabBarMobi';
+import ToastProvider from './components/common/ToastProvider';
+import BookDetailPage from './components/book/BookDetailPage';
+import BookReaderWrapper from './components/book/BookReaderWrapper';
+import ProfilePage from './components/user/ProfilePage';
+import BookshelfApp from './screens/BookshelfApp';
 import FavoritesPage from './screens/FavoritesPage';
 import ReadingPage from './screens/ReadingPage';
-import GenreBook from './adminScreens/page/GenreBook';
-import BookDetailPage from './components/book/BookDetailPage';
-import ToastProvider from './components/common/ToastProvider';
-import ProfilePage from './components/user/ProfilePage';
-import MobileTabBar from './components/common/TabBarMobi';
-import BookReaderWrapper from './components/book/BookReaderWrapper';
 
 
 function AppRoutes() {

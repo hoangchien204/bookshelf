@@ -33,8 +33,8 @@ const CommentSection: React.FC<CommentSectionProps> = ({ bookId }) => {
   const [activeTab, setActiveTab] = useState<"comments" | "reviews">("comments");
   const userId = localStorage.getItem("userId");
   const [visibleComments, setVisibleComments] = useState(5);
-const [visibleReviews, setVisibleReviews] = useState(5);
-
+  const [visibleReviews, setVisibleReviews] = useState(5);
+  const accessToken = localStorage.getItem("accessToken")
   useEffect(() => {
     fetch(`${API.comments}/book/${bookId}`)
       .then((res) => res.json())
@@ -55,7 +55,7 @@ const [visibleReviews, setVisibleReviews] = useState(5);
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-user-id": userId ?? "",
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           bookId,
@@ -83,7 +83,7 @@ const [visibleReviews, setVisibleReviews] = useState(5);
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-user-id": userId ?? "",
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           bookId,
@@ -251,7 +251,8 @@ const [visibleReviews, setVisibleReviews] = useState(5);
                       className="w-10 h-10 rounded-full object-cover"
                     />
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 justify-between ">
+                      {/* Hàng đầu: Tên + Ngày */}
+                      <div className="flex items-center justify-between">
                         <span className="font-semibold text-white">
                           {r.user?.fullName || r.user?.username || "Ẩn danh"}
                         </span>
@@ -259,11 +260,25 @@ const [visibleReviews, setVisibleReviews] = useState(5);
                           {formatDateVN(r.updatedAt || r.createdAt)}
                         </span>
                       </div>
-                      <p className="text-yellow-400">⭐ {r.score}/5</p>
-                      <p className="text-gray-200 mt-1">
-                        {r.content || "(Không có nội dung)"}
-                      </p>
+
+
+                      <div className="flex items-start justify-between mt-1 items-center">
+                        <p className="text-gray-200">
+                          {r.content || "(Không có nội dung)"}
+                        </p>
+
+                        <div className="flex ml-4">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <FaStar
+                              key={star}
+                              size={16}
+                              className={star <= r.score ? "text-yellow-400" : "text-gray-500"}
+                            />
+                          ))}
+                        </div>
+                      </div>
                     </div>
+
                   </div>
                 ))}
                 {visibleReviews < reviews.length && (

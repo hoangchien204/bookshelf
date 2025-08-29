@@ -101,7 +101,7 @@ body.loading-mode .tabbar {
 
 
 .react-pdf__Page__textContent span::selection {
-  background: rgba(0, 0, 255, 0.2); /* chỉ muốn thấy nền highlight */
+  background: rgba(0, 0, 255, 0.2); 
   color: transparent !important;
 }
 

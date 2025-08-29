@@ -12,18 +12,22 @@ const BookshelfApp: React.FC = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const navigate = useNavigate();
   const userId = localStorage.getItem("userId");
+  const accessToken = localStorage.getItem("accessToken");
+
   const location = useLocation();
   const [loadingBooks, setLoadingBooks] = useState(true);
   const [processingBookId, setProcessingBookId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchFavorites = async () => {
-      const userId = localStorage.getItem("userId");
       if (!userId) return;
 
       try {
         const res = await axios.get(API.favorites, {
-          headers: { "x-user-id": userId },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
         });
 
         if (Array.isArray(res.data)) {
@@ -43,9 +47,7 @@ const BookshelfApp: React.FC = () => {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const res = await axios.get(API.books, {
-          headers: { 'ngrok-skip-browser-warning': 'true' },
-        });
+        const res = await axios.get(API.books);
         setBooks(res.data);
       } catch (err) {
         console.error(err);
@@ -57,7 +59,7 @@ const BookshelfApp: React.FC = () => {
   }, []);
 
   const handleToggleFavorite = async (bookId: string) => {
-    if (!userId || processingBookId === bookId) return; // đang xử lý thì bỏ qua
+    if (!userId || processingBookId === bookId) return;
 
     setProcessingBookId(bookId);
 
@@ -71,7 +73,12 @@ const BookshelfApp: React.FC = () => {
       const response = await axios.post(
         API.favorites,
         { bookId },
-        { headers: { 'x-user-id': userId } }
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          }
+        }
       );
 
       if (typeof response.data.isFavorite !== "undefined") {
@@ -103,7 +110,8 @@ const BookshelfApp: React.FC = () => {
     try {
       const res = await axios.get(`${API.read}/${book.id}`, {
         headers: {
-          'x-user-id': userId
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 
@@ -145,7 +153,7 @@ const BookshelfApp: React.FC = () => {
         // layout chính chỉ hiện sau khi load xong
         <div className="w-full min-h-screen bg-black text-white font-sans px-2 sm:px-4 md:px-6 lg:px-8 py-6 pt-32 sm:pt-20">
 
-       
+
 
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold ">Kệ sách của bạn</h1>

@@ -7,31 +7,34 @@ import { FaHeart, FaRegHeart, FaStar, FaBookOpen, FaShareAlt } from "react-icons
 import axios from "axios";
 import toast from "react-hot-toast";
 import CommentSection from "../user/CommentSection";
+import BookCard from "./BookCard";
 
 const BookDetailPage = () => {
-  const navigate = useNavigate();
+   const navigate = useNavigate();
   const location = useLocation();
   const { slugAndId } = useParams();
   const [rating, setRating] = useState<number>(0);
+  const [relatedBooks, setRelatedBooks] = useState<Book[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [suggestedBooks, setSuggestedBooks] = useState<Book[]>([]);
+  const [book, setBook] = useState<Book | null>(location.state?.book || null);
+  const [loading, setLoading] = useState(!location.state?.book);
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
-  // Lấy id từ URL
+  const userId = localStorage.getItem("userId");
+  const accessToken = localStorage.getItem("accessToken");
+
+  const { slugAndId: slugParam } = useParams();
   const id =
-    slugAndId?.match(
+    slugParam?.match(
       /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/
     )?.[0] || "";
 
-  const [book, setBook] = useState<Book | null>(location.state?.book || null);
-  const [loading, setLoading] = useState(!location.state?.book);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false); // cooldown
-  const [showLoginModal, setShowLoginModal] = useState(false);
-
-  const userId = localStorage.getItem("userId");
-  const [showFullDescription, setShowFullDescription] = useState(false);
-
   const MAX_LENGTH = 200;
 
-
+  // Fetch chi tiết sách
   useEffect(() => {
     if (!id || book) return;
     (async () => {
@@ -47,94 +50,129 @@ const BookDetailPage = () => {
     })();
   }, [id, book]);
 
+  // Fetch danh sách yêu thích
   useEffect(() => {
-    if (!id || !userId) return;
+    if (!userId || !accessToken) return;
     (async () => {
       try {
         const res = await axios.get(API.favorites, {
-          headers: { "x-user-id": userId },
+          headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (Array.isArray(res.data)) {
-          setIsFavorite(res.data.some((fav: any) => fav.id === id));
+          setFavorites(res.data.map((fav: any) => fav.id));
         }
       } catch (error) {
         console.error("Lỗi lấy danh sách yêu thích:", error);
       }
     })();
-  }, [id, userId]);
+  }, [userId, accessToken]);
 
+  // Fetch rating
   useEffect(() => {
     if (!book?.id) return;
-
-    const fetchRating = async () => {
+    (async () => {
       try {
         const res = await axios.get(`${API.books}/${book.id}/average`);
-        const avg = res.data;
-        setRating(avg > 0 ? avg : 5);
+        setRating(res.data > 0 ? res.data : 5);
       } catch (err) {
         console.error("Lỗi khi lấy rating:", err);
         setRating(5);
       }
-    };
-
-    fetchRating();
+    })();
   }, [book?.id]);
 
-  const handleCopyLink = () => {
-    const link = window.location.href;
-    navigator.clipboard.writeText(link)
-      .then(() => {
-        toast.success("Đã sao chép liên kết!");
-      })
-      .catch(err => {
-        console.error("Lỗi sao chép liên kết:", err);
-        toast.error("Không thể sao chép liên kết");
-      });
-  };
-  const handleToggleFavorite = async () => {
-    if (!id || !userId || isProcessing) return;
+  // Fetch sách cùng tác giả
+  useEffect(() => {
+    if (!book) return;
+    (async () => {
+      const res = await fetch(`${API.books}/author/${encodeURIComponent(book.author)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setRelatedBooks(data.filter((b: Book) => b.id !== book.id));
+      }
+    })();
+  }, [book]);
+
+  // Fetch random "có thể bạn sẽ thích"
+  useEffect(() => {
+    if (!book) return;
+    (async () => {
+      const res = await fetch(`${API.random}/${book.id}?limit=10`);
+      if (res.ok) {
+        setSuggestedBooks(await res.json());
+      }
+    })();
+  }, [book]);
+
+  // Toggle favorite (chung cho mọi sách)
+  const handleToggleFavorite = async (bookId: string) => {
+    if (isProcessing) return;
     setIsProcessing(true);
-    setIsFavorite(prev => !prev);
+
     try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        toast.error("Bạn cần đăng nhập để yêu thích sách");
+        return;
+      }
+
       const response = await axios.post(
         API.favorites,
-        { bookId: id },
-        { headers: { "x-user-id": userId } }
+        { bookId },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+
       if (typeof response.data.isFavorite !== "undefined") {
-        setIsFavorite(response.data.isFavorite);
-        if (response.data.isFavorite) {
-          toast.success(
-            <span className="flex items-center gap-2">
-              Yêu thích thành công
-            </span>
-          );
-        } else {
-          toast.success(
-            <span className="flex items-center gap-2">
-              Bỏ yêu thích thành công
-            </span>,
-          );
-        }
+        setFavorites((prev) =>
+          response.data.isFavorite
+            ? [...prev, bookId]
+            : prev.filter((id) => id !== bookId)
+        );
+
+        toast.success(
+          response.data.isFavorite
+            ? "Yêu thích thành công"
+            : "Bỏ yêu thích thành công"
+        );
       }
     } catch (error) {
       console.error("Lỗi toggle yêu thích:", error);
-      setIsFavorite(prev => !prev);
+      toast.error("Có lỗi xảy ra, vui lòng thử lại!");
     } finally {
       setTimeout(() => setIsProcessing(false), 500);
     }
   };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => toast.success("Đã sao chép liên kết!"))
+      .catch(() => toast.error("Không thể sao chép liên kết"));
+  };
+
   const handleReadClick = () => {
     if (!book) return;
-
     if (!userId) {
-      setShowLoginModal(true); // chỉ set state
+      setShowLoginModal(true);
       return;
     }
     const slug = slugify(book.name);
     navigate(`/read/${slug}-${book.id}`);
   };
 
+  const handleRead = async (book: Book) => {
+    try {
+      const res = await axios.get(`${API.read}/${book.id}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const lastPage = res.data.page || 1;
+      const slug = slugify(book.name);
+      navigate(`/book/${slug}-${book.id}`, { state: { startPage: lastPage } });
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      }
+    }
+  };
   useEffect(() => {
     document.body.style.placeItems = "unset";
     document.body.style.display = "block";
@@ -165,191 +203,228 @@ const BookDetailPage = () => {
 
 
   return (
-    <div className="">
-    <div className="book-detail-page w-screen flex flex-col md:flex-row bg-gradient-to-br 
+    <div className="bg-gradient-to-br from-gray-900 to-gray-800">
+      <div className="book-detail-page w-screen flex flex-col md:flex-row bg-gradient-to-br 
                     from-gray-900 to-gray-800 text-white pt-0 sm:pt-20 roboto-slab">
-      {/* mobi */}
-      <div className="w-full md:hidden relative flex flex-col items-center pb-6">
-        <img
-          src={book.coverUrl}
-          alt="background"
-          className="absolute inset-0 w-full h-full object-cover opacity-100"
-        />
-        {/* lớp phủ */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/40"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-transparent"></div>
+        {/* mobi */}
+        <div className="w-full md:hidden relative flex flex-col items-center pb-6">
+          <img
+            src={book.coverUrl}
+            alt="background"
+            className="absolute inset-0 w-full h-full object-cover opacity-100"
+          />
+          {/* lớp phủ */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/40"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-transparent"></div>
 
-        <img
-          src={book.coverUrl}
-          alt={book.name}
-          className="relative w-[180px] h-[265px] rounded-lg shadow-lg object-cover z-10 mt-8"
-        />
-        <div className="relative z-10 text-center px-4 mt-4">
-          <h1 className="text-lg font-bold">{book.name}</h1>
-          <p className="text-sm text-gray-200">Tác giả: {book.author}</p>
-        </div>
-        <div className="relative z-10 flex items-center gap-3 mt-4 px-6 w-full">
-          <button
-            onClick={handleReadClick}
-            className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 flex text-center justify-center items-center
-            rounded-3xl font-semibold transition gap-2 text-lg"
-          >
-            <FaBookOpen /> Đọc sách
-          </button>
-          <button
-            onClick={handleToggleFavorite}
-            className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full transition text-lg"
-          >
-            {isFavorite ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
-          </button>
-          <button
-            onClick={handleCopyLink}
-            className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full transition text-lg"
-          >
-            <FaShareAlt />
-          </button>
-        </div>
-      </div>
-
-      <div className="md:hidden px-6 mt-4 flex flex-wrap gap-2">
-        <span className="flex items-center bg-gray-700 text-white text-base px-3 py-1 rounded-full">
-          <RatingBadge score={rating} />
-        </span>
-        <span className="bg-gray-700 text-white text-sm px-3 py-1 rounded-full flex justify-center items-center">
-          {book.genre || "Không rõ"}
-        </span>
-      </div>
-
-      {/* --- Desktop --- */}
-      <div className="hidden md:block md:w-[400px] flex-shrink-0 md:sticky md:top-0 self-start p-6">
-        <div className="relative w-full">
           <img
             src={book.coverUrl}
             alt={book.name}
-            className="w-[330px] h-[528px] rounded-lg shadow-lg object-cover"
+            className="relative w-[180px] h-[265px] rounded-lg shadow-lg object-cover z-10 mt-8"
           />
+          <div className="relative z-10 text-center px-4 mt-4">
+            <h1 className="text-lg font-bold">{book.name}</h1>
+            <p className="text-sm text-gray-200">Tác giả: {book.author}</p>
+          </div>
+          <div className="relative z-10 flex items-center gap-3 mt-4 px-6 w-full">
+            <button
+              onClick={handleReadClick}
+              className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 flex text-center justify-center items-center
+            rounded-3xl font-semibold transition gap-2 text-lg"
+            >
+              <FaBookOpen /> Đọc sách
+            </button>
+            <button
+              onClick={() => handleToggleFavorite(id)}
+              className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full transition text-lg"
+            >
+              {favorites.includes(id) ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
+            </button>
+            <button
+              onClick={handleCopyLink}
+              className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full transition text-lg"
+            >
+              <FaShareAlt />
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Nội dung Desktop */}
-      <div className="flex-1 p-6 space-y-6 overflow-y-auto text-left max-w-3xl">
+        <div className="md:hidden px-6 mt-4 flex flex-wrap gap-2">
+          <span className="flex items-center bg-gray-700 text-white text-base px-3 py-1 rounded-full">
+            <RatingBadge score={rating} />
+          </span>
+          <span className="bg-gray-700 text-white text-sm px-3 py-1 rounded-full flex justify-center items-center">
+            {book.genre || "Không rõ"}
+          </span>
+        </div>
 
-        {/* Thông tin chung - chỉ Desktop */}
-        <div className="hidden md:block">
-          <h1 className="text-2xl font-bold mb-4">{book.name}</h1>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-8 text-sm font-sans">
-            <div>
-              <div className="text-gray-300 font-medium">Tác giả</div>
-              <div className="text-white">{book.author}</div>
-            </div>
-            <div>
-              <div className="text-gray-300 font-medium">Thể loại</div>
-              <div className="text-white">{book.genre || "Không rõ"}</div>
-            </div>
-            <div>
-              <div className="text-gray-300 font-medium">Trạng thái</div>
-              <div className="text-white">{book.isSeries ? "Đang ra" : "Hoàn thành"}</div>
-            </div>
-            <div>
-              <div className="text-gray-300 font-medium">Nhà xuất bản</div>
-              <div className="text-white">Đang cập nhật</div>
-            </div>
-            <div>
-              <div className="text-gray-300 font-medium">Ngày phát hành</div>
-              <div className="text-white">
-                {new Date(book.createdAt).toLocaleString("vi-VN")}
+        {/* --- Desktop --- */}
+        <div className="hidden md:block md:w-[400px] flex-shrink-0 md:sticky md:top-0 self-start p-6">
+          <div className="relative w-full">
+            <img
+              src={book.coverUrl}
+              alt={book.name}
+              className="w-[330px] h-[528px] rounded-lg shadow-lg object-cover"
+            />
+          </div>
+        </div>
+
+        {/* Nội dung Desktop */}
+        <div className="flex-1 p-6 space-y-6 overflow-y-auto text-left max-w-3xl">
+
+          {/* Thông tin chung - chỉ Desktop */}
+          <div className="hidden md:block">
+            <h1 className="text-2xl font-bold mb-4">{book.name}</h1>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-8 text-sm font-sans">
+              <div>
+                <div className="text-gray-300 font-medium">Tác giả</div>
+                <div className="text-white">{book.author}</div>
+              </div>
+              <div>
+                <div className="text-gray-300 font-medium">Thể loại</div>
+                <div className="text-white">{book.genre || "Không rõ"}</div>
+              </div>
+              <div>
+                <div className="text-gray-300 font-medium">Trạng thái</div>
+                <div className="text-white">{book.isSeries ? "Đang ra" : "Hoàn thành"}</div>
+              </div>
+              <div>
+                <div className="text-gray-300 font-medium">Nhà xuất bản</div>
+                <div className="text-white">Đang cập nhật</div>
+              </div>
+              <div>
+                <div className="text-gray-300 font-medium">Ngày phát hành</div>
+                <div className="text-white">
+                  {new Date(book.createdAt).toLocaleString("vi-VN")}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Nút hành động - Desktop */}
-        <div className="hidden md:flex items-center gap-3 flex-wrap">
-          <button
-            onClick={handleReadClick}
-            className="bg-green-500 hover:bg-green-600 text-white flex text-center justify-center items-center gap-2 px-6 py-2 
+          {/* Nút hành động - Desktop */}
+          <div className="hidden md:flex items-center gap-3 flex-wrap">
+            <button
+              onClick={handleReadClick}
+              className="bg-green-500 hover:bg-green-600 text-white flex text-center justify-center items-center gap-2 px-6 py-2 
                         rounded-2xl font-semibold transition w-[201px]"
-          >
-            <FaBookOpen />Đọc sách
-          </button>
-          <button
-            onClick={handleToggleFavorite}
-            className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full transition text-2xl"
-          >
-            {isFavorite ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
-          </button>
-          <button
-            onClick={handleCopyLink}
-            className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full transition text-2xl"
-          >
-            <FaShareAlt />
-          </button>
-        </div>
+            >
+              <FaBookOpen />Đọc sách
+            </button>
+            <button
+              onClick={() => handleToggleFavorite(id)}
+              className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full transition text-2xl"
+            >
+              {favorites.includes(id) ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
+            </button>
+            <button
+              onClick={handleCopyLink}
+              className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full transition text-2xl"
+            >
+              <FaShareAlt />
+            </button>
+          </div>
 
-        {/* Mô tả */}
-        <div>
-          <h2 className="text-xl font-semibold mb-2">Mô tả</h2>
-          <p className="text-gray-300">
-            {displayedText}
-            {isLong && (
-              <button
-                onClick={() => setShowFullDescription(prev => !prev)}
-                className="ml-2 text-green-400 no-underline cursor-pointer focus:outline-none"
-              >
-                {showFullDescription ? "Rút gọn" : "Xem thêm"}
-              </button>
+          {/* Mô tả */}
+          <div>
+            <h2 className="text-xl font-semibold mb-2">Mô tả</h2>
+            <p className="text-gray-300">
+              {displayedText}
+              {isLong && (
+                <button
+                  onClick={() => setShowFullDescription(prev => !prev)}
+                  className="ml-2 text-green-400 no-underline cursor-pointer focus:outline-none"
+                >
+                  {showFullDescription ? "Rút gọn" : "Xem thêm"}
+                </button>
+              )}
+            </p>
+          </div>
+
+          {/* Danh sách tập */}
+          <div>
+            {book.volumeNumber ? (
+              <>
+                <h2 className="text-xl font-semibold mb-2">Danh sách tập</h2>
+                {/* render danh sách tập ở đây */}
+              </>
+            ) : (
+              <>
+                <h2 className="text-xl font-semibold mb-2">Độc giả nói gì về "{book.name}"</h2>
+                {<CommentSection bookId={book.id} />}
+              </>
             )}
-          </p>
-        </div>
-
-        {/* Danh sách tập */}
-        <div>
-          {book.volumeNumber ? (
-            <>
-              <h2 className="text-xl font-semibold mb-2">Danh sách tập</h2>
-              {/* render danh sách tập ở đây */}
-            </>
-          ) : (
-            <>
-              <h2 className="text-xl font-semibold mb-2">Độc giả nói gì về "{book.name}"</h2>
-             { <CommentSection bookId={book.id} />}
-            </>
-          )}
-        </div>
-      </div>
-
-      {showLoginModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
-            <h2 className="text-lg font-semibold mb-4 text-black">
-              Bạn cần đăng nhập để xem chi tiết sách
-            </h2>
-            <div className="flex gap-3 justify-center mt-4">
-              <button
-                onClick={() => navigate("/login")}
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold"
-              >
-                Đăng nhập ngay
-              </button>
-              <button
-                onClick={() => setShowLoginModal(false)}
-                className="bg-red-300 hover:bg-red-400 px-4 py-2 rounded-lg"
-              >
-                Đóng
-              </button>
-            </div>
-
           </div>
         </div>
-      )}
-    </div>
-    <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-2 text-3xl text-white">Cùng tác giả</h2>
-          <p className="text-gray-300">
-            Các tác phẩm khác của <span className="font-semibold">{book.author}</span> sẽ hiển thị ở đây.
-          </p>
-        </div>
+
+        {showLoginModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
+              <h2 className="text-lg font-semibold mb-4 text-black">
+                Bạn cần đăng nhập để xem chi tiết sách
+              </h2>
+              <div className="flex gap-3 justify-center mt-4">
+                <button
+                  onClick={() => navigate("/login")}
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold"
+                >
+                  Đăng nhập ngay
+                </button>
+                <button
+                  onClick={() => setShowLoginModal(false)}
+                  className="bg-red-300 hover:bg-red-400 px-4 py-2 rounded-lg"
+                >
+                  Đóng
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+      </div>
+      
+     <div className="mt-8 relative p-6 ">
+  <h2 className="text-2xl font-semibold mb-2 text-white">
+    Có thể bạn sẽ thích
+  </h2>
+
+  {/* Nút trái */}
+  <button
+    onClick={() =>
+      document.getElementById("suggestedScroll")?.scrollBy({ left: -250, behavior: "smooth" })
+    }
+    className="absolute left-0 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full z-10 w-[45px]"
+  >
+    ◀
+  </button>
+
+  <div
+    id="suggestedScroll"
+    className="flex gap-20 overflow-hidden scroll-smooth"
+  >
+    {suggestedBooks.map((b) => (
+      <div key={b.id} className="flex-shrink-0 w-48">
+        <BookCard
+          book={b}
+          onRead={() => handleRead(b)}
+          onToggleFavorite={handleToggleFavorite}
+          isFavorite={favorites.includes(b.id)}
+        />
+      </div>
+    ))}
+  </div>
+
+  {/* Nút phải */}
+  <button
+    onClick={() =>
+      document.getElementById("suggestedScroll")?.scrollBy({ left: 250, behavior: "smooth" })
+    }
+    className="absolute right-0 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full z-10 w-[45px]"
+  >
+    ▶
+  </button>
+</div>
+
     </div>
   );
 };

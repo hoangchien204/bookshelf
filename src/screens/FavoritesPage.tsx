@@ -12,63 +12,72 @@ const FavoritesPage: React.FC = () => {
   const [favoriteBooks, setFavoriteBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
+  const accessToken = localStorage.getItem("accessToken")
   const userId = localStorage.getItem('userId')
   useEffect(() => {
-  const fetchFavorites = async () => {
-    if (!userId) return;
+    const fetchFavorites = async () => {
+      if (!userId) return;
 
+      try {
+        const res = await axios.get(API.favorites, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        setFavoriteBooks(res.data);
+      } catch (err) {
+        setError('Không thể tải danh sách yêu thích.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFavorites();
+  }, [userId]);
+
+  const handleRead = (book: Book) => {
+    window.location.href = `/reader/${book.id}`;
+  };
+  const handleToggleFavorite = async (bookId: string) => {
     try {
+      await axios.post(
+        API.favorites, // toggle favorite
+        { bookId },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
       const res = await axios.get(API.favorites, {
-        headers: { "x-user-id": userId },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
-      setFavoriteBooks(res.data);
+
+      const updatedBooks = res.data;
+
+      setFavoriteBooks(updatedBooks);
     } catch (err) {
-      setError('Không thể tải danh sách yêu thích.');
-    } finally {
-      setLoading(false);
+      console.error(err);
     }
   };
-
-  fetchFavorites();
-}, [userId]);
-
- const handleRead = (book: Book) => {
-  window.location.href = `/reader/${book.id}`;
-};
-const handleToggleFavorite = async (bookId: string) => {
-  try {
-    await axios.post(
-      API.favorites, // toggle favorite
-      { bookId },
-      {
-        headers: { 'x-user-id': userId },
-      }
+  if (!userId) {
+    return (
+      <div className="p-6 text-center text-lg text-gray-700">
+        Vui lòng{' '}
+        <Link to="/login" className="text-blue-600 font-semibold hover:underline">
+          đăng nhập
+        </Link>{' '}
+        để sử dụng tính năng yêu thích.
+      </div>
     );
-
-    const res = await axios.get(API.favorites, {
-      headers: { 'x-user-id': userId },
-    });
-
-    const updatedBooks = res.data;
-
-    setFavoriteBooks(updatedBooks); 
-  } catch (err) {
-    console.error(err);
   }
-};
-if (!userId) {
-  return (
-    <div className="p-6 text-center text-lg text-gray-700">
-      Vui lòng{' '}
-      <Link to="/login" className="text-blue-600 font-semibold hover:underline">
-        đăng nhập
-      </Link>{' '}
-      để sử dụng tính năng yêu thích.
-    </div>
-  );
-}
-if (loading) return <Loading />;
+  if (loading) return <Loading />;
 
   return (
     <div

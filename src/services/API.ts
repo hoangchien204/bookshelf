@@ -12,6 +12,7 @@ const API = {
     activities: `${URL_LINK}/activities`,
     read: `${URL_LINK}/activities/read`,
     favorites: `${URL_LINK}/activities/favorites`,
+    random: `${URL_LINK}/books/suggest`,
     genres: `${URL_LINK}/genres`,
     series: `${URL_LINK}/series`,
     ratings: `${URL_LINK}/ratings`,

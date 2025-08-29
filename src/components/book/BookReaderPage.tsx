@@ -47,35 +47,28 @@ const BookReaderPage: React.FC = () => {
   const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
   const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(null);
   // const [selectedText, setSelectedText] = useState<string>("");
-
-  // lưu highlights
   const [highlights, setHighlights] = useState<Highlight[]>([]);
-
-  // laptop hay mobile
   const [isLaptop, setIsLaptop] = useState(window.innerWidth >= 1024);
+
   useEffect(() => {
     const handleResize = () => setIsLaptop(window.innerWidth >= 1024);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // ép viewMode = single trên mobile
   useEffect(() => {
     if (!isLaptop && viewMode !== "single") {
       setViewMode("single");
     }
   }, [isLaptop, viewMode]);
 
-  /** 📌 Fetch book */
   useEffect(() => {
     const fetchBook = async () => {
       try {
         setLoading(true);
         if (!userId || !accessToken) return;
 
-        const res = await fetch(API.books, {
-          headers: { "ngrok-skip-browser-warning": "true" },
-        });
+        const res = await fetch(API.books);
         const allBooks: Book[] = await res.json();
         const matched = allBooks.find((b) => b.id.includes(bookId || ""));
         if (!matched) {
@@ -90,7 +83,10 @@ const BookReaderPage: React.FC = () => {
         if (userId) {
           try {
             const res = await axios.get(`${API.activities}/read/${matched.id}`, {
-              headers: { "x-user-id": userId },
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+              },
             });
             const serverPage = res.data?.page;
             if (serverPage && serverPage > restoredPage) {
@@ -104,7 +100,6 @@ const BookReaderPage: React.FC = () => {
                   headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${accessToken}`,
-                    "x-user-id": userId,
                   },
                 }
               );
@@ -220,7 +215,7 @@ const BookReaderPage: React.FC = () => {
     selection.removeAllRanges();
   };
 
-  
+
   const handlePageChange = async (offset: number) => {
     const step = viewMode === "double" ? 2 : 1;
     const newPage = currentPage + offset * step;
@@ -263,15 +258,15 @@ const BookReaderPage: React.FC = () => {
       y: rect.top + window.scrollY - 40,
     });
   };
-useEffect(() => {
-  const onFs = () => {
-    const live = !!document.fullscreenElement;
-    console.log("[BookReaderPage] fullscreenchange → live =", live);
-    setIsFullscreen(live);
-  };
-  document.addEventListener("fullscreenchange", onFs);
-  return () => document.removeEventListener("fullscreenchange", onFs);
-}, []);
+  useEffect(() => {
+    const onFs = () => {
+      const live = !!document.fullscreenElement;
+      console.log("[BookReaderPage] fullscreenchange → live =", live);
+      setIsFullscreen(live);
+    };
+    document.addEventListener("fullscreenchange", onFs);
+    return () => document.removeEventListener("fullscreenchange", onFs);
+  }, []);
   /** 📌 UI */
   if (loading) return <Loading />;
   if (!book) return <div className="p-5 text-red-500">Không tìm thấy sách.</div>;
@@ -363,7 +358,7 @@ useEffect(() => {
                 <PdfPageWrapper
                   pageNumber={currentPage}
                   pageWidth={pageWidth}
-                   isFullscreen={isFullscreen}
+                  isFullscreen={isFullscreen}
                   onTextSelect={handleTextSelection}
                   highlights={highlights.filter((h) => h.page === currentPage)}
                 />

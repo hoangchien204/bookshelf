@@ -14,9 +14,9 @@ const AvatarMenu = ({ avatarUrl, username }: { avatarUrl?: string; username?: st
         }
         if (!isVisible) {
             setIsVisible(true);
-            setTimeout(() => setIsOpen(true), 10); // delay 10ms để trigger animation in
+            setTimeout(() => setIsOpen(true), 10);
         } else {
-            setIsOpen(true); // nếu đã visible thì mở luôn
+            setIsOpen(true); 
         }
     };
 
