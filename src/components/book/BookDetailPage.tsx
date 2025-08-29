@@ -12,7 +12,6 @@ import BookCard from "./BookCard";
 const BookDetailPage = () => {
    const navigate = useNavigate();
   const location = useLocation();
-  const { slugAndId } = useParams();
   const [rating, setRating] = useState<number>(0);
   const [relatedBooks, setRelatedBooks] = useState<Book[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -383,7 +382,53 @@ const BookDetailPage = () => {
         )}
       </div>
       
-     <div className="mt-8 relative p-6 ">
+     {/* Nếu có sách cùng tác giả */}
+{relatedBooks.length > 0 && (
+  <div className="mt-8 relative p-6 ">
+    <h2 className="text-2xl font-semibold mb-2 text-white">
+      Sách cùng tác giả
+    </h2>
+
+    {/* Nút trái */}
+    <button
+      onClick={() =>
+        document.getElementById("relatedScroll")?.scrollBy({ left: -250, behavior: "smooth" })
+      }
+      className="absolute left-0 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full z-10 w-[45px]"
+    >
+      ◀
+    </button>
+
+    <div
+      id="relatedScroll"
+      className="flex gap-20 overflow-hidden scroll-smooth"
+    >
+      {relatedBooks.map((b) => (
+        <div key={b.id} className="flex-shrink-0 w-48">
+          <BookCard
+            book={b}
+            onRead={() => handleRead(b)}
+            onToggleFavorite={handleToggleFavorite}
+            isFavorite={favorites.includes(b.id)}
+          />
+        </div>
+      ))}
+    </div>
+
+    {/* Nút phải */}
+    <button
+      onClick={() =>
+        document.getElementById("relatedScroll")?.scrollBy({ left: 250, behavior: "smooth" })
+      }
+      className="absolute right-0 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full z-10 w-[45px]"
+    >
+      ▶
+    </button>
+  </div>
+)}
+
+{/* Phần "Có thể bạn sẽ thích" luôn có */}
+<div className="mt-8 relative p-6 ">
   <h2 className="text-2xl font-semibold mb-2 text-white">
     Có thể bạn sẽ thích
   </h2>
@@ -424,6 +469,7 @@ const BookDetailPage = () => {
     ▶
   </button>
 </div>
+
 
     </div>
   );
