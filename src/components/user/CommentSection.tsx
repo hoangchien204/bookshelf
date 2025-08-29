@@ -31,7 +31,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ bookId }) => {
   const [newReview, setNewReview] = useState("");
   const [rating, setRating] = useState(0);
   const [activeTab, setActiveTab] = useState<"comments" | "reviews">("comments");
-  const userId = localStorage.getItem("userId");
   const [visibleComments, setVisibleComments] = useState(5);
   const [visibleReviews, setVisibleReviews] = useState(5);
   const accessToken = localStorage.getItem("accessToken")
