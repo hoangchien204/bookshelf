@@ -17,11 +17,11 @@ interface SeriesOption {
 interface AddBookModalProps {
   show: boolean;
   onCancel: () => void;
-  bookData: BookData; 
-  setBookData: React.Dispatch<React.SetStateAction<BookData>>; 
-  onSave: (newBookData: BookData) => Promise<void>; 
+  bookData: BookData;
+  setBookData: React.Dispatch<React.SetStateAction<BookData>>;
+  onSave: (newBookData: BookData) => Promise<void>;
   genreOptions: GenreOption[];
-  onSuccess?: () => void; 
+  onSuccess?: () => void;
 }
 
 const AddBookModal: React.FC<AddBookModalProps> = ({
@@ -33,7 +33,7 @@ const AddBookModal: React.FC<AddBookModalProps> = ({
   const [bookData, setBookData] = useState<BookData>({
     name: '',
     author: '',
-    genre: '',
+    genre: null,
     description: '',
     file: null,
     cover: null,
@@ -148,8 +148,9 @@ const AddBookModal: React.FC<AddBookModalProps> = ({
     const newErrors: { [key: string]: string } = {};
     if (!bookData.name?.trim()) newErrors.name = 'Vui lòng nhập tên sách';
     if (!bookData.author?.trim()) newErrors.author = 'Vui lòng nhập tên tác giả';
-    if (!bookData.genre?.trim()) newErrors.genre = 'Vui lòng chọn thể loại';
-    if (!bookData.file) newErrors.file = 'Vui lòng chọn file PDF';
+    if (!bookData.genre || !bookData.genre.id || !bookData.genre.id.trim()) {
+      newErrors.genre = 'Vui lòng chọn thể loại';
+    } if (!bookData.file) newErrors.file = 'Vui lòng chọn file PDF';
     if (!bookData.cover) newErrors.cover = 'Vui lòng chọn ảnh bìa';
 
     if (bookData.isSeries) {
@@ -171,13 +172,13 @@ const AddBookModal: React.FC<AddBookModalProps> = ({
       const formData = new FormData();
       formData.append('name', bookData.name);
       formData.append('author', bookData.author);
-      formData.append('genre', bookData.genre);
+      formData.append('genreId', bookData.genre?.id || '');
       formData.append('description', bookData.description || '');
       formData.append('isSeries', String(!!bookData.isSeries));
       if (bookData.seriesId) formData.append('seriesId', bookData.seriesId);
       if (bookData.seriesTitleNew) formData.append('seriesTitleNew', bookData.seriesTitleNew);
       if (bookData.volumeNumber != null) formData.append('volumeNumber', String(bookData.volumeNumber));
-      if (bookData.file) formData.append('pdf', bookData.file);
+      if (bookData.file) formData.append('bookFile', bookData.file);
       if (bookData.cover) formData.append('cover', bookData.cover);
 
       const res = await fetch(`${API.books}`, { method: 'POST', body: formData });
@@ -203,7 +204,7 @@ const AddBookModal: React.FC<AddBookModalProps> = ({
 
         <input
           type="file"
-          accept=".pdf"
+          accept=".pdf,.epub"
           onChange={(e) => handleChange('file', e.target.files?.[0] || null)}
           className="mb-1 w-full text-sm"
         />
@@ -229,8 +230,15 @@ const AddBookModal: React.FC<AddBookModalProps> = ({
 
         <Select
           options={genreOptions}
-          value={genreOptions.find((opt) => opt.label === bookData.genre)}
-          onChange={(selected) => handleChange('genre', (selected as any)?.label || '')}
+          value={bookData.genre ? { label: bookData.genre.name, value: bookData.genre.id } : null}
+          onChange={(selected) => {
+            if (selected) {
+              const option = selected as GenreOption;
+              handleChange('genre', { id: option.value, name: option.label });
+            } else {
+              handleChange('genre', null);
+            }
+          }}
           placeholder="Chọn thể loại..."
           isClearable
           className="mb-1"

@@ -254,7 +254,7 @@ const BookDetailPage = () => {
             <RatingBadge score={rating} />
           </span>
           <span className="bg-gray-700 text-white text-sm px-3 py-1 rounded-full flex justify-center items-center">
-            {book.genre || "Không rõ"}
+            {book.genre?.name || "Không rõ"}
           </span>
         </div>
 
@@ -282,7 +282,7 @@ const BookDetailPage = () => {
               </div>
               <div>
                 <div className="text-gray-300 font-medium">Thể loại</div>
-                <div className="text-white">{book.genre || "Không rõ"}</div>
+                <div className="text-white">{book.genre?.name || "Không rõ"}</div>
               </div>
               <div>
                 <div className="text-gray-300 font-medium">Trạng thái</div>

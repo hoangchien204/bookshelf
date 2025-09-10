@@ -19,7 +19,7 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-
+  const currentUserId = localStorage.getItem('userId')
   const fetchUsers = async () => {
     try {
       const response = await axios(API.users);
@@ -32,6 +32,11 @@ const UserManagement = () => {
   };
 
   const deleteUser = async (id: string) => {
+    if(id === currentUserId){
+      alert("Bạn không thể xóa người này")
+      return;
+    }
+
     if (confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
       try {
         await axios(`${API.users}/${id}`, {
@@ -103,7 +108,7 @@ const UserManagement = () => {
                     onClick={() => deleteUser(user.id)}
                     className="text-red-600 hover:underline"
                   >
-                    <FontAwesomeIcon icon={faTrash} /> Xóa
+                   Xóa
                   </button>
                 </td>
               </tr>

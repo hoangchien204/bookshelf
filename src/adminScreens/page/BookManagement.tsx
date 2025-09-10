@@ -5,27 +5,19 @@ import { FaPlus, FaSearch } from 'react-icons/fa';
 import AddBookModal from '../components/AddBookModal';
 import EditBookModal from '../components/EditBookModal';
 import API from '../../services/API';
+import type { BookData } from '../../types/BookData';
 
 interface Book {
   id: string;
   name: string;
   author: string;
   description: string;
-  genre: string; // đây là genreId (id thể loại)
+  genreId: string; // 👈 rõ ràng đây là FK tới Genre
 }
 
 interface Genre {
   id: string;
   name: string;
-}
-
-interface BookData {
-  name: string;
-  author: string;
-  genre: string; // id thể loại
-  description: string;
-  file?: File | null;
-  cover?: File | null;
 }
 
 const BookManagement = () => {
@@ -35,7 +27,7 @@ const BookManagement = () => {
   const [bookData, setBookData] = useState<BookData>({
     name: '',
     author: '',
-    genre: '',
+    genre: null, // 👈 để trống ban đầu
     description: '',
     file: null,
     cover: null,
@@ -50,7 +42,6 @@ const BookManagement = () => {
       .then((res) => setGenres(res.data))
       .catch((err) => console.error('Lỗi khi lấy genres:', err));
   }, []);
-
 
   const fetchBooks = async () => {
     try {
@@ -72,43 +63,42 @@ const BookManagement = () => {
 
   // Xử lý lưu sách (thêm hoặc sửa)
   const handleSaveBook = async (newBookData: BookData) => {
-  try {
-    const formData = new FormData();
-    formData.append('name', newBookData.name);
-    formData.append('author', newBookData.author);
-    formData.append('description', newBookData.description);
+    try {
+      const formData = new FormData();
+      formData.append('name', newBookData.name);
+      formData.append('author', newBookData.author);
+      formData.append('description', newBookData.description);
 
-    // 🔁 Map genreId thành genreName
-    const genreName = genres.find((g) => g.id === newBookData.genre)?.name;
-    if (!genreName) {
-      throw new Error('Thể loại không hợp lệ');
-    }
-    formData.append('genre', genreName); // 👈 Lưu theo tên, không phải ID
+      // 👇 gửi đúng genreId
+      if (!newBookData.genre?.id) {
+        throw new Error('Thể loại không hợp lệ');
+      }
+      formData.append('genreId', newBookData.genre?.id);
 
-    if (newBookData.file) {
-      formData.append('pdf', newBookData.file);
-    }
-    if (newBookData.cover) {
-      formData.append('cover', newBookData.cover);
-    }
+      if (newBookData.file) {
+        formData.append('bookFile', newBookData.file);
+      }
+      if (newBookData.cover) {
+        formData.append('cover', newBookData.cover);
+      }
 
-    if (editingBook) {
-      await axios.put(`${API.books}/${editingBook.id}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      setEditingBook(null);
-    } else {
-      await axios.post(API.books, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-    }
+      if (editingBook) {
+        await axios.put(`${API.books}/${editingBook.id}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        setEditingBook(null);
+      } else {
+        await axios.post(API.books, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
 
-    setShowAddModal(false);
-    fetchBooks();
-  } catch (error) {
-    console.error(error);
-  }
-};
+      setShowAddModal(false);
+      fetchBooks();
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   // Xóa sách
   const deleteBook = async (id: string) => {
@@ -171,7 +161,7 @@ const BookManagement = () => {
                 <td className="border p-2">{book.name}</td>
                 <td className="border p-2">{book.author}</td>
                 <td className="border p-2">
-                  {genres.find((g) => g.id === book.genre)?.name || book.genre}
+                  {genres.find((g) => g.id === book.genreId)?.name || 'Không xác định'}
                 </td>
                 <td className="border p-2 text-center space-x-2">
                   <button
@@ -207,7 +197,7 @@ const BookManagement = () => {
           setBookData={setBookData}
           onSave={handleSaveBook}
           onCancel={() => setShowAddModal(false)}
-          genreOptions={genres.map((g) => ({ label: g.name, value: g.id }))}
+          genreOptions={genres.map((g) => ({ label: g.name, value: g.id }))} // 👈 truyền option chuẩn
         />
       )}
 
@@ -215,7 +205,7 @@ const BookManagement = () => {
       {editingBook && (
         <EditBookModal
           bookId={editingBook.id}
-          currentGenreId={editingBook.genre}
+          currentGenreId={editingBook.genreId} // 👈 gửi id
           currentDescription={editingBook.description}
           genres={genres}
           onClose={() => setEditingBook(null)}

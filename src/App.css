@@ -81,9 +81,6 @@ body.loading-mode .tabbar {
   z-index: 10;
   opacity: 0;
 }
-
-/* Canvas mặc định (normal mode) */
-
 .react-pdf__Page__canvas {
   display: block;
   max-width: 100% !important;
@@ -95,17 +92,6 @@ body.loading-mode .tabbar {
   display: block !important;
 }
 
-.pdf-page-wrapper .react-pdf__Page__textContent {
-  opacity: 1 !important; /* luôn hiển thị text layer */
-}
-
-
-.react-pdf__Page__textContent span::selection {
-  background: rgba(0, 0, 255, 0.2); 
-  color: transparent !important;
-}
-
-/* Lúc bình thường → hiện canvas */
 
 @tailwind base;
 @tailwind components;

@@ -3,7 +3,7 @@ import { FiLayout, FiCheck } from "react-icons/fi";
 
 interface ViewModeSwitcherProps {
   mode: "single" | "double" | "scroll";
-  onChange: (mode: "single" | "double" | "scroll") => void;
+  onChange: (mode: "single" | "double") => void;
 }
 
 const ViewModeSwitcher: React.FC<ViewModeSwitcherProps> = ({ mode, onChange }) => {
@@ -21,7 +21,7 @@ const ViewModeSwitcher: React.FC<ViewModeSwitcherProps> = ({ mode, onChange }) =
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const renderItem = (label: string, value: "single" | "double" | "scroll", icon: string) => (
+  const renderItem = (label: string, value: "single" | "double" , icon: string) => (
     <button
       key={value}
       onClick={() => {
@@ -58,7 +58,7 @@ const ViewModeSwitcher: React.FC<ViewModeSwitcherProps> = ({ mode, onChange }) =
     <div className="space-y-1">
       {renderItem("1 Trang", "single", "📄")}
       {renderItem("2 Trang", "double", "📑")}
-      {renderItem("Cuộn dọc", "scroll", "📜")}
+      {/* {renderItem("Cuộn dọc", "scroll", "📜")} */}
     </div>
   </div>
 )}

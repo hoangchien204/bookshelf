@@ -48,22 +48,24 @@ const GenreBook: React.FC = () => {
   }
 };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Bạn có chắc muốn xóa thể loại này?')) return;
-    try {
-      await axios.delete(`${API.genres}/${id}`);
-      fetchGenres();
-      setDeleteBlockedIds((prev) => prev.filter((gid) => gid !== id));
-    } catch (err: any) {
-      const msg = err.response?.data?.message || '';
-      // Nếu server trả về lỗi do liên kết sách, ta đánh dấu thể loại này không thể xóa
-      if (msg.includes('sách')) {
-        setDeleteBlockedIds((prev) => [...prev, id]);
-      } else {
-        console.error('Xóa thể loại thất bại:', err);
-      }
+ const handleDelete = async (id: string) => {
+  if (!window.confirm('Bạn có chắc muốn xóa thể loại này?')) return;
+  try {
+    await axios.delete(`${API.genres}/${id}`);
+    fetchGenres();
+    setDeleteBlockedIds((prev) => prev.filter((gid) => gid !== id));
+    alert("✅ Xóa thể loại thành công!");
+  } catch (err: any) {
+    const msg = err.response?.data?.message || '';
+    if (msg.includes('sách')) {
+      setDeleteBlockedIds((prev) => [...prev, id]);
+      alert("❌ Không thể xóa: Thể loại đang liên kết với sách.");
+    } else {
+      console.error('Xóa thể loại thất bại:', err);
+      alert("❌ Xóa thể loại thất bại. Vui lòng thử lại.");
     }
-  };
+  }
+};
 
   const handleEdit = (genre: Genre) => {
     setEditGenreId(genre.id);

@@ -8,12 +8,6 @@ import axios from "axios";
 import BookReaderPage from "./BookReaderPage";
 import BookReaderMobile from "./BookReaderMobile";
 
-interface Highlight {
-  page: number;
-  rects: { x: number; y: number; w: number; h: number }[];
-  color: string;
-  text: string;
-}
 
 const BookReaderWrapper: React.FC = () => {
   const { slugAndId } = useParams();
@@ -26,7 +20,7 @@ const BookReaderWrapper: React.FC = () => {
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [highlights, setHighlights] = useState<Highlight[]>([]);
+  // const [highlights, setHighlights] = useState<Highlight[]>([]);
   const [isLaptop, setIsLaptop] = useState(window.innerWidth >= 1024);
 
   /** 📌 Responsive check */
@@ -44,7 +38,10 @@ const BookReaderWrapper: React.FC = () => {
         if (!userId || !accessToken) return;
 
         const res = await fetch(API.books, {
-          headers: { "ngrok-skip-browser-warning": "true" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
         });
         const allBooks: Book[] = await res.json();
         const matched = allBooks.find((b) => b.id.includes(bookId || ""));
@@ -59,7 +56,10 @@ const BookReaderWrapper: React.FC = () => {
 
         try {
           const res = await axios.get(`${API.activities}/read/${matched.id}`, {
-            headers: { "x-user-id": userId },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
           });
           const serverPage = res.data?.page;
           if (serverPage && serverPage > restoredPage) {
@@ -73,7 +73,6 @@ const BookReaderWrapper: React.FC = () => {
                 headers: {
                   "Content-Type": "application/json",
                   Authorization: `Bearer ${accessToken}`,
-                  "x-user-id": userId,
                 },
               }
             );
@@ -102,12 +101,6 @@ const BookReaderWrapper: React.FC = () => {
   ) : (
     <BookReaderMobile
       book={book}
-      currentPage={currentPage}
-      setCurrentPage={setCurrentPage}
-      numPages={numPages}
-      setNumPages={setNumPages}
-      highlights={highlights}
-      setHighlights={setHighlights}
       userId={userId}
       accessToken={accessToken}
     />

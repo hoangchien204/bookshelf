@@ -1,7 +1,5 @@
 import { Page } from "react-pdf";
-import type { PDFPageProxy } from "pdfjs-dist";
 import HighlightOverlay from "./HighlightOverlay";
-import { useEffect, useRef } from "react";
 
 interface PdfPageWrapperProps {
   pageNumber: number;
@@ -23,63 +21,6 @@ export default function PdfPageWrapper({
   highlights = [],
   isFullscreen = false, // 👈 default
 }: PdfPageWrapperProps) {
-  const lastPdfPageRef = useRef<PDFPageProxy | null>(null);
-
-  const syncTextLayer = (pdfPage: PDFPageProxy) => {
-    lastPdfPageRef.current = pdfPage;
-        console.log(`[PdfPageWrapper] 🔄 syncTextLayer page ${pdfPage.pageNumber}, fullscreen=${isFullscreen}`);
-
-    const pageNum = pdfPage.pageNumber;
-    const textLayer = document.querySelector(
-      `#page-${pageNum} .react-pdf__Page__textContent`
-    ) as HTMLElement | null;
-    const canvas = document.querySelector(
-      `#page-${pageNum} canvas`
-    ) as HTMLCanvasElement | null;
-
-    if (textLayer && canvas) {
-      const canvasStyle = window.getComputedStyle(canvas);
-
-      textLayer.style.transform = canvasStyle.transform;
-      textLayer.style.transformOrigin = canvasStyle.transformOrigin;
-
-      textLayer.style.width = canvas.style.width;
-      textLayer.style.height = canvas.style.height;
-
-      textLayer.style.position = "absolute";
-      textLayer.style.top = "0";
-      textLayer.style.left = "0";
-
-      // Ẩn text thực (chỉ dùng để select)
-      textLayer.style.opacity = "0";
-      textLayer.querySelectorAll("span").forEach((el) => {
-        (el as HTMLElement).style.color = "transparent";
-      });
-    }
-  };
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (lastPdfPageRef.current) {
-        syncTextLayer(lastPdfPageRef.current);
-      }
-    };
-    window.addEventListener("resize", handleResize);
-    document.addEventListener("fullscreenchange", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      document.removeEventListener("fullscreenchange", handleResize);
-    };
-  }, []);
-
-  useEffect(() => {
-          console.log("[PdfPageWrapper] 📏 Resize hoặc FullscreenChange -> gọi sync");
-
-    if (lastPdfPageRef.current) {
-      syncTextLayer(lastPdfPageRef.current);
-    }
-  }, [isFullscreen]);
-
   return (
     <div
       id={`page-${pageNumber}`}
@@ -93,9 +34,8 @@ export default function PdfPageWrapper({
         width={fitMode === "width" ? pageWidth : undefined}
         height={fitMode === "height" ? window.innerHeight - 96 : undefined}
         renderMode="canvas"
-        renderTextLayer
+        renderTextLayer={false}
         renderAnnotationLayer={false}
-        onRenderSuccess={(pdfPage) => syncTextLayer(pdfPage)}
       />
 
       <HighlightOverlay highlights={highlights} />
