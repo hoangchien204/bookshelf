@@ -2,13 +2,21 @@ import { useState } from "react";
 import { IoCheckmark } from "react-icons/io5";
 
 const backgrounds = ["#000000", "#e5e7eb", "#d6d3d1", "#f5f0dc"];
-const fonts = ["Mặc định", "Netflix Sans", "Arial", "Bookerly", "Minion", "Times New Roman", "Roboto"];
+const fonts = ["Mặc định",
+    "Helvetica",
+    "Times New Roman",
+    "Georgia",
+    "Courier New",
+    "Open Sans",
+];
 
 interface FontMenuProps {
     fontSize: number;
     fontFamily: string;
     background: string;
     scrollMode: boolean;
+    isMobile: boolean
+
     onFontSizeChange: (size: number) => void;
     onFontChange: (font: string) => void;
     onBackgroundChange: (bg: string) => void;
@@ -20,6 +28,8 @@ export default function FontMenu({
     fontSize,
     fontFamily,
     background,
+    isMobile = false,
+
     onFontSizeChange,
     onFontChange,
     onBackgroundChange,
@@ -56,30 +66,31 @@ export default function FontMenu({
 
 
             {/* Dàn trang */}
-            <div>
-                <h4 className="font-semibold mb-2">Dàn trang</h4>
-                <div className="flex gap-3">
-                    <button
-                        onClick={() => {
-                            setLayout("single");
-                            onLayoutChange?.("single");
-                        }}
-                        className={`px-3 py-2 rounded ${layout === "single" ? "bg-gray-700" : "bg-gray-800 hover:bg-gray-700"}`}
-                    >
-                        ☰
-                    </button>
-                    <button
-                        onClick={() => {
-                            setLayout("double");
-                            onLayoutChange?.("double");
-                        }}
-                        className={`px-3 py-2 rounded ${layout === "double" ? "bg-gray-700" : "bg-gray-800 hover:bg-gray-700"}`}
-                    >
-                        ☷
-                    </button>
+            {!isMobile && !scrollMode && (
+                <div>
+                    <h4 className="font-semibold mb-2">Dàn trang</h4>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => {
+                                setLayout("single");
+                                onLayoutChange?.("single");
+                            }}
+                            className={`px-3 py-2 rounded ${layout === "single" ? "bg-gray-700" : "bg-gray-800 hover:bg-gray-700"}`}
+                        >
+                            ☰
+                        </button>
+                        <button
+                            onClick={() => {
+                                setLayout("double");
+                                onLayoutChange?.("double");
+                            }}
+                            className={`px-3 py-2 rounded ${layout === "double" ? "bg-gray-700" : "bg-gray-800 hover:bg-gray-700"}`}
+                        >
+                            ☷
+                        </button>
+                    </div>
                 </div>
-            </div>
-
+            )}
             {/* Cuộn dọc */}
             <div className="flex justify-between items-center">
                 <span>Cuộn dọc trang</span>
@@ -109,18 +120,25 @@ export default function FontMenu({
                 <div className="flex gap-2 mb-2">
                     <button
                         onClick={() => onFontSizeChange(Math.max(10, fontSize - 2))}
-                        className="px-3 py-1 bg-gray-700 rounded"
+                        disabled={fontSize <= 10}
+                        className={`px-3 py-1 rounded ${fontSize <= 10
+                            ? "bg-gray-500 cursor-not-allowed opacity-50"
+                            : "bg-gray-700 hover:bg-gray-600"
+                            }`}
                     >
                         A-
                     </button>
                     <button
-                        onClick={() => onFontSizeChange(Math.min(40, fontSize + 2))}
-                        className="px-3 py-1 bg-gray-700 rounded"
+                        onClick={() => onFontSizeChange(Math.min(30, fontSize + 2))}
+                        disabled={fontSize >= 30}
+                        className={`px-3 py-1 rounded ${fontSize >= 30
+                            ? "bg-gray-500 cursor-not-allowed opacity-50"
+                            : "bg-gray-700 hover:bg-gray-600"
+                            }`}
                     >
                         A+
                     </button>
                 </div>
-                <p className="text-sm text-gray-400">Cỡ hiện tại: {fontSize}px</p>
             </div>
 
             {/* Font list */}
@@ -133,6 +151,7 @@ export default function FontMenu({
                             className={`flex justify-between items-center w-full px-3 py-2 rounded ${fontFamily === f ? "bg-gray-700" : "hover:bg-gray-800"
                                 }`}
                             style={{ fontFamily: f !== "Mặc định" ? f : "inherit" }}
+
                         >
                             {f}
                             {fontFamily === f && <IoCheckmark />}

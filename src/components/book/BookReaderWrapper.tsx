@@ -16,9 +16,7 @@ const BookReaderWrapper: React.FC = () => {
   const accessToken = localStorage.getItem("accessToken");
   const bookId = slugAndId?.split("-").slice(-1)[0];
 
-  const [book, setBook] = useState<Book | null>(null);
-  const [numPages, setNumPages] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [book, setBook] = useState<Book | null>(null)
   const [loading, setLoading] = useState(true);
   // const [highlights, setHighlights] = useState<Highlight[]>([]);
   const [isLaptop, setIsLaptop] = useState(window.innerWidth >= 1024);
@@ -80,8 +78,6 @@ const BookReaderWrapper: React.FC = () => {
         } catch (err) {
           console.error("Sync server error:", err);
         }
-
-        setCurrentPage(restoredPage);
       } catch (err) {
         console.error(err);
       } finally {

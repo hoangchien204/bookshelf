@@ -1,22 +1,12 @@
-import { ReactReader, ReactReaderStyle, type IReactReaderStyle } from "react-reader";
+import { ReactReaderStyle, type IReactReaderStyle } from "react-reader";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import API from "../../services/API";
-interface EpubReaderWrapperProps {
-  fileUrl: string;
-  bookId: string;
-  location?: string | number | null;
-  onLocationChange?: (loc: string | number) => void;
-  fontSize?: number;
-  fontFamily?: string;
-  background?: string;
-  scrollMode?: boolean;
-  viewMode?: "single" | "double";
-  onReady?: (rendition: any, toc: { label: string; href: string }[], notes: any[]) => void;
-  onNotesLoaded?: (notes: HighlightNote[]) => void;
-}
+import type { EpubReaderWrapperProps } from "../../types/EpubReader";
+import EpubReaderPC from "./EpubReaderPC";
+import EpubReaderMobile from "./EpubReaderMobi";
 
-interface HighlightNote {
+export interface HighlightNote {
   id: string;
   cfiRange: string;
   note?: string;
@@ -34,11 +24,12 @@ export default function CustomEpubReader({
   scrollMode,
   viewMode,
   onReady,
-  onNotesLoaded
+  onNotesLoaded,
 }: EpubReaderWrapperProps) {
   const [bookData, setBookData] = useState<ArrayBuffer | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [rendition, setRendition] = useState<any>(null);
+  const isMobile = window.innerWidth < 1024;
 
   // Highlight + note
   const [notes, setNotes] = useState<HighlightNote[]>([]);
@@ -93,20 +84,21 @@ export default function CustomEpubReader({
       })
       .catch((err) => console.error("❌ Load highlights error:", err));
   }, [bookId, token]);
-useEffect(() => {
-  if (!rendition) return;
-  const fixTop = () => {
-    const containers = document.querySelectorAll(".epub-container");
-    containers.forEach((c) => {
-      (c as HTMLElement).style.top = "-54px";
-    });
-  };
-  rendition.on("relocated", fixTop);
-  return () => rendition.off("relocated", fixTop);
-}, [rendition]);
+
+  useEffect(() => {
+    if (!rendition) return;
+    const fixTop = () => {
+      const containers = document.querySelectorAll(".epub-container");
+      containers.forEach((c) => {
+        (c as HTMLElement).style.top = "-54px";
+      });
+    };
+    rendition.on("relocated", fixTop);
+    return () => rendition.off("relocated", fixTop);
+  }, [rendition]);
+
   useEffect(() => {
     if (rendition) {
-      // Background + text color
       rendition.themes.register("custom", {
         body: {
           "background": background,
@@ -139,15 +131,33 @@ useEffect(() => {
         { note: n.note },
         () => openEditModal(n),
         `hl-${n.id}`,   // class unique
-        { fill: n.color || "yellow" }
+        { fill: n.color || "#d5b8ff" }
       );
     });
   }, [rendition, notes]);
 
+  const loadHighlights = async () => {
+    if (!bookId || !token) return;
+    try {
+      const res = await axios.get(`${API.highlights}/${bookId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const highlights = Array.isArray(res.data) ? res.data : res.data.data;
+      setNotes(highlights || []);
+      onNotesLoaded?.(highlights || []);
+    } catch (err) {
+      console.error("❌ Load highlights error:", err);
+    }
+  };
+
+  useEffect(() => {
+    loadHighlights();
+  }, [bookId, token]);
+
   useEffect(() => {
     if (rendition) {
-      rendition.flow(scrollMode ? "scrolled-doc" : "paginated"); // ✅ cuộn dọc hoặc lật trang
-      rendition.spread(viewMode === "double" ? "always" : "none"); // ✅ single vs double page
+      rendition.flow(scrollMode ? "scrolled-doc" : "paginated");
+      rendition.spread(viewMode === "double" ? "always" : "none");
     }
   }, [rendition, scrollMode, viewMode]);
   // Count characters in note
@@ -155,9 +165,9 @@ useEffect(() => {
     setCharCount(tempNote.length);
   }, [tempNote]);
 
-  // Add new highlight
   const handleAddNote = async (color: string, note?: string) => {
     if (!tempCFI) return;
+    const finalColor = color || "#d5b8ff";
 
     try {
       const res = await axios.post(
@@ -165,7 +175,7 @@ useEffect(() => {
         {
           bookId,
           cfiRange: tempCFI,
-          color,
+          color: finalColor,
           note,
         },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -173,13 +183,30 @@ useEffect(() => {
 
       const savedNote = res.data;
       setNotes((prev) => [...prev.filter((n) => n.cfiRange !== tempCFI), savedNote]);
+      loadHighlights();
     } catch (err) {
       console.error("❌ Save highlight error:", err);
     }
   };
 
+  const handleDeleteNote = async (id: string) => {
+    try {
+      const note = notes.find((n) => n.id === id);
+      if (!note) return;
+
+      rendition?.annotations.remove(note.cfiRange, "highlight");
+
+      await axios.delete(`${API.highlights}/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setNotes((prev) => prev.filter((n) => n.id !== id));
+    } catch (err) {
+      console.error("❌ Delete highlight error:", err);
+    }
+  };
   const customStyles: IReactReaderStyle = {
-    ...ReactReaderStyle, // giữ lại toàn bộ style gốc
+    ...ReactReaderStyle,
     readerArea: {
       ...ReactReaderStyle.readerArea,
       background: background,
@@ -187,11 +214,11 @@ useEffect(() => {
       margin: 0,
       height: "100%",
     },
+
     arrow: {
       ...ReactReaderStyle.arrow,
-      background: "#313131ff", // xanh dương
-      color: "#fff",
-      borderRadius: "100%", // tròn
+      background: "#313131ff",
+      borderRadius: "100%",
       width: "34px",
       height: "34px",
       display: "flex",
@@ -228,11 +255,6 @@ useEffect(() => {
     // Sinh location
     rend.book.ready
       .then(() => rend.book.locations.generate(1024))
-      .then(() => {
-        console.log("✅ Locations generated:", rend.book.locations.length);
-      });
-
-    // Lấy TOC
     const tocData = rend.book.navigation.toc.map((item: any) => ({
       label: item.label,
       href: item.href,
@@ -261,139 +283,70 @@ useEffect(() => {
 
   if (error) return <div className="text-center text-red-600">{error}</div>;
   if (!bookData) return <div className="text-center">⏳ Đang tải EPUB...</div>;
-
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      {/* ReactReader */}
-      {/* <div className="relative flex-1 reader-container" style={{ background: background }}> */}
-      <ReactReader
-        url={bookData}
-        showToc={false}
-        location={location ?? null}
-        locationChanged={(epubcfi) => onLocationChange?.(epubcfi)}
-        getRendition={(rend) => {
-          setRendition(rend);
+    isMobile ? (
 
-          // 🚀 Fix viền trên của epub container
-          requestAnimationFrame(() => {
-            const containers = document.querySelectorAll(".epub-container");
-            containers.forEach((c) => {
-              (c as HTMLElement).style.top = "-54px";
-            });
-          });
-
-          setupRendition(
-            rend,
-            (rendition, tocData, noteData) => {
-              onReady?.(rendition, tocData, noteData);
-              onNotesLoaded?.(noteData);
-            },
-            (cfiRange, contents) => {
-              setEditingNote(null);
-              setTempCFI(cfiRange);
-              setTempNote("");
-              setTempColor("");
-              setShowModal(true);
-              contents.window.getSelection().removeAllRanges();
-            }
-          );
-        }}
-        readerStyles={customStyles}
+      <EpubReaderMobile
+        fileUrl={fileUrl}
+        bookId={bookId}
+        bookData={bookData}
+        error={error}
+        location={location}
+        onLocationChange={onLocationChange}
+        setRendition={setRendition}
+        customStyles={customStyles}
+        editingNote={editingNote}
+        setEditingNote={setEditingNote}
+        handleAddNote={handleAddNote}
+        handleUpdateNote={handleUpdateNote}
+        notes={notes}
+        showModal={showModal}
+        setShowModal={setShowModal}
+        resetModal={resetModal}
+        tempCFI={tempCFI}
+        setTempCFI={setTempCFI}
+        tempNote={tempNote}
+        setTempNote={setTempNote}
+        tempColor={tempColor}
+        setTempColor={setTempColor}
+        charCount={charCount}
+        rendition={rendition}
+        setupRendition={setupRendition}
+        onReady={onReady}
+        onNotesLoaded={onNotesLoaded}
       />
-      {/* </div> */}
-
-
-      {/* Modal ghi chú */}
-      {showModal && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-          onClick={resetModal}
-        >
-          <div
-            className="bg-black dark:bg-gray-900 p-4 rounded-xl w-[276px] shadow-lg relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={resetModal}
-              className="absolute top-4 right-2 w-5 h-5 bg-white rounded-full flex justify-center items-center font-bold leading-none text-[10px]"
-            >
-              x
-            </button>
-
-            <h3 className="font-bold mb-3 text-white">Ghi chú</h3>
-
-            {/* 4 ô màu */}
-            <div className="grid grid-cols-4 gap-3 mb-4">
-              {["#fff9b1", "#aee1ff", "#ffc4d6", "#d5b8ff"].map((c) => (
-                <div
-                  key={c}
-                  className={`h-10 rounded-lg cursor-pointer border-2 flex items-center justify-center 
-              transition-transform ${tempColor === c ? "border-green-500 scale-105" : "border-transparent"}`}
-                  style={{ background: c }}
-                  onClick={() => {
-                    if (editingNote) {
-                      // Xóa highlight cũ khỏi epub.js
-                      rendition?.annotations.remove(editingNote.cfiRange, "highlight");
-                      handleUpdateNote(editingNote.id, c, editingNote.note);
-                      resetModal();
-                    } else if (!showTextbox) {
-                      handleAddNote(c);
-                      resetModal();
-                    } else {
-                      setTempColor(c);
-                    }
-                  }}
-                >
-                  {tempColor === c && <span className="text-green-600 font-bold">✓</span>}
-                </div>
-              ))}
-            </div>
-
-            {/* Nút thêm ghi chú */}
-            {!showTextbox && (
-              <button
-                onClick={() => setShowTextbox(true)}
-                className="w-full py-2 rounded-full bg-gray-300 text-gray-800 dark:bg-gray-700 dark:text-white"
-              >
-                Thêm ghi chú
-              </button>
-            )}
-
-            {/* Textbox nhập note */}
-            {showTextbox && (
-              <>
-                <textarea
-                  value={tempNote}
-                  onChange={(e) => setTempNote(e.target.value.slice(0, 200))}
-                  className="w-full p-2 border rounded mb-2 dark:bg-gray-800 dark:text-white resize-none"
-                  rows={3}
-                  placeholder="Nhập ghi chú"
-                />
-                <div className="flex justify-between items-center">
-                  <div className={`text-xs ${charCount >= 200 ? "text-red-500" : "text-gray-400"}`}>
-                    {charCount}/200 ký tự
-                  </div>
-                  <button
-                    onClick={() => {
-                      if (editingNote) {
-                        handleUpdateNote(editingNote.id, tempColor, tempNote);
-                      } else {
-                        handleAddNote(tempColor, tempNote);
-                      }
-                      resetModal();
-                    }}
-                    className="px-4 py-2 bg-green-500 text-white rounded"
-                  >
-                    Lưu
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-    </div>
+    ) : (
+      <EpubReaderPC
+        fileUrl={fileUrl}
+        bookId={bookId}
+        bookData={bookData}
+        error={error}
+        location={location}
+        onLocationChange={onLocationChange}
+        setRendition={setRendition}
+        customStyles={customStyles}
+        showModal={showModal}
+        resetModal={resetModal}
+        editingNote={editingNote}
+        setEditingNote={setEditingNote}
+        setTempCFI={setTempCFI}
+        setShowModal={setShowModal}
+        rendition={rendition}
+        handleUpdateNote={handleUpdateNote}
+        handleAddNote={handleAddNote}
+        tempColor={tempColor}
+        setTempColor={setTempColor}
+        showTextbox={showTextbox}
+        setShowTextbox={setShowTextbox}
+        tempNote={tempNote}
+        setTempNote={setTempNote}
+        charCount={charCount}
+        setupRendition={setupRendition}
+        onReady={onReady}
+        onNotesLoaded={onNotesLoaded}
+        onDeleteNote={handleDeleteNote}
+      />
+    )
   );
 }
 

@@ -1,5 +1,4 @@
 import { Page } from "react-pdf";
-import HighlightOverlay from "./HighlightOverlay";
 
 interface PdfPageWrapperProps {
   pageNumber: number;
@@ -18,7 +17,6 @@ export default function PdfPageWrapper({
   pageWidth,
   onTextSelect,
   fitMode = "width",
-  highlights = [],
   isFullscreen = false, // 👈 default
 }: PdfPageWrapperProps) {
   return (
@@ -37,8 +35,6 @@ export default function PdfPageWrapper({
         renderTextLayer={false}
         renderAnnotationLayer={false}
       />
-
-      <HighlightOverlay highlights={highlights} />
     </div>
   );
 }

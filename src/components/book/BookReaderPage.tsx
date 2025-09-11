@@ -13,6 +13,7 @@ import ReaderHeader from "../common/ReaderHeader";
 import FontMenu from "../common/FontMenuButton";
 import ReaderMenu from "../common/ReaderMenu";
 import ChapterProgress from "../common/ReadingProgressCircle";
+
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.js",
   import.meta.url
@@ -152,6 +153,22 @@ const BookReaderPage: React.FC = () => {
       }
     }
   };
+  const handleDeleteNote = async (id: string) => {
+  try {
+    const note = notes.find((n) => n.id === id);
+    if (!note) return;
+
+    rendition?.annotations.remove(note.cfiRange, "highlight");
+
+    await axios.delete(`${API.highlights}/${id}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+  } catch (err) {
+    console.error("❌ Delete highlight error:", err);
+  }
+};
 
   /** 📌 Fullscreen handler */
   useEffect(() => {
@@ -183,7 +200,8 @@ const BookReaderPage: React.FC = () => {
             fontSize={fontSize}
             fontFamily={fontFamily}
             background={background}
-            scrollMode={scrollMode}      
+            scrollMode={scrollMode} 
+            isMobile = {false}     
             onFontSizeChange={setFontSize}
             onFontChange={setFontFamily}
             onBackgroundChange={setBackground}
@@ -200,6 +218,8 @@ const BookReaderPage: React.FC = () => {
           onClose={() => setShowMenu(false)}
           onSelectChapter={(href) => rendition?.display(href)}
           onSelectNote={(cfi) => rendition?.display(cfi)}
+          isMobile = {false}
+          onDeleteNote={handleDeleteNote}
         />
       )}
 

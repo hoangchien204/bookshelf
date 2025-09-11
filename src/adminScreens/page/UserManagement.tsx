@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import AddUserModal from '../components/AddUserModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import API from '../../services/API';
 interface User {

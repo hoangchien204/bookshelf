@@ -7,6 +7,8 @@ interface ReaderMenuProps {
     onClose: () => void;
     onSelectChapter: (href: string) => void;
     onSelectNote: (cfiRange: string) => void;
+  onDeleteNote?: (id: string) => void;
+    isMobile?: boolean;
 }
 
 export default function ReaderMenu({
@@ -15,13 +17,15 @@ export default function ReaderMenu({
     onClose,
     onSelectChapter,
     onSelectNote,
+    onDeleteNote,
+    isMobile = false,
 }: ReaderMenuProps) {
     const [activeTab, setActiveTab] = useState<"toc" | "notes">("toc");
 
     return (
         <div className="fixed top-12 right-0 w-72 h-[calc(100%-56px)] 
-             bg-gray-800 text-white shadow-lg z-[30000] 
-             flex flex-col border-l border-gray-700/50">
+         bg-gray-800 text-white shadow-lg z-[30000] 
+         flex flex-col border-l border-gray-700/50">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
                 <h3 className="font-semibold text-sm uppercase tracking-wide text-gray-300">
@@ -81,14 +85,30 @@ export default function ReaderMenu({
                         {notes.map((n) => (
                             <li
                                 key={n.id}
-                                onClick={() => onSelectNote(n.cfiRange)}
-                                className="cursor-pointer p-2 rounded bg-gray-700/50 hover:bg-gray-700 flex items-center justify-between"
+                                className="p-2 rounded bg-gray-700/50 flex items-center justify-between group"
                             >
-                                <span className="truncate">{n.note || "Không có nội dung"}</span>
+                                {/* Click vào note */}
                                 <span
-                                    className="w-3 h-3 rounded-full ml-2 shrink-0"
-                                    style={{ background: n.color || "yellow" }}
-                                />
+                                    onClick={() => onSelectNote(n.cfiRange)}
+                                    className="truncate cursor-pointer"
+                                >
+                                    {n.note || "Không có nội dung"}
+                                </span>
+
+                                <div className="flex items-center gap-2 ml-2">
+                                    <span
+                                        className="w-3 h-3 rounded-full shrink-0"
+                                        style={{ background: n.color || "yellow" }}
+                                    />
+                                    {!isMobile && onDeleteNote && (
+                                        <button
+                                            onClick={() => onDeleteNote(n.id)}
+                                            className="text-gray-400 hover:text-red-400"
+                                        >
+                                            x
+                                        </button>
+                                    )}
+                                </div>
                             </li>
                         ))}
                     </ul>
@@ -96,4 +116,5 @@ export default function ReaderMenu({
             </div>
         </div>
     );
+
 }
