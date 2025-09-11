@@ -26,11 +26,11 @@ export default function PdfPageWrapper({
       onMouseUp={onTextSelect}
     >
       <Page
-        key={`${pageNumber}-${isFullscreen}`} // ✅ force re-mount khi đổi fullscreen
+        key={`${pageNumber}-${isFullscreen}`}
         className="pdf-page-item border border-gray-300 rounded-md shadow-sm"
         pageNumber={pageNumber}
         width={fitMode === "width" ? pageWidth : undefined}
-        height={fitMode === "height" ? window.innerHeight - 96 : undefined}
+        height={window.innerHeight - 120}
         renderMode="canvas"
         renderTextLayer={false}
         renderAnnotationLayer={false}

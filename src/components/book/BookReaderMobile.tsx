@@ -36,7 +36,7 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
   const [toc, setToc] = useState<{ label: string; href: string }[]>([]);
   const [notes, setNotes] = useState<any[]>([]);
 
-  const pageWidth = window.innerWidth - 16;
+  const pageWidth = window.innerWidth - 30;
 
   /** 📌 Restore progress */
   useEffect(() => {
@@ -82,16 +82,16 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
     }
   };
   useEffect(() => {
-  if (!rendition) return;
-  rendition.themes.fontSize(`${fontSize}px`);
-  if (fontFamily === "Mặc định") {
-    rendition.themes.override("font-family", "inherit");
-  } else {
-    rendition.themes.override("font-family", fontFamily);
-  }
-  rendition.themes.override("background", background);
-  rendition.themes.override("color", background === "#000000" ? "#ffffff" : "#000000");
-}, [rendition, fontSize, fontFamily, background]);
+    if (!rendition) return;
+    rendition.themes.fontSize(`${fontSize}px`);
+    if (fontFamily === "Mặc định") {
+      rendition.themes.override("font-family", "inherit");
+    } else {
+      rendition.themes.override("font-family", fontFamily);
+    }
+    rendition.themes.override("background", background);
+    rendition.themes.override("color", background === "#000000" ? "#ffffff" : "#000000");
+  }, [rendition, fontSize, fontFamily, background]);
 
   return (
     <div className="fixed inset-0 bg-white z-[99999] flex flex-col" {...handlers}>
@@ -112,13 +112,13 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
             fontSize={fontSize}
             fontFamily={fontFamily}
             background={background}
-            isMobile = {true}
+            isMobile={true}
             scrollMode={false}
             onFontSizeChange={setFontSize}
             onFontChange={setFontFamily}
             onBackgroundChange={setBackground}
-            onLayoutChange={() => {}} // mobile luôn single
-            onScrollModeChange={() => {}} // mobile không cuộn
+            onLayoutChange={() => { }} // mobile luôn single
+            onScrollModeChange={() => { }} // mobile không cuộn
           />
         </div>
       )}
@@ -130,7 +130,7 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
           onClose={() => setShowMenu(false)}
           onSelectChapter={(href) => rendition?.display(href)}
           onSelectNote={(cfi) => rendition?.display(cfi)}
-          isMobile= {true}
+          isMobile={true}
         />
       )}
 
@@ -143,7 +143,13 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
             loading={<div className="text-center">Đang tải PDF...</div>}
             noData={<div className="text-center text-red-600">⚠ Không tìm thấy file PDF.</div>}
           >
-            <PdfPageWrapper pageNumber={currentPage} pageWidth={pageWidth} fitMode="height" />
+            <div className="relative left-[-30px] w-[400px] h-[535px] mx-auto">
+              <PdfPageWrapper
+                pageNumber={currentPage}
+                pageWidth={pageWidth}
+                fitMode="height"
+              />
+            </div>
           </Document>
         ) : book.fileType === "epub" ? (
           <EpubReaderWrapper

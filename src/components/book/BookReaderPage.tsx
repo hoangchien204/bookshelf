@@ -33,14 +33,13 @@ const BookReaderPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [pageWidth, setPageWidth] = useState<number>(600);
 
-  const isMobile = window.innerWidth < 1024;
+  const isMobile = window.innerWidth < 768;
   const [viewMode, setViewMode] = useState<"double" | "single">(
     isMobile ? "single" : "double"
   );
   const [scrollMode, setScrollMode] = useState(false);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isLaptop, setIsLaptop] = useState(window.innerWidth >= 1024);
 
   //  Menu state
   const [showFontMenu, setShowFontMenu] = useState(false);
@@ -56,7 +55,6 @@ const BookReaderPage: React.FC = () => {
   /**Resize handler */
   useEffect(() => {
     const handleResize = () => {
-      setIsLaptop(window.innerWidth >= 1024);
       const container = document.getElementById("pdf-container");
       if (container) {
         const innerWidth = container.clientWidth - 4;
@@ -67,6 +65,7 @@ const BookReaderPage: React.FC = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
 
   /** 📌 Fetch book + restore progress */
   useEffect(() => {
@@ -134,7 +133,12 @@ const BookReaderPage: React.FC = () => {
   /** 📌 Change PDF page manually */
   const handlePageChange = async (offset: number) => {
     const step = viewMode === "double" ? 2 : 1;
-    const newPage = currentPage + offset * step;
+    let newPage = currentPage + offset * step;
+
+    if (viewMode === "double" && newPage % 2 === 0) {
+      newPage -= 1; // đảm bảo luôn số lẻ
+    }
+
     if (newPage >= 1 && newPage <= numPages) {
       setCurrentPage(newPage);
       if (book) {
@@ -154,21 +158,21 @@ const BookReaderPage: React.FC = () => {
     }
   };
   const handleDeleteNote = async (id: string) => {
-  try {
-    const note = notes.find((n) => n.id === id);
-    if (!note) return;
+    try {
+      const note = notes.find((n) => n.id === id);
+      if (!note) return;
 
-    rendition?.annotations.remove(note.cfiRange, "highlight");
+      rendition?.annotations.remove(note.cfiRange, "highlight");
 
-    await axios.delete(`${API.highlights}/${id}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+      await axios.delete(`${API.highlights}/${id}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
 
-    setNotes((prev) => prev.filter((n) => n.id !== id));
-  } catch (err) {
-    console.error("❌ Delete highlight error:", err);
-  }
-};
+      setNotes((prev) => prev.filter((n) => n.id !== id));
+    } catch (err) {
+      console.error("❌ Delete highlight error:", err);
+    }
+  };
 
   /** 📌 Fullscreen handler */
   useEffect(() => {
@@ -190,7 +194,7 @@ const BookReaderPage: React.FC = () => {
         isFullscreen={isFullscreen}
         setIsFullscreen={setIsFullscreen}
         onOpenFontMenu={() => setShowFontMenu((prev) => !prev)}
-        onToggleToc={() => setShowMenu((prev) => !prev)} 
+        onToggleToc={() => setShowMenu((prev) => !prev)}
       />
 
       {/* Font Menu */}
@@ -200,8 +204,8 @@ const BookReaderPage: React.FC = () => {
             fontSize={fontSize}
             fontFamily={fontFamily}
             background={background}
-            scrollMode={scrollMode} 
-            isMobile = {false}     
+            scrollMode={scrollMode}
+            isMobile={false}
             onFontSizeChange={setFontSize}
             onFontChange={setFontFamily}
             onBackgroundChange={setBackground}
@@ -218,7 +222,7 @@ const BookReaderPage: React.FC = () => {
           onClose={() => setShowMenu(false)}
           onSelectChapter={(href) => rendition?.display(href)}
           onSelectNote={(cfi) => rendition?.display(cfi)}
-          isMobile = {false}
+          isMobile={false}
           onDeleteNote={handleDeleteNote}
         />
       )}
@@ -239,22 +243,20 @@ const BookReaderPage: React.FC = () => {
               loading={<div className="text-center">Đang tải file PDF...</div>}
               noData={<div className="text-center text-red-600">⚠ Không tìm thấy file PDF.</div>}
             >
-              {/* PDF hiển thị */}
-              {isLaptop && viewMode === "double" ? (
-                <div className="flex justify-center gap-6">
-                  <PdfPageWrapper pageNumber={currentPage} pageWidth={pageWidth} />
-                  {currentPage + 1 <= numPages && (
-                    <PdfPageWrapper pageNumber={currentPage + 1} pageWidth={pageWidth} />
-                  )}
-                </div>
-              ) : (
+              <div className="flex justify-center gap-6">
+
                 <PdfPageWrapper
                   pageNumber={currentPage}
-                  pageWidth={pageWidth}
-                  isFullscreen={isFullscreen}
-                />
-              )}
+                  pageWidth={pageWidth} />
+
+                {currentPage + 1 <= numPages && (
+                  <PdfPageWrapper
+                    pageNumber={currentPage + 1}
+                    pageWidth={pageWidth} />
+                )}
+              </div>
             </Document>
+
           ) : book.fileType === "epub" ? (
             <EpubReaderWrapper
               fileUrl={book.fileUrl}
@@ -321,8 +323,8 @@ const BookReaderPage: React.FC = () => {
           </button>
         </>
       )}
-      {book.fileType === "epub" &&(
-          <ChapterProgress rendition={rendition} />
+      {book.fileType === "epub" && (
+        <ChapterProgress rendition={rendition} />
       )}
     </div>
   );

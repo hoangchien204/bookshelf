@@ -91,7 +91,6 @@ const BookReaderWrapper: React.FC = () => {
   if (loading) return <Loading />;
   if (!book) return <div className="p-5 text-red-500">Không tìm thấy sách.</div>;
 
-  /** 📌 Chọn UI theo thiết bị */
   return isLaptop ? (
     <BookReaderPage />
   ) : (
