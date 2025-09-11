@@ -41,42 +41,44 @@ const BookCard: React.FC<BookCardProps> = ({
 
   return (
     <motion.div
-  className="flex flex-col items-center w-[160px] md:w-[180px] lg:w-[200px] text-white"
->
-  {/* Card ảnh */}
-  <div
-    onClick={handleNavigate}
-    className="w-[208px] h-[306px] bg-white rounded shadow relative group hover:shadow-lg cursor-pointer"
-  >
-    <img
-      src={book.coverUrl}
-      alt="cover"
-      className="w-full h-full object-cover rounded"
-    />
-    {/* Icon tim */}
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        handleFavoriteClick();
-      }}
-      className="absolute top-2 right-2 bg-white rounded-full p-1 shadow opacity-0 group-hover:opacity-100 transition"
+      className="flex flex-col items-center w-[160px] md:w-[180px] lg:w-[200px] text-white"
     >
-      {isFavorite ? (
-        <FaHeart className="text-red-500" />
-      ) : (
-        <FaRegHeart className="text-gray-400" />
-      )}
-    </button>
-  </div>
+      {/* Card ảnh */}
+      <div
+        onClick={handleNavigate}
+        className=" w-[150px] h-[220px]    
+                    sm:w-[180px] sm:h-[260px]
+                    md:w-[208px] md:h-[306px]  bg-white rounded shadow relative group hover:shadow-lg cursor-pointer"
+      >
+        <img
+          src={book.coverUrl}
+          alt="cover"
+          className="w-full h-full object-cover rounded"
+        />
+        {/* Icon tim */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleFavoriteClick();
+          }}
+          className="absolute top-2 right-2 bg-white rounded-full p-1 shadow opacity-0 group-hover:opacity-100 transition"
+        >
+          {isFavorite ? (
+            <FaHeart className="text-red-500" />
+          ) : (
+            <FaRegHeart className="text-gray-400" />
+          )}
+        </button>
+      </div>
 
-  <div
-    onClick={handleNavigate}
-    className="cursor-pointer text-center mt-2 hover:text-[#8b4513] transition"
-  >
-    <div className="text-sm sm:text-base font-bold leading-snug line-clamp-2">
-      {book.name}
-    </div>
-  </div>
+      <div
+        onClick={handleNavigate}
+        className="cursor-pointer text-center mt-2 hover:text-[#8b4513] transition"
+      >
+        <div className="text-sm sm:text-base font-bold leading-snug line-clamp-2">
+          {book.name}
+        </div>
+      </div>
 
       {/* Modal thông báo đăng nhập */}
       {showLoginModal && (

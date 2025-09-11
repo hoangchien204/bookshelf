@@ -76,22 +76,34 @@ body.loading-mode .tabbar {
 #pdf-container::-webkit-scrollbar {
   display: none;
 }
-
-.react-pdf__Page__textContent {
-  z-index: 10;
-  opacity: 0;
+.no-scrollbar-x {
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
 }
-.react-pdf__Page__canvas {
-  display: block;
-  max-width: 100% !important;
-  height: auto !important;
-  margin: 0 auto;
+.no-scrollbar-x::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
 }
 
-.pdf-page-wrapper canvas {
-  display: block !important;
+/* Scrollbar dọc mượt */
+.scrollbar-thin {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #4b5563 #1f2937; /* thumb + track */
 }
-
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #1f2937; /* track màu xám đậm */
+  border-radius: 9999px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: #4b5563; /* thumb màu xám */
+  border-radius: 9999px;
+  border: 2px solid #1f2937; /* tạo padding */
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: #6b7280; /* hover sáng hơn */
+}
 
 @tailwind base;
 @tailwind components;

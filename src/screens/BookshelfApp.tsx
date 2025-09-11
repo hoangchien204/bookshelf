@@ -150,7 +150,6 @@ const BookshelfApp: React.FC = () => {
 
         <Loading />
       ) : (
-        // layout chính chỉ hiện sau khi load xong
         <div className="w-full min-h-screen bg-black text-white font-sans px-2 sm:px-4 md:px-6 lg:px-8 py-6 pt-32 sm:pt-20">
 
 
