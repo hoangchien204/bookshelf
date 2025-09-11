@@ -36,9 +36,12 @@
     animation: logo-spin infinite 20s linear;
   }
 }
+
 .hide-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari */
+  display: none;
+  /* Chrome, Safari */
 }
+
 .card {
   padding: 2em;
 }
@@ -66,44 +69,34 @@ body.loading-mode .tabbar {
 }
 
 
-#pdf-container {
-  overflow-x: hidden;
-  overflow-y: auto;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 #1f2937;
+  /* thumb + track */
 }
 
-#pdf-container::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar-x {
-  overflow-x: auto;
-  scrollbar-width: none; /* Firefox */
-}
-.no-scrollbar-x::-webkit-scrollbar {
-  display: none; /* Chrome, Safari */
-}
-
-/* Scrollbar dọc mượt */
-.scrollbar-thin {
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: #4b5563 #1f2937; /* thumb + track */
-}
-.scrollbar-thin::-webkit-scrollbar {
+/* Chrome, Edge, Safari */
+*::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: #1f2937; /* track màu xám đậm */
+
+*::-webkit-scrollbar-track {
+  background: #1f2937;
   border-radius: 9999px;
 }
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: #4b5563; /* thumb màu xám */
+
+*::-webkit-scrollbar-thumb {
+  background-color: #4b5563;
   border-radius: 9999px;
-  border: 2px solid #1f2937; /* tạo padding */
+  border: 2px solid #1f2937;
 }
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: #6b7280; /* hover sáng hơn */
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #6b7280;
 }
+
+
 
 @tailwind base;
 @tailwind components;

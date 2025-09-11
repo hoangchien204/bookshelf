@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { FaAngleLeft, FaAngleRight  } from "react-icons/fa";
+import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 
 interface HorizontalSliderProps {
     children: ReactNode;
@@ -54,8 +54,9 @@ export default function HorizontalSlider({
 
             <div
                 ref={scrollRef}
-                className={`flex ${gap} overflow-x-auto scroll-smooth scrollbar-hide ${isMobile ? "cursor-grab active:cursor-grabbing" : ""
-                    }`}
+                className={`flex ${gap} scroll-smooth 
+                            ${isMobile ? "overflow-x-auto cursor-grab active:cursor-grabbing" : "overflow-hidden"}
+                        `}
                 onMouseDown={handleMouseDown}
                 onMouseLeave={handleMouseLeave}
                 onMouseUp={handleMouseUp}
