@@ -5,18 +5,17 @@ import API from '../services/API';
 import axios from 'axios';
 import Loading from '../components/common/Loading';
 import type { Book } from '../types/Book';
-import toast from 'react-hot-toast';
+import { useFavorites } from '../hooks/useFavorites';
 
 const BookshelfApp: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
-  const [favorites, setFavorites] = useState<string[]>([]);
   const navigate = useNavigate();
   const userId = localStorage.getItem("userId");
   const accessToken = localStorage.getItem("accessToken");
+  const { favorites, setFavorites, handleToggleFavorite } = useFavorites(userId, accessToken);
 
   const location = useLocation();
   const [loadingBooks, setLoadingBooks] = useState(true);
-  const [processingBookId, setProcessingBookId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchFavorites = async () => {
@@ -31,8 +30,7 @@ const BookshelfApp: React.FC = () => {
         });
 
         if (Array.isArray(res.data)) {
-          const favoriteIds = res.data.map((book: any) => book.id);
-          setFavorites(favoriteIds);
+          setFavorites(res.data);
         } else {
           console.warn(res.data);
         }
@@ -57,54 +55,6 @@ const BookshelfApp: React.FC = () => {
     };
     fetchBooks();
   }, []);
-
-  const handleToggleFavorite = async (bookId: string) => {
-    if (!userId || processingBookId === bookId) return;
-
-    setProcessingBookId(bookId);
-
-    setFavorites(prev =>
-      prev.includes(bookId)
-        ? prev.filter(id => id !== bookId)
-        : [...prev, bookId]
-    );
-
-    try {
-      const response = await axios.post(
-        API.favorites,
-        { bookId },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          }
-        }
-      );
-
-      if (typeof response.data.isFavorite !== "undefined") {
-        setFavorites(prev =>
-          response.data.isFavorite
-            ? [...new Set([...prev, bookId])]
-            : prev.filter(id => id !== bookId)
-        );
-
-      }
-      if (response.data.isFavorite) {
-        toast.success("Yêu thích thành công");
-      } else {
-        toast.success("Bỏ yêu thích thành công"); // hoặc đổi màu/icon tùy bạn
-      }
-    } catch (error) {
-      console.error(error);
-      setFavorites(prev =>
-        prev.includes(bookId)
-          ? prev.filter(id => id !== bookId)
-          : [...prev, bookId]
-      );
-    } finally {
-      setTimeout(() => setProcessingBookId(null), 500);
-    }
-  };
 
   const handleRead = async (book: Book) => {
     try {
@@ -172,8 +122,8 @@ const BookshelfApp: React.FC = () => {
                       key={book.id}
                       book={book}
                       onRead={handleRead}
-                      onToggleFavorite={handleToggleFavorite}
-                      isFavorite={favorites.includes(book.id)}
+                      onToggleFavorite={() => handleToggleFavorite(book)}
+                      isFavorite={favorites.some((b) => b.id === book.id)}
                     />
                   ))}
                 </div>
@@ -197,8 +147,8 @@ const BookshelfApp: React.FC = () => {
                       key={book.id}
                       book={book}
                       onRead={handleRead}
-                      onToggleFavorite={handleToggleFavorite}
-                      isFavorite={favorites.includes(book.id)}
+                      onToggleFavorite={() => handleToggleFavorite(book)}
+                      isFavorite={favorites.some(f => f.id === book.id)}
                     />
                   ))}
               </div>

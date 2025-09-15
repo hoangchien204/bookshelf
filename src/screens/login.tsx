@@ -31,7 +31,7 @@ const LoginPage: React.FC = () => {
         localStorage.setItem('userId', data.userId);
         localStorage.setItem('role', data.role);
 
-        navigate('/');
+        navigate(-1);
       } else {
         const errData = await res.json();
 

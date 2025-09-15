@@ -18,9 +18,9 @@ export default function HorizontalSlider({
     const [startX, setStartX] = useState(0);
     const [scrollLeft, setScrollLeft] = useState(0);
 
-    // drag-to-scroll (chỉ mobile)
+
     const handleMouseDown = (e: React.MouseEvent) => {
-        if (window.innerWidth >= 768) return; // 👉 desktop bỏ qua
+        if (window.innerWidth >= 768) return;
         setIsDown(true);
         setStartX(e.pageX - (scrollRef.current?.offsetLeft || 0));
         setScrollLeft(scrollRef.current?.scrollLeft || 0);
@@ -29,7 +29,7 @@ export default function HorizontalSlider({
     const handleMouseUp = () => setIsDown(false);
     const handleMouseMove = (e: React.MouseEvent) => {
         if (!isDown || !scrollRef.current) return;
-        if (window.innerWidth >= 768) return; // 👉 desktop bỏ qua
+        if (window.innerWidth >= 768) return;
         e.preventDefault();
         const x = e.pageX - scrollRef.current.offsetLeft;
         const walk = (x - startX) * 1;
@@ -40,7 +40,6 @@ export default function HorizontalSlider({
 
     return (
         <div className="relative w-full">
-            {/* Nút trái/phải chỉ hiện trên desktop */}
             {!isMobile && (
                 <button
                     onClick={() =>

@@ -24,7 +24,7 @@ const BookReaderPage: React.FC = () => {
   const navigate = useNavigate();
   const userId = localStorage.getItem("userId");
   const accessToken = localStorage.getItem("accessToken");
-  const bookId = slugAndId?.split("-").slice(-1)[0];
+  const bookId = slugAndId?.split("-").slice(-5).join("-");
 
   const [book, setBook] = useState<Book | null>(null);
   const [numPages, setNumPages] = useState(0);
@@ -41,9 +41,7 @@ const BookReaderPage: React.FC = () => {
 
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  //  Menu state
-  const [showFontMenu, setShowFontMenu] = useState(false);
-  const [showMenu, setShowMenu] = useState(false)
+
   //  Reader settings
   const [fontSize, setFontSize] = useState(16);
   const [fontFamily, setFontFamily] = useState("Mặc định");
@@ -52,6 +50,14 @@ const BookReaderPage: React.FC = () => {
   const [toc, setToc] = useState<{ label: string; href: string }[]>([]);
   const [notes, setNotes] = useState<any[]>([]);
   const [rendition, setRendition] = useState<any>(null);
+  // Đọc trước 7 page gới guset
+  const previewLimit = 7;
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const isGuest = !accessToken;
+  const [openMenu, setOpenMenu] = useState<"font" | "toc" | null>(null);
+
+
+
   /**Resize handler */
   useEffect(() => {
     const handleResize = () => {
@@ -68,30 +74,26 @@ const BookReaderPage: React.FC = () => {
 
 
   /** 📌 Fetch book + restore progress */
+
   useEffect(() => {
     const fetchBook = async () => {
       try {
         setLoading(true);
-        if (!userId || !accessToken) return;
-        const res = await fetch(API.books);
-        const allBooks: Book[] = await res.json();
-        const matched = allBooks.find((b) => b.id.includes(bookId || ""));
-        if (!matched) {
-          navigate("/");
-          return;
-        }
+        // Luôn fetch sách để có fileUrl
+        const res = await fetch(`${API.books}/${bookId}`);
+        if (!res.ok) throw new Error("Không tìm thấy sách");
+        const matched: Book = await res.json();
         setBook(matched);
 
         if (matched.fileType === "pdf") {
-          let restoredPage =
-            parseInt(localStorage.getItem(`book-${matched.id}-page`) || "1", 10) || 1;
+          let restoredPage = parseInt(localStorage.getItem(`book-${matched.id}-page`) || "1", 10);
 
-          if (userId) {
+          if (!isGuest) {
             try {
-              const res = await axios.get(`${API.activities}/read/${matched.id}`, {
+              const resAct = await axios.get(`${API.activities}/read/${matched.id}`, {
                 headers: { Authorization: `Bearer ${accessToken}` },
               });
-              const serverPage = res.data?.lastPage;
+              const serverPage = resAct.data?.lastPage;
               if (serverPage && serverPage > restoredPage) {
                 restoredPage = serverPage;
                 localStorage.setItem(`book-${matched.id}-page`, restoredPage.toString());
@@ -102,15 +104,14 @@ const BookReaderPage: React.FC = () => {
           }
           setCurrentPage(restoredPage);
         } else if (matched.fileType === "epub") {
-          let restoredLocation =
-            localStorage.getItem(`book-${matched.id}-location`) || "0";
+          let restoredLocation = localStorage.getItem(`book-${matched.id}-location`) || "0";
 
-          if (userId) {
+          if (!isGuest) {
             try {
-              const res = await axios.get(`${API.activities}/read/${matched.id}`, {
+              const resAct = await axios.get(`${API.activities}/read/${matched.id}`, {
                 headers: { Authorization: `Bearer ${accessToken}` },
               });
-              const serverLocation = res.data?.lastLocation;
+              const serverLocation = resAct.data?.lastLocation;
               if (serverLocation) {
                 restoredLocation = serverLocation;
                 localStorage.setItem(`book-${matched.id}-location`, restoredLocation);
@@ -123,12 +124,14 @@ const BookReaderPage: React.FC = () => {
         }
       } catch (err) {
         console.error(err);
+        navigate("/");
       } finally {
         setLoading(false);
       }
     };
+
     fetchBook();
-  }, [bookId, navigate, userId, accessToken]);
+  }, [bookId, navigate, isGuest, accessToken]);
 
   /** 📌 Change PDF page manually */
   const handlePageChange = async (offset: number) => {
@@ -137,6 +140,11 @@ const BookReaderPage: React.FC = () => {
 
     if (viewMode === "double" && newPage % 2 === 0) {
       newPage -= 1; // đảm bảo luôn số lẻ
+    }
+
+    if (isGuest && newPage > previewLimit) {
+      setShowLoginModal(true);
+      return; // chặn luôn, không cho đổi trang
     }
 
     if (newPage >= 1 && newPage <= numPages) {
@@ -157,6 +165,7 @@ const BookReaderPage: React.FC = () => {
       }
     }
   };
+
   const handleDeleteNote = async (id: string) => {
     try {
       const note = notes.find((n) => n.id === id);
@@ -170,16 +179,16 @@ const BookReaderPage: React.FC = () => {
 
       setNotes((prev) => prev.filter((n) => n.id !== id));
     } catch (err) {
-      console.error("❌ Delete highlight error:", err);
+      console.error("Delete highlight error:", err);
     }
   };
 
-  /** 📌 Fullscreen handler */
   useEffect(() => {
     const onFs = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", onFs);
     return () => document.removeEventListener("fullscreenchange", onFs);
   }, []);
+
 
   /** 📌 UI */
   if (loading) return <Loading />;
@@ -193,12 +202,18 @@ const BookReaderPage: React.FC = () => {
         bookName={book.name}
         isFullscreen={isFullscreen}
         setIsFullscreen={setIsFullscreen}
-        onOpenFontMenu={() => setShowFontMenu((prev) => !prev)}
-        onToggleToc={() => setShowMenu((prev) => !prev)}
+        onOpenFontMenu={() => setOpenMenu(openMenu === "font" ? null : "font")}
+        onToggleToc={() => setOpenMenu(openMenu === "toc" ? null : "toc")}
       />
 
+      {openMenu && (
+        <div
+          className="fixed inset-0 bg-black/30 z-[19999]"
+          onClick={() => setOpenMenu(null)}
+        />
+      )}
       {/* Font Menu */}
-      {showFontMenu && (
+      {openMenu == "font" && (
         <div className="absolute right-0 top-[40px] z-[20000]">
           <FontMenu
             fontSize={fontSize}
@@ -215,11 +230,11 @@ const BookReaderPage: React.FC = () => {
         </div>
       )}
       {/* Show Menu */}
-      {showMenu && (
+      {openMenu == "toc" && (
         <ReaderMenu
           toc={toc}
           notes={notes}
-          onClose={() => setShowMenu(false)}
+          onClose={() => setOpenMenu(null)}
           onSelectChapter={(href) => rendition?.display(href)}
           onSelectNote={(cfi) => rendition?.display(cfi)}
           isMobile={false}
@@ -227,7 +242,30 @@ const BookReaderPage: React.FC = () => {
         />
       )}
 
-
+      {/* modal đăng yêu cầu đăng nhập */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 z-[200000]">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
+            <h2 className="text-lg font-semibold mb-4 text-black">
+              Bạn cần đăng nhập để tiếp tục đọc sách
+            </h2>
+            <div className="flex gap-3 justify-center mt-4">
+              <button
+                onClick={() => navigate("/login")}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold"
+              >
+                Đăng nhập ngay
+              </button>
+              <button
+                onClick={() => setShowLoginModal(false)}
+                className="bg-red-300 hover:bg-red-400 px-4 py-2 rounded-lg"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Content */}
       <div
         id="book-container"
@@ -284,17 +322,26 @@ const BookReaderPage: React.FC = () => {
                 setRendition(rend);
                 setToc(tocData);
                 setNotes(noteData);
+                rend.on("relocated", (location: any) => {
+                  if (isGuest) {
+                    const percentage = location.start.percentage || 0;
+                    if (percentage > 0.03) {
+                      setShowLoginModal(true);
+                      rend.display(location.start.cfi);
+                    }
+                  }
+                });
               }}
               onNotesLoaded={(loadedNotes) => setNotes(loadedNotes)}
 
             />
           ) : (
             <div className="text-center text-red-600">
-              ❌ Định dạng {book.fileType} chưa được hỗ trợ.
+              Định dạng {book.fileType} chưa được hỗ trợ.
             </div>
           )
         ) : (
-          <div className="text-center text-red-600">⚠ Không tìm thấy file.</div>
+          <div className="text-center text-red-600">Không tìm thấy file.</div>
         )}
       </div>
 

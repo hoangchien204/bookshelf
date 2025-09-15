@@ -6,14 +6,16 @@ import BookCard from '../components/book/BookCard';
 import { Link } from 'react-router-dom';
 import Loading from '../components/common/Loading';
 import type { Book } from '../types/Book';
+import { useFavorites } from '../hooks/useFavorites';
 
 
 const FavoritesPage: React.FC = () => {
-  const [favoriteBooks, setFavoriteBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const accessToken = localStorage.getItem("accessToken")
   const userId = localStorage.getItem('userId')
+  const { favorites, setFavorites, handleToggleFavorite } = useFavorites(userId, accessToken);
+  
   useEffect(() => {
     const fetchFavorites = async () => {
       if (!userId) return;
@@ -25,7 +27,7 @@ const FavoritesPage: React.FC = () => {
             Authorization: `Bearer ${accessToken}`,
           },
         });
-        setFavoriteBooks(res.data);
+        setFavorites(res.data);
       } catch (err) {
         setError('Không thể tải danh sách yêu thích.');
       } finally {
@@ -38,33 +40,6 @@ const FavoritesPage: React.FC = () => {
 
   const handleRead = (book: Book) => {
     window.location.href = `/reader/${book.id}`;
-  };
-  const handleToggleFavorite = async (bookId: string) => {
-    try {
-      await axios.post(
-        API.favorites, // toggle favorite
-        { bookId },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-
-      const res = await axios.get(API.favorites, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      const updatedBooks = res.data;
-
-      setFavoriteBooks(updatedBooks);
-    } catch (err) {
-      console.error(err);
-    }
   };
   if (!userId) {
     return (
@@ -100,14 +75,14 @@ const FavoritesPage: React.FC = () => {
       {error && <p className="text-center text-red-400">{error}</p>}
 
       {/* Trường hợp chưa có sách */}
-      {!loading && favoriteBooks.length === 0 && (
+      {!loading && favorites.length === 0 && (
         <p className="text-center text-gray-400 italic">
           Bạn chưa có sách yêu thích nào. Hãy thêm vài quyển nhé!
         </p>
       )}
 
       {/* Danh sách yêu thích */}
-      {favoriteBooks.length > 0 && (
+      {favorites.length > 0 && (
         <section className="mt-10">
           <h2 className="text-xl font-semibold mb-4">Danh sách yêu thích</h2>
 
@@ -117,13 +92,13 @@ const FavoritesPage: React.FC = () => {
                        md:gap-x-10 md:gap-y-10 
                        xl:gap-x-[100px] xl:gap-y-12"
           >
-            {Array.isArray(favoriteBooks) &&
-              favoriteBooks.map((book) => (
+            {Array.isArray(favorites) &&
+              favorites.map((book) => (
                 <BookCard
                   key={book.id}
                   book={book}
                   onRead={handleRead}
-                  onToggleFavorite={handleToggleFavorite}
+                  onToggleFavorite={() => handleToggleFavorite(book)}
                   isFavorite={true}
                 />
               ))}

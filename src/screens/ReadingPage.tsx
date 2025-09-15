@@ -6,6 +6,7 @@ import BookCard from '../components/book/BookCard';
 import { useNavigate } from 'react-router-dom';
 import Loading from '../components/common/Loading';
 import type { Book } from '../types/Book';
+import { useFavorites } from '../hooks/useFavorites';
 interface Activity {
   id: string;
   book: Book;
@@ -18,11 +19,12 @@ interface User {
 
 const ReadingPage: React.FC = () => {
   const [readingBooks, setReadingBooks] = useState<Book[]>([]);
-  const [favorites, setFavorites] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const userId = localStorage.getItem('userId');
+  const accessToken = localStorage.getItem("accessToken");
   const navigate = useNavigate();
+  const { favorites, setFavorites, handleToggleFavorite } = useFavorites(userId, accessToken);
 
   useEffect(() => {
     const fetchReading = async () => {
@@ -33,7 +35,10 @@ const ReadingPage: React.FC = () => {
 
       try {
         const res = await axios.get(API.activities, {
-          headers: { 'x-user-id': userId },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
         });
 
         const filtered = res.data
@@ -50,9 +55,13 @@ const ReadingPage: React.FC = () => {
     const fetchFavorites = async () => {
       try {
         const res = await axios.get(API.favorites, {
-          headers: { 'x-user-id': userId },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`
+
+          },
         });
-        setFavorites(res.data.map((book: Book) => book.id));
+        setFavorites(res.data); // không map ra id
       } catch (err) {
 
       }
@@ -66,18 +75,7 @@ const ReadingPage: React.FC = () => {
     window.location.href = `/reader/${book.id}`;
   };
 
-  const handleToggleFavorite = async (bookId: string) => {
-    try {
-      await axios.post(API.activities, null, {
-        headers: { 'x-user-id': userId },
-      });
-      setFavorites((prev) =>
-        prev.includes(bookId) ? prev.filter((id) => id !== bookId) : [...prev, bookId]
-      );
-    } catch (err) {
 
-    }
-  };
 
   if (!userId) {
     return (
@@ -133,8 +131,8 @@ const ReadingPage: React.FC = () => {
               key={book.id}
               book={book}
               onRead={handleRead}
-              onToggleFavorite={handleToggleFavorite}
-              isFavorite={favorites.includes(book.id)}
+              onToggleFavorite={() => handleToggleFavorite(book)}
+              isFavorite={favorites.some((f) => f.id === book.id)}
             />
           ))}
         </div>

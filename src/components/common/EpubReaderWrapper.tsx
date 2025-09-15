@@ -26,6 +26,7 @@ export default function CustomEpubReader({
   onReady,
   onNotesLoaded,
 }: EpubReaderWrapperProps) {
+
   const [bookData, setBookData] = useState<ArrayBuffer | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [rendition, setRendition] = useState<any>(null);
@@ -65,8 +66,7 @@ export default function CustomEpubReader({
         setError(null);
       })
       .catch((err) => {
-        console.error("❌ EPUB load error:", err);
-        setError("Không thể tải EPUB. Vui lòng thử lại.");
+        console.error("EPUB load error:", err);
       });
   }, [fileUrl]);
 
@@ -118,7 +118,6 @@ export default function CustomEpubReader({
     }
   }, [rendition, fontSize, fontFamily, background]);
 
-  // Render highlights into epub.js when notes change
   useEffect(() => {
     if (!rendition) return;
     rendition.annotations.removeAll?.();
@@ -195,12 +194,12 @@ export default function CustomEpubReader({
       if (!note) return;
 
       rendition?.annotations.remove(note.cfiRange, "highlight");
+      setNotes((prev) => prev.filter((n) => n.id !== id));
 
       await axios.delete(`${API.highlights}/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      setNotes((prev) => prev.filter((n) => n.id !== id));
+      await loadHighlights();
     } catch (err) {
       console.error("❌ Delete highlight error:", err);
     }
@@ -260,12 +259,10 @@ export default function CustomEpubReader({
       href: item.href,
     }));
 
-    // 🚀 Tạm để notes rỗng (sau có thể fetch từ API hoặc truyền từ ngoài vào)
     const notes: any[] = [];
 
     onReady?.(rend, tocData, notes);
 
-    // Lắng nghe highlight
     rend.on("selected", (cfiRange: string, contents: any) => {
       openEditModal?.(cfiRange, contents);
     });

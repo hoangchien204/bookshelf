@@ -122,7 +122,6 @@ export default function EpubReaderPC({
 
             <h3 className="font-bold mb-3 text-white">Ghi chú</h3>
 
-            {/* 4 ô màu */}
             <div className="grid grid-cols-4 gap-3 mb-4">
               {["#fff9b1", "#aee1ff", "#ffc4d6", "#d5b8ff"].map((c) => (
                 <div
@@ -133,9 +132,9 @@ export default function EpubReaderPC({
                   onClick={() => {
                     if (editingNote) {
                       if (editingNote.color === c) {
-                        // 👉 Nếu chọn lại đúng màu cũ => XÓA highlight
                         rendition?.annotations.remove(editingNote.cfiRange, "highlight");
                         onDeleteNote?.(editingNote.id);
+                        resetModal();
                       } else {
                         // 👉 Nếu chọn màu khác => UPDATE
                         rendition?.annotations.remove(editingNote.cfiRange, "highlight");
@@ -151,11 +150,11 @@ export default function EpubReaderPC({
                       }
                       resetModal();
                     } else if (!showTextbox) {
-                      // 👉 Highlight mới
+                      //Highlight mới
                       handleAddNote(c);
                       resetModal();
                     } else {
-                      // 👉 Đang gõ note thì chỉ set màu tạm
+                      // Đang gõ note thì chỉ set màu tạm
                       setTempColor(c);
                     }
                   }}

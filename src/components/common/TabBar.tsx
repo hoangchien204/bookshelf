@@ -1,13 +1,19 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AvatarMenu from "../user/AvatarMenu";
 import type { User } from "../../types/user";
 import API from "../../services/API";
 import type { Book } from "../../types/Book";
 import axios from "axios";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+
+interface Genre {
+  id: string;
+  name: string;
+  isActive: boolean;
+}
 
 const TabBar = () => {
   const { pathname } = useLocation();
@@ -18,11 +24,16 @@ const TabBar = () => {
   const [books, setBooks] = useState<Book[]>([]);  // 🔹 fetch ở đây
   const [menuOpen, setMenuOpen] = useState(false);
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
-   const [showTabs, setShowTabs] = useState(true);
+  const [showTabs, setShowTabs] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const tabClass = (active: boolean) =>
     `flex-1 text-center py-2 ${active ? "text-blue-400" : "text-gray-300"
     } transition`;
+  const [, setSearchParams] = useSearchParams();
+
+  const [genres, setGenres] = useState<Genre[]>([]);
+  const [showGenreDropdown, setShowGenreDropdown] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -36,7 +47,17 @@ const TabBar = () => {
 
     fetchBooks();
   }, []);
-
+  useEffect(() => {
+    const fetchGenres = async () => {
+      try {
+        const res = await axios.get(`${API.genres}`);
+        setGenres(res.data.filter((g: Genre) => g.isActive));
+      } catch (err) {
+        console.error("❌ Lỗi fetch thể loại:", err);
+      }
+    };
+    fetchGenres();
+  }, []);
   useEffect(() => {
     const userId = localStorage.getItem("userId");
     if (!userId) return;
@@ -67,7 +88,7 @@ const TabBar = () => {
     );
     setFilteredBooks(filtered);
   }, [searchValue, books]);
-   useEffect(() => {
+  useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > lastScrollY) {
         setShowTabs(false);
@@ -86,16 +107,72 @@ const TabBar = () => {
       {/* 🔹 Desktop */}
       <div className="hidden md:flex items-center justify-between h-16 w-full px-8 fixed top-0 left-0 z-50 bg-black/80">
         {/* Nhóm trái */}
-        <div className="flex-1 flex items-center gap-6">
+        <div className="flex-1 flex items-center gap-6 relative">
           <Link to="/" className="text-2xl font-bold text-green-400">
             Tủ Sách Nhỏ
           </Link>
           <Link to="/" className={tabClass(pathname === "/")}>
             <span className="inline-block text-lg font-semibold">Trang chủ</span>
           </Link>
-          <Link to="/genres" className={tabClass(pathname === "/genres")}>
-            <span className="inline-block text-lg font-semibold">Thể loại</span>
-          </Link>
+
+          {/* Dropdown Thể loại */}
+          <div
+            className="relative"
+            onMouseEnter={() => {
+              if (timeoutRef.current) clearTimeout(timeoutRef.current);
+              setShowGenreDropdown(true);
+            }}
+            onMouseLeave={() => {
+              timeoutRef.current = setTimeout(() => {
+                setShowGenreDropdown(false);
+              }, 1000); // delay 1s
+            }}
+          >
+            {/* Nút chính */}
+            <Link
+              to="/genres"
+              className={tabClass(pathname.startsWith("/genres"))}
+            >
+              <span className="inline-block text-lg font-semibold">Thể loại</span>
+            </Link>
+
+            <AnimatePresence>
+              {showGenreDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                  className="absolute top-full left-0 mt-2 bg-gray-900 text-white shadow-xl 
+                   rounded-lg w-[700px] z-50 p-6"
+                >
+                  <h3 className="text-lg font-semibold mb-4">Thể loại</h3>
+
+                  <div className="grid grid-cols-4 gap-4">
+                    {genres.filter((g) => g.isActive).map((g) => (
+                      <button
+                        key={g.id}
+                        className="text-left px-2 py-1 rounded hover:bg-gray-800 transition"
+                        onClick={() => {
+                          setSearchParams({ genreId: g.id });
+                          setShowGenreDropdown(false);
+                        }}
+                      >
+                        {g.name}
+                      </button>
+                    ))}
+
+                    {genres.length === 0 && (
+                      <span className="col-span-4 text-gray-400 italic">
+                        Không có thể loại
+                      </span>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           <Link to="/reading" className={tabClass(pathname === "/reading")}>
             <span className="inline-block text-lg font-semibold">Đang đọc</span>
           </Link>
@@ -106,7 +183,6 @@ const TabBar = () => {
 
         {/* Nhóm phải */}
         <div className="flex items-center gap-8 ml-10">
-          {/* Search input */}
           {searchOpen ? (
             <input
               type="text"
@@ -119,15 +195,14 @@ const TabBar = () => {
               }}
               placeholder="Tìm sách hoặc tác giả..."
               className="w-32 sm:w-48 md:w-64 px-3 py-1.5 rounded-md 
-               bg-gray-800 text-white text-sm outline-none
-               transition-all duration-500 ease-in-out
-               focus:w-72"
+                bg-gray-800 text-white text-sm outline-none
+                transition-all duration-500 ease-in-out
+                focus:w-72"
             />
           ) : (
             <button
               onClick={() => setSearchOpen(true)}
-              className="text-gray-300 hover:text-blue-400 p-1
-               transition-all duration-300 transform hover:scale-110"
+              className="text-gray-300 hover:text-blue-400 p-1 transition-all duration-300 transform hover:scale-110"
             >
               <FontAwesomeIcon icon={faSearch} />
             </button>
@@ -149,43 +224,43 @@ const TabBar = () => {
         </div>
       </div>
       {/* Mobi */}
-     
-<div className="flex flex-col md:hidden w-full fixed top-0 left-0 z-50">
-  {/* Dòng trên */}
-<div className="flex items-center justify-between h-14 px-4 text-white bg-black/80 backdrop-blur-sm">
-    <button onClick={() => setMenuOpen(true)}>☰</button>
-    {searchOpen ? (
-      <input
-        type="text"
-        value={searchValue}
-        onChange={(e) => setSearchValue(e.target.value)}
-        onBlur={() => {
-          setSearchOpen(false);
-          setSearchValue("");
-        }}
-        placeholder="Tìm sách..."
-        className="w-40 px-3 py-1 rounded bg-gray-800 text-white text-sm outline-none"
-      />
-    ) : (
-      <button onClick={() => setSearchOpen(true)}>
-        <FontAwesomeIcon icon={faSearch} />
-      </button>
-    )}
-  </div>
 
-  {/* Dòng dưới: tabs (ẩn/hiện khi scroll) */}
-  <motion.div
-    initial={{ y: 0 }}
-    animate={{ y: showTabs ? 0 : -50, opacity: showTabs ? 1 : 0 }}
-    transition={{ duration: 0.3 }}
-    className="flex overflow-x-auto gap-4 px-4 py-2 bg-gray-800 text-white hide-scrollbar text-sm"
-  >
-    <Link to="/" className={tabClass(pathname === "/")}>Trang chủ</Link>
-    <Link to="/genres" className={tabClass(pathname === "/genres")}>Thể loại</Link>
-    <Link to="/reading" className={tabClass(pathname === "/reading")}>Đang đọc</Link>
-    <Link to="/favorites" className={tabClass(pathname === "/favorites")}>Yêu thích</Link>
-  </motion.div>
-</div>
+      <div className="flex flex-col md:hidden w-full fixed top-0 left-0 z-50">
+        {/* Dòng trên */}
+        <div className="flex items-center justify-between h-14 px-4 text-white bg-black/80 backdrop-blur-sm">
+          <button onClick={() => setMenuOpen(true)}>☰</button>
+          {searchOpen ? (
+            <input
+              type="text"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              onBlur={() => {
+                setSearchOpen(false);
+                setSearchValue("");
+              }}
+              placeholder="Tìm sách..."
+              className="w-40 px-3 py-1 rounded bg-gray-800 text-white text-sm outline-none"
+            />
+          ) : (
+            <button onClick={() => setSearchOpen(true)}>
+              <FontAwesomeIcon icon={faSearch} />
+            </button>
+          )}
+        </div>
+
+        {/* Dòng dưới: tabs (ẩn/hiện khi scroll) */}
+        <motion.div
+          initial={{ y: 0 }}
+          animate={{ y: showTabs ? 0 : -50, opacity: showTabs ? 1 : 0 }}
+          transition={{ duration: 0.3 }}
+          className="flex overflow-x-auto gap-4 px-4 py-2 bg-gray-800 text-white hide-scrollbar text-sm"
+        >
+          <Link to="/" className={tabClass(pathname === "/")}>Trang chủ</Link>
+          <Link to="/genres" className={tabClass(pathname === "/genres")}>Thể loại</Link>
+          <Link to="/reading" className={tabClass(pathname === "/reading")}>Đang đọc</Link>
+          <Link to="/favorites" className={tabClass(pathname === "/favorites")}>Yêu thích</Link>
+        </motion.div>
+      </div>
 
       {searchOpen && filteredBooks.length > 0 && (
         <ul className="absolute right-4 top-16 bg-gray-800 text-white rounded shadow-lg w-64 max-h-64 overflow-y-auto z-50 hide-scrollbar">

@@ -66,7 +66,7 @@ export default function EpubReaderMobile({
 }: EpubReaderMobileProps) {
     const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(null);
     const [showToolbar, setShowToolbar] = useState(false);
-
+    
     if (error) return <div className="text-center text-red-600">{error}</div>;
     if (!bookData) return <div className="text-center">⏳ Đang tải EPUB...</div>;
 
@@ -123,6 +123,7 @@ export default function EpubReaderMobile({
                         top: popupPos.y - 150,
                         left: popupPos.x - 100,
                     }}
+                    onClick={() => setShowToolbar(false)}
                 >
                     {/* Nút chọn màu */}
                     {["#d5b8ff", "#aee1ff", "#ffc4d6", "#fff9b1"].map((c) => (
@@ -135,7 +136,6 @@ export default function EpubReaderMobile({
                                 if (editingNote) {
                                     // Xoá highlight cũ
                                     rendition?.annotations.remove(editingNote.cfiRange, "highlight");
-
                                     rendition?.annotations.add(
                                         "highlight",
                                         editingNote.cfiRange,

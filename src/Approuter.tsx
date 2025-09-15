@@ -17,6 +17,8 @@ import BookshelfApp from './screens/BookshelfApp';
 import FavoritesPage from './screens/FavoritesPage';
 import ReadingPage from './screens/ReadingPage';
 
+import AuthWatcher from './components/common/GlobalAuthListener';
+import GenresPage from './screens/GenrePage';
 
 function AppRoutes() {
   const location = useLocation();
@@ -43,6 +45,7 @@ useEffect(() => {
   return (
     <>
       <ToastProvider />
+      <AuthWatcher />
       {!isDashboard && (
         isBookDetail && isMobile ? (
           <MobileTabBar
@@ -62,6 +65,7 @@ useEffect(() => {
         <Route path="/favorites" element={<FavoritesPage />} />
         <Route path="/reading" element={<ReadingPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path='/genres' element = {<GenresPage />} />
         <Route path="/login" element={<LoginPage />} />
 
 

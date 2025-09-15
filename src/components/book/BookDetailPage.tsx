@@ -17,7 +17,6 @@ const BookDetailPage = () => {
   const [relatedBooks, setRelatedBooks] = useState<Book[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [suggestedBooks, setSuggestedBooks] = useState<Book[]>([]);
   const [book, setBook] = useState<Book | null>(location.state?.book || null);
   const [loading, setLoading] = useState(!location.state?.book);
@@ -43,7 +42,7 @@ const BookDetailPage = () => {
         const res = await axios.get(`${API.books}/${id}`);
         setBook(res.data);
       } catch (error) {
-        console.error("Lỗi lấy chi tiết sách:", error);
+        console.error("Lỗi:", error);
       } finally {
         setLoading(false);
       }
@@ -62,7 +61,7 @@ const BookDetailPage = () => {
           setFavorites(res.data.map((fav: any) => fav.id));
         }
       } catch (error) {
-        console.error("Lỗi lấy danh sách yêu thích:", error);
+        console.error("Lỗi:", error);
       }
     })();
   }, [userId, accessToken]);
@@ -75,7 +74,7 @@ const BookDetailPage = () => {
         const res = await axios.get(`${API.books}/${book.id}/average`);
         setRating(res.data > 0 ? res.data : 5);
       } catch (err) {
-        console.error("Lỗi khi lấy rating:", err);
+        console.error("Lỗi:", err);
         setRating(5);
       }
     })();
@@ -136,8 +135,7 @@ const BookDetailPage = () => {
         );
       }
     } catch (error) {
-      console.error("Lỗi toggle yêu thích:", error);
-      toast.error("Có lỗi xảy ra, vui lòng thử lại!");
+      console.error("Lỗi:", error);
     } finally {
       setTimeout(() => setIsProcessing(false), 500);
     }
@@ -151,10 +149,6 @@ const BookDetailPage = () => {
 
   const handleReadClick = () => {
     if (!book) return;
-    if (!userId) {
-      setShowLoginModal(true);
-      return;
-    }
     const slug = slugify(book.name);
     navigate(`/read/${slug}-${book.id}`);
   };
@@ -358,56 +352,32 @@ const BookDetailPage = () => {
           </div>
         </div>
 
-        {showLoginModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
-              <h2 className="text-lg font-semibold mb-4 text-black">
-                Bạn cần đăng nhập để xem chi tiết sách
-              </h2>
-              <div className="flex gap-3 justify-center mt-4">
-                <button
-                  onClick={() => navigate("/login")}
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold"
-                >
-                  Đăng nhập ngay
-                </button>
-                <button
-                  onClick={() => setShowLoginModal(false)}
-                  className="bg-red-300 hover:bg-red-400 px-4 py-2 rounded-lg"
-                >
-                  Đóng
-                </button>
-              </div>
-
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Nếu có sách cùng tác giả */}
-     {relatedBooks.length > 0 && (
-  <div className="mt-8 relative p-6">
-    <h2 className="text-2xl font-semibold mb-2 text-white">
-      Sách cùng tác giả
-    </h2>
+      {relatedBooks.length > 0 && (
+        <div className="mt-8 relative p-6">
+          <h2 className="text-2xl font-semibold mb-2 text-white">
+            Sách cùng tác giả
+          </h2>
 
-    <HorizontalSlider itemWidth={250} gap="gap-4 sm:gap-6 md:gap-10 lg:gap-20">
-      {relatedBooks.map((b) => (
-        <div
-          key={b.id}
-          className="flex-shrink-0 w-[140px] sm:w-[160px] md:w-48"
-        >
-          <BookCard
-            book={b}
-            onRead={() => handleRead(b)}
-            onToggleFavorite={handleToggleFavorite}
-            isFavorite={favorites.includes(b.id)}
-          />
+          <HorizontalSlider itemWidth={250} gap="gap-4 sm:gap-6 md:gap-10 lg:gap-20">
+            {relatedBooks.map((b) => (
+              <div
+                key={b.id}
+                className="flex-shrink-0 w-[140px] sm:w-[160px] md:w-48"
+              >
+                <BookCard
+                  book={b}
+                  onRead={() => handleRead(b)}
+                  onToggleFavorite={handleToggleFavorite}
+                  isFavorite={favorites.includes(b.id)}
+                />
+              </div>
+            ))}
+          </HorizontalSlider>
         </div>
-      ))}
-    </HorizontalSlider>
-  </div>
-)}
+      )}
 
       {/* Phần "Có thể bạn sẽ thích" luôn có */}
       <div className="mt-8 relative p-6 ">

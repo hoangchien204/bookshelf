@@ -29,7 +29,7 @@ export default function FontMenu({
     fontFamily,
     background,
     isMobile = false,
-
+    scrollMode = false,
     onFontSizeChange,
     onFontChange,
     onBackgroundChange,
@@ -37,8 +37,6 @@ export default function FontMenu({
     onScrollModeChange,
 }: FontMenuProps) {
     const [layout, setLayout] = useState<"single" | "double">("single");
-    const [scrollMode, setScrollMode] = useState(false);
-
     return (
         <div className="bg-gray-900 text-white w-72 p-4 rounded-xl shadow-lg space-y-4 
                     transition-all duration-200 ease-out origin-top-right animate-in fade-in zoom-in-95">
@@ -100,7 +98,6 @@ export default function FontMenu({
                         checked={scrollMode}
                         onChange={() => {
                             const newVal = !scrollMode;
-                            setScrollMode(newVal);
                             onScrollModeChange?.(newVal);
                         }}
                         className="sr-only"

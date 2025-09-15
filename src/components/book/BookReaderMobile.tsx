@@ -16,6 +16,7 @@ interface Props {
   book: Book;
   userId: string | null;
   accessToken: string | null;
+  isGuest: boolean;
 }
 
 const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
@@ -26,8 +27,7 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
 
   // UI
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showFontMenu, setShowFontMenu] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
+  const [openMenu, setOpenMenu] = useState<"font" | "toc" | null>(null);
 
   // Reader settings
   const [fontSize, setFontSize] = useState(16);
@@ -35,8 +35,8 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
   const [background, setBackground] = useState("#ffffff");
   const [toc, setToc] = useState<{ label: string; href: string }[]>([]);
   const [notes, setNotes] = useState<any[]>([]);
-
   const pageWidth = window.innerWidth - 30;
+  const [scrollMode, setScrollMode] = useState(false);
 
   /** 📌 Restore progress */
   useEffect(() => {
@@ -50,6 +50,12 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
     }
   }, [book, userId]);
 
+  useEffect(() => {
+    if (rendition) {
+      rendition.flow(scrollMode ? "scrolled-doc" : "paginated");
+      // ❌ bỏ dòng spread nếu không muốn quản lý viewMode
+    }
+  }, [rendition, scrollMode]);
   /** 📌 Save progress */
   const saveProgress = (page?: number, location?: string | number) => {
     if (!userId || !accessToken) return;
@@ -101,33 +107,34 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
         bookName={book.name}
         isFullscreen={isFullscreen}
         setIsFullscreen={setIsFullscreen}
-        onOpenFontMenu={() => setShowFontMenu((prev) => !prev)}
-        onToggleToc={() => setShowMenu((prev) => !prev)}
+        onOpenFontMenu={() => setOpenMenu(openMenu === "font" ? null : "font")}
+        onToggleToc={() => setOpenMenu(openMenu === "toc" ? null : "toc")}
       />
 
       {/* Font Menu */}
-      {showFontMenu && (
+      {openMenu == "font" && (
         <div className="absolute right-0 top-[40px] z-[20000]">
           <FontMenu
             fontSize={fontSize}
             fontFamily={fontFamily}
             background={background}
             isMobile={true}
-            scrollMode={false}
+
+            scrollMode={scrollMode}
             onFontSizeChange={setFontSize}
             onFontChange={setFontFamily}
             onBackgroundChange={setBackground}
-            onLayoutChange={() => { }} // mobile luôn single
-            onScrollModeChange={() => { }} // mobile không cuộn
+            onLayoutChange={() => { }}
+            onScrollModeChange={setScrollMode}
           />
         </div>
       )}
 
-      {showMenu && (
+      {openMenu === "toc" && (
         <ReaderMenu
           toc={toc}
           notes={notes}
-          onClose={() => setShowMenu(false)}
+          onClose={() => setOpenMenu(null)}
           onSelectChapter={(href) => rendition?.display(href)}
           onSelectNote={(cfi) => rendition?.display(cfi)}
           isMobile={true}

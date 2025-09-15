@@ -14,13 +14,12 @@ const BookReaderWrapper: React.FC = () => {
   const navigate = useNavigate();
   const userId = localStorage.getItem("userId");
   const accessToken = localStorage.getItem("accessToken");
-  const bookId = slugAndId?.split("-").slice(-1)[0];
-
+const bookId = slugAndId?.substring(slugAndId.lastIndexOf("-") + 1);
   const [book, setBook] = useState<Book | null>(null)
   const [loading, setLoading] = useState(true);
-  // const [highlights, setHighlights] = useState<Highlight[]>([]);
-  const [isLaptop, setIsLaptop] = useState(window.innerWidth >= 1024);
 
+  const [isLaptop, setIsLaptop] = useState(window.innerWidth >= 1024);
+  const isGuest = !accessToken;
   /** 📌 Responsive check */
   useEffect(() => {
     const handleResize = () => setIsLaptop(window.innerWidth >= 1024);
@@ -30,36 +29,44 @@ const BookReaderWrapper: React.FC = () => {
 
   /** 📌 Fetch book & sync page */
   useEffect(() => {
-    const fetchBook = async () => {
-      try {
-        setLoading(true);
-        if (!userId || !accessToken) return;
+  const fetchBook = async () => {
+    try {
+      setLoading(true);
+      // ✅ Bỏ chặn guest, luôn fetch sách
+      const res = await fetch(API.books, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}), // chỉ thêm header nếu có token
+        },
+      });
 
-        const res = await fetch(API.books, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        const allBooks: Book[] = await res.json();
-        const matched = allBooks.find((b) => b.id.includes(bookId || ""));
-        if (!matched) {
-          navigate("/");
-          return;
-        }
-        setBook(matched);
+      if (!res.ok) {
+        console.error("Fetch error:", res.status);
+        navigate("/");
+        return;
+      }
 
-        let restoredPage =
-          parseInt(localStorage.getItem(`book-${matched.id}-page`) || "1", 10) || 1;
+      const allBooks: Book[] = await res.json();
+      const matched = allBooks.find((b) => b.id.includes(bookId || ""));
+
+      if (!matched) {
+        navigate("/");
+        return;
+      }
+      setBook(matched);
+
+      // ✅ Sync progress chỉ khi có login
+      if (!isGuest) {
+        let restoredPage = parseInt(localStorage.getItem(`book-${matched.id}-page`) || "1", 10);
 
         try {
-          const res = await axios.get(`${API.activities}/read/${matched.id}`, {
+          const resAct = await axios.get(`${API.activities}/read/${matched.id}`, {
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${accessToken}`,
             },
           });
-          const serverPage = res.data?.page;
+          const serverPage = resAct.data?.page;
           if (serverPage && serverPage > restoredPage) {
             restoredPage = serverPage;
             localStorage.setItem(`book-${matched.id}-page`, restoredPage.toString());
@@ -70,23 +77,27 @@ const BookReaderWrapper: React.FC = () => {
               {
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization: `Bearer ${accessToken}`,
-                },
+                  Authorization: `Bearer ${accessToken}` },
               }
             );
           }
         } catch (err) {
-          console.error("Sync server error:", err);
+          console.error("Sync error:", err);
         }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+      } else {
+        console.log("Guest → chỉ setBook, không sync progress");
       }
-    };
 
-    fetchBook();
-  }, [bookId, navigate, userId, accessToken]);
+    } catch (err) {
+      console.error("FetchBook error:", err);
+    } finally {
+      setLoading(false);
+      console.log("Wrapper fetch done");
+    }
+  };
+
+  fetchBook();
+}, [bookId, navigate, accessToken, isGuest]);
 
   if (loading) return <Loading />;
   if (!book) return <div className="p-5 text-red-500">Không tìm thấy sách.</div>;
@@ -97,7 +108,8 @@ const BookReaderWrapper: React.FC = () => {
     <BookReaderMobile
       book={book}
       userId={userId}
-      accessToken={accessToken}
+      accessToken={accessToken} 
+      isGuest={isGuest}
     />
   );
 };
