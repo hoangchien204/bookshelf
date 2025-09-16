@@ -30,7 +30,7 @@ const TabBar = () => {
     `flex-1 text-center py-2 ${active ? "text-blue-400" : "text-gray-300"
     } transition`;
   const [, setSearchParams] = useSearchParams();
-
+  const accessToken = localStorage.getItem('accessToken')
   const [genres, setGenres] = useState<Genre[]>([]);
   const [showGenreDropdown, setShowGenreDropdown] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -64,9 +64,14 @@ const TabBar = () => {
 
     const fetchUser = async () => {
       try {
-        const res = await fetch(`${API.users}/${userId}`);
-        const data: User = await res.json();
-        setUser(data);
+        const res = await axios.get(`${API.users}/${userId}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        const user = res.data
+        setUser(user);
       } catch (err) {
         console.error("Lỗi fetch user:", err);
       }

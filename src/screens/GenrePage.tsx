@@ -30,32 +30,37 @@ export default function GenresPage() {
     const [selectedGenre, setSelectedGenre] = useState<Genre | null>(null);
     const [showGenreDropdown, setShowGenreDropdown] = useState(false);
     useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
+        const fetchGenres = async () => {
             try {
-                const [genresRes, favoritesRes] = await Promise.all([
-                    axios.get(API.genres),
-                    axios.get(API.favorites, {
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${accessToken}`,
-                        },
-                    }),
-                ]);
-
-                setGenres(genresRes.data.filter((g: Genre) => g.isActive));
-                setFavorites(favoritesRes.data);
+                const res = await axios.get(API.genres);
+                setGenres(res.data.filter((g: Genre) => g.isActive));
             } catch (err) {
-                console.error("❌ Lỗi fetch:", err);
-            } finally {
-                setLoading(false);
+                console.error("❌ Lỗi fetch genres:", err);
             }
         };
 
-        if (userId) {
-            fetchData();
-        }
-    }, [userId]);
+        fetchGenres();
+    }, []);
+
+    useEffect(() => {
+        const fetchFavorites = async () => {
+            if (!userId || !accessToken) {
+                setFavorites([]);
+                return;
+            }
+            try {
+                const res = await axios.get(API.favorites, {
+                    headers: { Authorization: `Bearer ${accessToken}` },
+                });
+                setFavorites(res.data);
+            } catch (err) {
+                console.error("❌ Lỗi fetch favorites:", err);
+            }
+        };
+
+        fetchFavorites();
+    }, [userId, accessToken]);
+
 
     useEffect(() => {
         if (!genres.length) return;
@@ -121,11 +126,11 @@ export default function GenresPage() {
                             {/* dropdown */}
                             <div
                                 className={`
-    absolute mt-2 w-56 max-h-64 overflow-y-auto 
-    bg-gray-900 text-white shadow rounded z-50
-    transform transition-all duration-300 ease-out origin-top
-    ${showGenreDropdown ? "scale-y-100 opacity-100" : "scale-y-0 opacity-0"}
-  `}
+                                    absolute mt-2 w-56 max-h-64 overflow-y-auto 
+                                    bg-gray-900 text-white shadow rounded z-50
+                                    transform transition-all duration-300 ease-out origin-top
+                                    ${showGenreDropdown ? "scale-y-100 opacity-100" : "scale-y-0 opacity-0"}
+                                `}
                             >
                                 <div
                                     className="px-4 py-2 hover:bg-gray-700 cursor-pointer"
@@ -165,7 +170,7 @@ export default function GenresPage() {
             {books.length === 0 ? (
                 <div className="text-gray-400">Không có sách trong thể loại này</div>
             ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
                     {books.map((book) => (
                         <BookCard
                             key={book.id}

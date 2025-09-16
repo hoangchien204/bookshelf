@@ -35,7 +35,7 @@ const BookDetailPage = () => {
 
   // Fetch chi tiết sách
   useEffect(() => {
-    if (!id || book) return;
+    if (!id) return;
     (async () => {
       try {
         setLoading(true);
@@ -47,7 +47,7 @@ const BookDetailPage = () => {
         setLoading(false);
       }
     })();
-  }, [id, book]);
+  }, [id]);
 
   // Fetch danh sách yêu thích
   useEffect(() => {

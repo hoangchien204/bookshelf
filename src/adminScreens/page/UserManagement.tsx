@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import API from '../../services/API';
+import toast from 'react-hot-toast';
 interface User {
   id: string;
   username: string;
@@ -20,9 +21,14 @@ const UserManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const currentUserId = localStorage.getItem('userId')
+  const accessToken = localStorage.getItem('accessToken')
   const fetchUsers = async () => {
     try {
-      const response = await axios(API.users);
+      const response = await axios.get(API.users, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        }
+      });
       setUsers(response.data);
     } catch (error) {
       console.error('Lỗi khi lấy dữ liệu người dùng:', error);
@@ -32,17 +38,20 @@ const UserManagement = () => {
   };
 
   const deleteUser = async (id: string) => {
-    if(id === currentUserId){
+    if (id === currentUserId) {
       alert("Bạn không thể xóa người này")
       return;
     }
 
     if (confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
       try {
-        await axios(`${API.users}/${id}`, {
-          method: 'DELETE',
+        await axios.delete(`${API.users}/${id}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
         });
         setUsers(users.filter((u) => u.id !== id));
+        toast("Xóa thành công")
       } catch (error) {
         console.error('Lỗi khi xóa người dùng:', error);
       }
@@ -108,7 +117,7 @@ const UserManagement = () => {
                     onClick={() => deleteUser(user.id)}
                     className="text-red-600 hover:underline"
                   >
-                   Xóa
+                    Xóa
                   </button>
                 </td>
               </tr>
