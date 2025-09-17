@@ -5,9 +5,9 @@ const backgrounds = ["#000000", "#e5e7eb", "#d6d3d1", "#f5f0dc"];
 const fonts = ["Mặc định",
     "Helvetica",
     "Times New Roman",
-    "Georgia",
+    "Roboto",
     "Courier New",
-    "Open Sans",
+    "Verdana",
 ];
 
 interface FontMenuProps {
@@ -38,8 +38,8 @@ export default function FontMenu({
 }: FontMenuProps) {
     const [layout, setLayout] = useState<"single" | "double">("single");
     return (
-        <div className="bg-gray-900 text-white w-72 p-4 rounded-xl shadow-lg space-y-4 
-                    transition-all duration-200 ease-out origin-top-right animate-in fade-in zoom-in-95">
+        <div className="bg-gray-900 text-white w-[210px] sm:w-72 p-4 rounded-xl shadow-lg space-y-4 
+                    transition-all duration-200 ease-out origin-top-right animate-in fade-in zoom-in-95 ">
             {/* Nền */}
             <div>
                 <h4 className="font-semibold mb-2">Nền</h4>

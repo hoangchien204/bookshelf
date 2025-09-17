@@ -79,11 +79,11 @@ const ReadingPage: React.FC = () => {
 
   if (!userId) {
     return (
-      <div className="text-center mt-20">
+      <div className="text-center text-white mt-32">
         <p className="text-lg">
           Vui lòng{' '}
           <span
-            className="text-blue-600 font-semibold cursor-pointer"
+            className="text-blue-600 font-semibold cursor-pointer "
             onClick={() => navigate('/login')}
           >
             đăng nhập
@@ -100,15 +100,11 @@ const ReadingPage: React.FC = () => {
       className="w-full min-h-screen bg-black text-white font-sans 
                px-2 sm:px-4 md:px-6 lg:px-8 py-6 pt-32 sm:pt-20"
     >
-      {/* Tiêu đề */}
       <h1 className="text-3xl font-semibold mb-6">Sách đang đọc</h1>
-
-      {/* Loading */}
       {loading && (
         <p className="text-center text-gray-400 italic">Đang tải...</p>
       )}
 
-      {/* Error */}
       {error && <p className="text-center text-red-400">{error}</p>}
 
       {/* Chưa có sách */}
@@ -117,8 +113,6 @@ const ReadingPage: React.FC = () => {
           Bạn chưa đọc cuốn sách nào.
         </p>
       )}
-
-      {/* Danh sách sách đang đọc */}
       {readingBooks.length > 0 && (
         <div
           className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 

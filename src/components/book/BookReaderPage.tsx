@@ -13,6 +13,7 @@ import ReaderHeader from "../common/ReaderHeader";
 import FontMenu from "../common/FontMenuButton";
 import ReaderMenu from "../common/ReaderMenu";
 import ChapterProgress from "../common/ReadingProgressCircle";
+import { motion } from "framer-motion";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.js",
@@ -214,7 +215,14 @@ const BookReaderPage: React.FC = () => {
       )}
       {/* Font Menu */}
       {openMenu == "font" && (
-        <div className="absolute right-0 top-[40px] z-[20000]">
+        <motion.div
+          key="fontmenu"
+          initial={{ opacity: 0, scale: 0.9, y: -10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: -10 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="absolute right-0 top-[40px] z-[20000]"
+        >
           <FontMenu
             fontSize={fontSize}
             fontFamily={fontFamily}
@@ -227,19 +235,29 @@ const BookReaderPage: React.FC = () => {
             onLayoutChange={(layout) => setViewMode(layout)}
             onScrollModeChange={(scroll) => setScrollMode(scroll)}
           />
-        </div>
+        </motion.div>
       )}
       {/* Show Menu */}
       {openMenu == "toc" && (
-        <ReaderMenu
-          toc={toc}
-          notes={notes}
-          onClose={() => setOpenMenu(null)}
-          onSelectChapter={(href) => rendition?.display(href)}
-          onSelectNote={(cfi) => rendition?.display(cfi)}
-          isMobile={false}
-          onDeleteNote={handleDeleteNote}
-        />
+        <>
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="fixed top-0 right-0 h-full w-72 bg-gray-900 text-white z-[200] shadow-lg"
+          >
+            <ReaderMenu
+              toc={toc}
+              notes={notes}
+              onClose={() => setOpenMenu(null)}
+              onSelectChapter={(href) => rendition?.display(href)}
+              onSelectNote={(cfi) => rendition?.display(cfi)}
+              isMobile={false}
+              onDeleteNote={handleDeleteNote}
+            />
+          </motion.div>
+        </>
       )}
 
       {/* modal đăng yêu cầu đăng nhập */}

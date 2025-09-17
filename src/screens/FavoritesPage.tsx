@@ -43,12 +43,12 @@ const FavoritesPage: React.FC = () => {
   };
   if (!userId) {
     return (
-      <div className="p-6 text-center text-lg text-gray-700">
+      <div className="text-center text-lg text-white mt-32">
         Vui lòng{' '}
         <Link to="/login" className="text-blue-600 font-semibold hover:underline">
           đăng nhập
         </Link>{' '}
-        để sử dụng tính năng yêu thích.
+        để sử dụng tính năng này.
       </div>
     );
   }
@@ -59,29 +59,20 @@ const FavoritesPage: React.FC = () => {
       className="w-full min-h-screen bg-black text-white font-sans 
                  px-2 sm:px-4 md:px-6 lg:px-8 py-6 pt-32 sm:pt-20"
     >
-      {/* Tiêu đề */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Kệ sách yêu thích của bạn</h1>
       </div>
-
-      {/* Loading */}
       {loading && (
         <p className="text-center text-gray-400 italic">
           Đang tải sách yêu thích...
         </p>
       )}
-
-      {/* Error */}
       {error && <p className="text-center text-red-400">{error}</p>}
-
-      {/* Trường hợp chưa có sách */}
       {!loading && favorites.length === 0 && (
         <p className="text-center text-gray-400 italic">
           Bạn chưa có sách yêu thích nào. Hãy thêm vài quyển nhé!
         </p>
       )}
-
-      {/* Danh sách yêu thích */}
       {favorites.length > 0 && (
         <section className="mt-10">
           <h2 className="text-xl font-semibold mb-4">Danh sách yêu thích</h2>

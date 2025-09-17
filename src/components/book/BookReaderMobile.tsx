@@ -11,6 +11,7 @@ import ReaderHeader from "../common/ReaderHeader";
 import FontMenu from "../common/FontMenuButton";
 import ReaderMenu from "../common/ReaderMenu";
 import ChapterProgress from "../common/ReadingProgressCircle";
+import { motion } from "framer-motion";
 
 interface Props {
   book: Book;
@@ -111,15 +112,20 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
         onToggleToc={() => setOpenMenu(openMenu === "toc" ? null : "toc")}
       />
 
-      {/* Font Menu */}
       {openMenu == "font" && (
-        <div className="absolute right-0 top-[40px] z-[20000]">
+        <motion.div
+          key="fontmenu"
+          initial={{ opacity: 0, scale: 0.9, y: -10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: -10 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="absolute right-0 top-[40px] z-[20000]"
+        >
           <FontMenu
             fontSize={fontSize}
             fontFamily={fontFamily}
             background={background}
             isMobile={true}
-
             scrollMode={scrollMode}
             onFontSizeChange={setFontSize}
             onFontChange={setFontFamily}
@@ -127,18 +133,38 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
             onLayoutChange={() => { }}
             onScrollModeChange={setScrollMode}
           />
-        </div>
+        </motion.div>
       )}
 
       {openMenu === "toc" && (
-        <ReaderMenu
-          toc={toc}
-          notes={notes}
-          onClose={() => setOpenMenu(null)}
-          onSelectChapter={(href) => rendition?.display(href)}
-          onSelectNote={(cfi) => rendition?.display(cfi)}
-          isMobile={true}
-        />
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.5 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black z-[19999]"
+            onClick={() => setOpenMenu(null)}
+          />
+
+          {/* Sidebar */}
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="fixed top-0 right-0 h-full w-[245px] sm:w-72 bg-gray-900 text-white z-[20000] shadow-lg"
+          >
+            <ReaderMenu
+              toc={toc}
+              notes={notes}
+              onClose={() => setOpenMenu(null)}
+              onSelectChapter={(href) => rendition?.display(href)}
+              onSelectNote={(cfi) => rendition?.display(cfi)}
+              isMobile={true}
+            />
+          </motion.div>
+        </>
       )}
 
       {/* Content */}
@@ -150,7 +176,7 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
             loading={<div className="text-center">Đang tải PDF...</div>}
             noData={<div className="text-center text-red-600">⚠ Không tìm thấy file PDF.</div>}
           >
-            <div className="relative left-[-30px] w-[400px] h-[535px] mx-auto">
+            <div className="relative w-[400px] h-[535px] mx-auto max-[344px]:-left-[27px]">
               <PdfPageWrapper
                 pageNumber={currentPage}
                 pageWidth={pageWidth}

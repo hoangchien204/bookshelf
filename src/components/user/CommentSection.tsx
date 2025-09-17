@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaStar } from "react-icons/fa";
 import API from "../../services/API";
 import type { User } from "../../types/user";
+import { FaPen } from "react-icons/fa";
 
 interface Comment {
   id: string;
@@ -29,6 +30,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ bookId }) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [newComment, setNewComment] = useState("");
   const [newReview, setNewReview] = useState("");
+  const [hover, setHover] = useState<number>(0);
   const [rating, setRating] = useState(0);
   const [activeTab, setActiveTab] = useState<"comments" | "reviews">("comments");
   const [visibleComments, setVisibleComments] = useState(5);
@@ -113,17 +115,23 @@ const CommentSection: React.FC<CommentSectionProps> = ({ bookId }) => {
     if (!dateStr) return "Chưa xác định";
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return "Ngày không hợp lệ";
-    const vnDate = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+
     const now = new Date();
-    const diff = Math.floor((now.getTime() - vnDate.getTime()) / 1000);
+    let diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diff < 0) diff = 0; // tránh âm
 
     if (diff < 60) return `${diff} giây trước`;
     if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
     if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
     if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
     if (diff < 2592000) return `${Math.floor(diff / 604800)} tuần trước`;
-    return date.toLocaleDateString("vi-VN");
+    return date.toLocaleDateString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
+
 
 
   return (
@@ -220,23 +228,38 @@ const CommentSection: React.FC<CommentSectionProps> = ({ bookId }) => {
                   key={star}
                   size={24}
                   onClick={() => setRating(star)}
-                  className={`cursor-pointer ${star <= rating ? "text-yellow-400" : "text-gray-500"
-                    }`}
+                  onMouseEnter={() => setHover(star)}   
+                  onMouseLeave={() => setHover(0)}     
+                  className={`cursor-pointer transition-colors duration-200 
+          ${star <= (hover || rating) ? "text-yellow-400" : "text-gray-500"}`}
                 />
               ))}
             </div>
+
             <textarea
-              className="w-full border rounded-lg px-3 py-2 bg-gray-800 text-white"
+              className="w-full border rounded-lg px-3 py-2 bg-gray-800 text-white resize-none"
               placeholder="Viết đánh giá..."
               value={newReview}
-              onChange={(e) => setNewReview(e.target.value)}
+              onChange={(e) => {
+                if (e.target.value.length <= 300) setNewReview(e.target.value);
+              }}
             />
-            <button
-              type="submit"
-              className="mt-3 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-semibold"
-            >
-              Gửi đánh giá
-            </button>
+            <div className="flex justify-between items-center mt-2">
+              <span className="text-gray-400 text-sm">
+                {newReview.length}/300
+              </span>
+              <button
+                type="submit"
+                disabled={rating === 0 || newReview.trim().length === 0}
+                className={`px-4 py-2 rounded-lg font-semibold transition
+                   ${rating === 0 || newReview.trim().length === 0
+                    ? "bg-gray-600 text-gray-300 cursor-not-allowed"
+                    : "bg-green-500 hover:bg-green-600 text-white cursor-pointer"
+                  }`}
+              >
+              <FaPen className="inline mr-2" /> Gửi đánh giá
+              </button>
+            </div>
           </form>
 
           <div className="space-y-4">

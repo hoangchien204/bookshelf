@@ -23,7 +23,7 @@ export default function ReaderMenu({
     const [activeTab, setActiveTab] = useState<"toc" | "notes">("toc");
 
     return (
-        <div className="fixed top-12 right-0 w-72 h-[calc(100%-56px)] 
+        <div className="fixed top-12 right-0 w-[245px] sm:w-72 h-[calc(100%-56px)] 
          bg-gray-800 text-white shadow-lg z-[30000] 
          flex flex-col border-l border-gray-700/50">
             {/* Header */}

@@ -230,9 +230,8 @@ const TabBar = () => {
       {/* Mobi */}
 
       <div className="flex flex-col md:hidden w-full fixed top-0 left-0 z-50">
-        {/* Dòng trên */}
         <div className="flex items-center justify-between h-14 px-4 text-white bg-black/80 backdrop-blur-sm">
-          <button onClick={() => setMenuOpen(true)}>☰</button>
+          <button className = "p-1" onClick={() => setMenuOpen(true)}>☰</button>
           {searchOpen ? (
             <input
               type="text"
@@ -251,8 +250,6 @@ const TabBar = () => {
             </button>
           )}
         </div>
-
-        {/* Dòng dưới: tabs (ẩn/hiện khi scroll) */}
         <motion.div
           initial={{ y: 0 }}
           animate={{ y: showTabs ? 0 : -50, opacity: showTabs ? 1 : 0 }}
