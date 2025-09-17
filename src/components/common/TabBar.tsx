@@ -1,4 +1,4 @@
-import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { useEffect, useRef, useState } from "react";
@@ -29,11 +29,11 @@ const TabBar = () => {
   const tabClass = (active: boolean) =>
     `flex-1 text-center py-2 ${active ? "text-blue-400" : "text-gray-300"
     } transition`;
-  const [, setSearchParams] = useSearchParams();
   const accessToken = localStorage.getItem('accessToken')
   const [genres, setGenres] = useState<Genre[]>([]);
   const [showGenreDropdown, setShowGenreDropdown] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -53,7 +53,7 @@ const TabBar = () => {
         const res = await axios.get(`${API.genres}`);
         setGenres(res.data.filter((g: Genre) => g.isActive));
       } catch (err) {
-        console.error("❌ Lỗi fetch thể loại:", err);
+        console.error("Lỗi fetch thể loại:", err);
       }
     };
     fetchGenres();
@@ -120,7 +120,6 @@ const TabBar = () => {
             <span className="inline-block text-lg font-semibold">Trang chủ</span>
           </Link>
 
-          {/* Dropdown Thể loại */}
           <div
             className="relative"
             onMouseEnter={() => {
@@ -159,7 +158,7 @@ const TabBar = () => {
                         key={g.id}
                         className="text-left px-2 py-1 rounded hover:bg-gray-800 transition"
                         onClick={() => {
-                          setSearchParams({ genreId: g.id });
+                          navigate(`/genres?genreId=${g.id}`);
                           setShowGenreDropdown(false);
                         }}
                       >

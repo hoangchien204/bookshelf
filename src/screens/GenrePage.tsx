@@ -35,7 +35,7 @@ export default function GenresPage() {
                 const res = await axios.get(API.genres);
                 setGenres(res.data.filter((g: Genre) => g.isActive));
             } catch (err) {
-                console.error("❌ Lỗi fetch genres:", err);
+                console.error("Lỗi:", err);
             }
         };
 
