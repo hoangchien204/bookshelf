@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Document, pdfjs } from "react-pdf";
 import API from "../../services/API";
@@ -14,6 +14,7 @@ import FontMenu from "../common/FontMenuButton";
 import ReaderMenu from "../common/ReaderMenu";
 import ChapterProgress from "../common/ReadingProgressCircle";
 import { motion } from "framer-motion";
+import LoginModal from "../../screens/login";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.js",
@@ -56,6 +57,7 @@ const BookReaderPage: React.FC = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const isGuest = !accessToken;
   const [openMenu, setOpenMenu] = useState<"font" | "toc" | null>(null);
+  const allowedChapters = 2
 
 
 
@@ -74,13 +76,10 @@ const BookReaderPage: React.FC = () => {
   }, []);
 
 
-  /** 📌 Fetch book + restore progress */
-
   useEffect(() => {
     const fetchBook = async () => {
       try {
         setLoading(true);
-        // Luôn fetch sách để có fileUrl
         const res = await fetch(`${API.books}/${bookId}`);
         if (!res.ok) throw new Error("Không tìm thấy sách");
         const matched: Book = await res.json();
@@ -112,15 +111,23 @@ const BookReaderPage: React.FC = () => {
               const resAct = await axios.get(`${API.activities}/read/${matched.id}`, {
                 headers: { Authorization: `Bearer ${accessToken}` },
               });
+
               const serverLocation = resAct.data?.lastLocation;
               if (serverLocation) {
                 restoredLocation = serverLocation;
-                localStorage.setItem(`book-${matched.id}-location`, restoredLocation);
+              } else {
+                restoredLocation = localStorage.getItem(`book-${matched.id}-location`) || "0";
               }
+
+              localStorage.setItem(`book-${matched.id}-location`, restoredLocation);
             } catch (err) {
               console.error("Sync server error:", err);
+              restoredLocation = localStorage.getItem(`book-${matched.id}-location`) || "0";
             }
+          } else {
+            restoredLocation = localStorage.getItem(`book-${matched.id}-location`) || "0";
           }
+
           setCurrentLocation(restoredLocation);
         }
       } catch (err) {
@@ -140,12 +147,12 @@ const BookReaderPage: React.FC = () => {
     let newPage = currentPage + offset * step;
 
     if (viewMode === "double" && newPage % 2 === 0) {
-      newPage -= 1; // đảm bảo luôn số lẻ
+      newPage -= 1;
     }
 
     if (isGuest && newPage > previewLimit) {
       setShowLoginModal(true);
-      return; // chặn luôn, không cho đổi trang
+      return;
     }
 
     if (newPage >= 1 && newPage <= numPages) {
@@ -191,7 +198,92 @@ const BookReaderPage: React.FC = () => {
   }, []);
 
 
-  /** 📌 UI */
+ const lastValidLocationRef = useRef<string | null>(null);
+  const prevCfiRef = useRef<string | null>(null);
+  const [rollbackCfi, setRollbackCfi] = useState<string | null>(null);
+  const isRollbackingRef = useRef(false);
+  const isFirstLoadRef = useRef(true);
+
+const checkGuestLimit = (location: any) => {
+  if (isRollbackingRef.current) {
+    return;
+  }
+
+  if (!isGuest || toc.length === 0) {
+    prevCfiRef.current = lastValidLocationRef.current;
+    lastValidLocationRef.current = location.start.cfi;
+    return;
+  }
+
+  const normalizeHref = (s: string) =>
+    (s.split("#")[0] || "").split("/").pop() || s;
+
+  const currentIndex = toc.findIndex(
+    (t) => normalizeHref(location.start.href) === normalizeHref(t.href)
+  );
+
+  if (currentIndex >= allowedChapters) {
+    setShowLoginModal(true);
+    const targetCfi = prevCfiRef.current || lastValidLocationRef.current;
+    if (
+      targetCfi &&
+      !isRollbackingRef.current &&
+      targetCfi !== location.start.cfi
+    ) {
+      setRollbackCfi(targetCfi);
+    }
+  } else if (currentIndex !== -1) {
+    prevCfiRef.current = lastValidLocationRef.current;
+    lastValidLocationRef.current = location.start.cfi;
+  }
+
+  if (isFirstLoadRef.current) {
+    isFirstLoadRef.current = false;
+  }
+};
+
+useEffect(() => {
+  if (rollbackCfi && rendition) {
+    console.log("🚫 Rollback to:", rollbackCfi);
+    isRollbackingRef.current = true;
+    rendition.display(rollbackCfi).then(() => {
+      setRollbackCfi(null);
+      setTimeout(() => {
+        isRollbackingRef.current = false;
+      }, 0);
+    });
+  }
+}, [rollbackCfi, rendition]);
+
+
+  useEffect(() => {
+    if (rendition && toc.length > 0) {
+      rendition.on("relocated", checkGuestLimit);
+    }
+  }, [rendition, toc]);
+
+
+  const handleSelectChapter = (href: string) => {
+    if (isGuest && toc.length > 0) {
+      const targetIndex = toc.findIndex((t) => href.includes(t.href));
+      if (targetIndex >= allowedChapters) {
+        setShowLoginModal(true);
+        return;
+      }
+    }
+    rendition?.display(href);
+  };
+  const handleSelectNote = (cfi: string) => {
+    if (isGuest && toc.length > 0) {
+      const targetIndex = toc.findIndex((t) => cfi.includes(t.href));
+      if (targetIndex >= allowedChapters) {
+        setShowLoginModal(true);
+        return;
+      }
+    }
+    rendition?.display(cfi);
+  };
+
   if (loading) return <Loading />;
   if (!book) return <div className="p-5 text-red-500">Không tìm thấy sách.</div>;
 
@@ -213,7 +305,6 @@ const BookReaderPage: React.FC = () => {
           onClick={() => setOpenMenu(null)}
         />
       )}
-      {/* Font Menu */}
       {openMenu == "font" && (
         <motion.div
           key="fontmenu"
@@ -245,14 +336,14 @@ const BookReaderPage: React.FC = () => {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="fixed top-0 right-0 h-full w-72 bg-gray-900 text-white z-[200] shadow-lg"
+            className="fixed top-0 right-0 h-full w-72 bg-gray-900 text-white z-[30000] shadow-lg"
           >
             <ReaderMenu
               toc={toc}
               notes={notes}
               onClose={() => setOpenMenu(null)}
-              onSelectChapter={(href) => rendition?.display(href)}
-              onSelectNote={(cfi) => rendition?.display(cfi)}
+              onSelectChapter={handleSelectChapter}
+              onSelectNote={handleSelectNote}
               isMobile={false}
               onDeleteNote={handleDeleteNote}
             />
@@ -262,27 +353,10 @@ const BookReaderPage: React.FC = () => {
 
       {/* modal đăng yêu cầu đăng nhập */}
       {showLoginModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 z-[200000]">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
-            <h2 className="text-lg font-semibold mb-4 text-black">
-              Bạn cần đăng nhập để tiếp tục đọc sách
-            </h2>
-            <div className="flex gap-3 justify-center mt-4">
-              <button
-                onClick={() => navigate("/login")}
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold"
-              >
-                Đăng nhập ngay
-              </button>
-              <button
-                onClick={() => setShowLoginModal(false)}
-                className="bg-red-300 hover:bg-red-400 px-4 py-2 rounded-lg"
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        </div>
+        <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+      />
       )}
       {/* Content */}
       <div
@@ -340,15 +414,8 @@ const BookReaderPage: React.FC = () => {
                 setRendition(rend);
                 setToc(tocData);
                 setNotes(noteData);
-                rend.on("relocated", (location: any) => {
-                  if (isGuest) {
-                    const percentage = location.start.percentage || 0;
-                    if (percentage > 0.03) {
-                      setShowLoginModal(true);
-                      rend.display(location.start.cfi);
-                    }
-                  }
-                });
+                rend.on("relocated", checkGuestLimit);
+
               }}
               onNotesLoaded={(loadedNotes) => setNotes(loadedNotes)}
 
@@ -362,8 +429,6 @@ const BookReaderPage: React.FC = () => {
           <div className="text-center text-red-600">Không tìm thấy file.</div>
         )}
       </div>
-
-      {/* Footer PDF */}
       {book?.fileType === "pdf" && (
         <>
           <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 

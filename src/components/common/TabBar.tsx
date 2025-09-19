@@ -8,6 +8,8 @@ import API from "../../services/API";
 import type { Book } from "../../types/Book";
 import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
+import LoginModal from "../../screens/login";
+import SignupModal from "../../screens/signup";
 
 interface Genre {
   id: string;
@@ -34,6 +36,8 @@ const TabBar = () => {
   const [showGenreDropdown, setShowGenreDropdown] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
+  const [showLogin, setShowLogin] = useState(false);
+  const [showSignup, setShowSignup] = useState(false)
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -121,7 +125,7 @@ const TabBar = () => {
           </Link>
 
           <div
-            className="relative"
+            className={`${tabClass(pathname.startsWith("/genres"))} relative`}
             onMouseEnter={() => {
               if (timeoutRef.current) clearTimeout(timeoutRef.current);
               setShowGenreDropdown(true);
@@ -129,17 +133,12 @@ const TabBar = () => {
             onMouseLeave={() => {
               timeoutRef.current = setTimeout(() => {
                 setShowGenreDropdown(false);
-              }, 1000); // delay 1s
+              }, 100);
             }}
           >
-            {/* Nút chính */}
-            <Link
-              to="/genres"
-              className={tabClass(pathname.startsWith("/genres"))}
-            >
-              <span className="inline-block text-lg font-semibold">Thể loại</span>
+            <Link to="/genres" className="inline-block text-lg font-semibold">
+              Thể loại
             </Link>
-
             <AnimatePresence>
               {showGenreDropdown && (
                 <motion.div
@@ -150,7 +149,7 @@ const TabBar = () => {
                   className="absolute top-full left-0 mt-2 bg-gray-900 text-white shadow-xl 
                    rounded-lg w-[700px] z-50 p-6"
                 >
-                  <h3 className="text-lg font-semibold mb-4">Thể loại</h3>
+                  <h3 className="text-lg font-semibold mb-4 text-left">Thể loại</h3>
 
                   <div className="grid grid-cols-4 gap-4">
                     {genres.filter((g) => g.isActive).map((g) => (
@@ -218,12 +217,12 @@ const TabBar = () => {
               username={user?.username || "Guest"}
             />
           ) : (
-            <Link
-              to="/login"
+            <button
+              onClick={() => setShowLogin(true)}
               className="px-4 py-2 text-base font-medium text-white bg-green-500 hover:bg-green-600 rounded-full shadow-md transition"
             >
               Đăng nhập
-            </Link>
+            </button>
           )}
         </div>
       </div>
@@ -231,7 +230,7 @@ const TabBar = () => {
 
       <div className="flex flex-col md:hidden w-full fixed top-0 left-0 z-50">
         <div className="flex items-center justify-between h-14 px-4 text-white bg-black/80 backdrop-blur-sm">
-          <button className = "p-1" onClick={() => setMenuOpen(true)}>☰</button>
+          <button className="p-1" onClick={() => setMenuOpen(true)}>☰</button>
           {searchOpen ? (
             <input
               type="text"
@@ -323,14 +322,26 @@ const TabBar = () => {
                   Đăng xuất
                 </button>
               ) : (
-                <Link to="/login" onClick={() => setMenuOpen(false)}>
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setShowLogin(true);
+                  }}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                >
                   Đăng nhập
-                </Link>
+                </button>
               )}
+
             </nav>
           </div>
         </div>
       )}
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+      />
+    
     </div>
   );
 

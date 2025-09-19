@@ -46,7 +46,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({ bookId }) => {
       .then((data) => setReviews(data));
 
   }, [bookId]);
-
+function maskUsername(username: string, visibleCount: number = 8): string {
+  if (!username) return "Ẩn danh";
+  if (username.length <= visibleCount) return username; 
+  return username.slice(0, visibleCount) + "*".repeat(5);
+}
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
@@ -189,7 +193,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ bookId }) => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 justify-between">
                         <span className="font-semibold text-white">
-                          {c.user?.fullName || c.user?.username || "Ẩn danh"}
+                          {c.user?.fullName || maskUsername(c.user?.username) || "Ẩn danh"}
                         </span>
                         <span className="text-gray-400 text-sm">
                           {formatDateVN(c.updatedAt || c.createdAt)}

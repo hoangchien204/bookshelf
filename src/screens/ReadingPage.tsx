@@ -3,10 +3,10 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import API from '../services/API';
 import BookCard from '../components/book/BookCard';
-import { useNavigate } from 'react-router-dom';
 import Loading from '../components/common/Loading';
 import type { Book } from '../types/Book';
 import { useFavorites } from '../hooks/useFavorites';
+import LoginModal from './login';
 interface Activity {
   id: string;
   book: Book;
@@ -23,7 +23,7 @@ const ReadingPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const userId = localStorage.getItem('userId');
   const accessToken = localStorage.getItem("accessToken");
-  const navigate = useNavigate();
+  const [showLogin, setShowLogin] = useState(false)
   const { favorites, setFavorites, handleToggleFavorite } = useFavorites(userId, accessToken);
 
   useEffect(() => {
@@ -79,20 +79,23 @@ const ReadingPage: React.FC = () => {
 
   if (!userId) {
     return (
-      <div className="text-center text-white mt-32">
-        <p className="text-lg">
-          Vui lòng{' '}
-          <span
-            className="text-blue-600 font-semibold cursor-pointer "
-            onClick={() => navigate('/login')}
-          >
-            đăng nhập
-          </span>{' '}
-          để sử dụng tính năng này.
-        </p>
+      <div className="text-center text-white text-lg mt-32">
+        Vui lòng{" "}
+        <button
+          onClick={() => setShowLogin(true)}
+          className="text-blue-600 font-semibold hover:underline"
+        >
+          đăng nhập
+        </button>{" "}
+        để sử dụng tính năng này.
+        <LoginModal
+          isOpen={showLogin}
+          onClose={() => setShowLogin(false)}
+        />
       </div>
     );
   }
+
   if (loading) return <Loading />;
 
   return (
@@ -131,6 +134,7 @@ const ReadingPage: React.FC = () => {
           ))}
         </div>
       )}
+
     </div>
   );
 };

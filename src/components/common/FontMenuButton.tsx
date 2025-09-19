@@ -40,7 +40,7 @@ export default function FontMenu({
     return (
         <div className="bg-gray-900 text-white w-[210px] sm:w-72 p-4 rounded-xl shadow-lg space-y-4 
                     transition-all duration-200 ease-out origin-top-right animate-in fade-in zoom-in-95 ">
-            {/* Nền */}
+           
             <div>
                 <h4 className="font-semibold mb-2">Nền</h4>
                 <div className="flex gap-2">

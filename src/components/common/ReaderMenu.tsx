@@ -5,9 +5,9 @@ interface ReaderMenuProps {
     toc: { label: string; href: string }[];
     notes: { id: string; cfiRange: string; note?: string; color?: string }[];
     onClose: () => void;
-    onSelectChapter: (href: string) => void;
+    onSelectChapter: (href: string, index: number) => void;
     onSelectNote: (cfiRange: string) => void;
-  onDeleteNote?: (id: string) => void;
+    onDeleteNote?: (id: string) => void;
     isMobile?: boolean;
 }
 
@@ -44,8 +44,8 @@ export default function ReaderMenu({
                 <button
                     onClick={() => setActiveTab("toc")}
                     className={`flex-1 py-2 font-medium transition ${activeTab === "toc"
-                            ? "text-green-400 border-b-2 border-green-400"
-                            : "text-gray-400 hover:text-gray-200"
+                        ? "text-green-400 border-b-2 border-green-400"
+                        : "text-gray-400 hover:text-gray-200"
                         }`}
                 >
                     Mục lục
@@ -53,8 +53,8 @@ export default function ReaderMenu({
                 <button
                     onClick={() => setActiveTab("notes")}
                     className={`flex-1 py-2 font-medium transition ${activeTab === "notes"
-                            ? "text-green-400 border-b-2 border-green-400"
-                            : "text-gray-400 hover:text-gray-200"
+                        ? "text-green-400 border-b-2 border-green-400"
+                        : "text-gray-400 hover:text-gray-200"
                         }`}
                 >
                     Ghi chú
@@ -68,7 +68,7 @@ export default function ReaderMenu({
                         {toc.map((item, i) => (
                             <li
                                 key={i}
-                                onClick={() => onSelectChapter(item.href)}
+                                onClick={() => onSelectChapter(item.href, i)}
                                 className="cursor-pointer px-2 py-1 rounded hover:bg-gray-700 truncate"
                             >
                                 {item.label}

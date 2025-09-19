@@ -2,25 +2,20 @@ import { ReactReader } from "react-reader";
 import type { EpubReaderWrapperProps, HighlightNote } from "../../types/EpubReader";
 import { useState } from "react";
 import { FiEdit2, FiTrash2, FiX } from "react-icons/fi";
+import LoginModal from "../../screens/login";
 
 interface EpubReaderMobileProps extends EpubReaderWrapperProps {
     bookData: ArrayBuffer | null;
     error: string | null;
     setRendition: (rend: any) => void;
-
-    // highlight
     notes: HighlightNote[];
     editingNote: HighlightNote | null;
     setEditingNote: (n: HighlightNote | null) => void;
     handleUpdateNote: (id: string, color?: string, note?: string) => void;
     handleAddNote: (color: string, note?: string) => void;
-
-    // modal state
     showModal: boolean;
     setShowModal: (b: boolean) => void;
     resetModal: () => void;
-
-    // temp state
     tempCFI: string | null;
     setTempCFI: (cfi: string | null) => void;
     tempNote: string;
@@ -30,12 +25,12 @@ interface EpubReaderMobileProps extends EpubReaderWrapperProps {
     charCount: number;
     rendition: any;
     customStyles: any;
-
     setupRendition: (
         rend: any,
         onReady?: (rend: any, toc: { label: string; href: string }[], notes: HighlightNote[]) => void,
         openEditModal?: (cfiRange: string, contents: any) => void
     ) => void;
+    isGuest: boolean;
 }
 
 export default function EpubReaderMobile({
@@ -63,10 +58,11 @@ export default function EpubReaderMobile({
     onReady,
     onNotesLoaded,
     tempCFI,
+    isGuest,
 }: EpubReaderMobileProps) {
     const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(null);
     const [showToolbar, setShowToolbar] = useState(false);
-    
+    const [showLogin, setShowLogin] = useState(false)
     if (error) return <div className="text-center text-red-600">{error}</div>;
     if (!bookData) return <div className="text-center">⏳ Đang tải EPUB...</div>;
 
@@ -94,6 +90,11 @@ export default function EpubReaderMobile({
                             onNotesLoaded?.(noteData);
                         },
                         (cfiRange, contents) => {
+                            if (isGuest) {
+                                setShowLogin(true);
+                                return;
+                            }
+
                             setEditingNote(null);
                             setTempCFI(cfiRange);
                             setTempNote("");
@@ -125,7 +126,7 @@ export default function EpubReaderMobile({
                     }}
                     onClick={() => setShowToolbar(false)}
                 >
-                    {/* Nút chọn màu */}
+
                     {["#d5b8ff", "#aee1ff", "#ffc4d6", "#fff9b1"].map((c) => (
                         <button
                             key={c}
@@ -164,8 +165,6 @@ export default function EpubReaderMobile({
                             }}
                         />
                     ))}
-
-                    {/* Nút mở modal ghi chú */}
                     <button
                         onClick={() => {
                             setShowToolbar(false);
@@ -176,7 +175,6 @@ export default function EpubReaderMobile({
                         <FiEdit2 size={18} />
                     </button>
 
-                    {/* Nút xoá highlight */}
                     {editingNote && (
                         <button
                             onClick={() => {
@@ -251,6 +249,12 @@ export default function EpubReaderMobile({
                         </div>
                     </div>
                 </div>
+            )}
+            {showLogin && (
+                <LoginModal
+                    isOpen={showLogin}
+                    onClose={() => setShowLogin(false)}
+                />
             )}
         </div>
     );

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Document } from "react-pdf";
 import { useSwipeable } from "react-swipeable";
 import axios from "axios";
@@ -12,12 +12,12 @@ import FontMenu from "../common/FontMenuButton";
 import ReaderMenu from "../common/ReaderMenu";
 import ChapterProgress from "../common/ReadingProgressCircle";
 import { motion } from "framer-motion";
+import LoginModal from "../../screens/login";
 
 interface Props {
   book: Book;
   userId: string | null;
   accessToken: string | null;
-  isGuest: boolean;
 }
 
 const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
@@ -39,6 +39,11 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
   const pageWidth = window.innerWidth - 30;
   const [scrollMode, setScrollMode] = useState(false);
 
+  // Guest check
+  const MAX_PAGES_FOR_GUEST = 10;
+  const [showLogin, setShowLogin] = useState(false);
+  const isGuest = !accessToken;
+  const allowedChapters = 2;
   /** 📌 Restore progress */
   useEffect(() => {
     if (!book || !userId) return;
@@ -54,23 +59,36 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
   useEffect(() => {
     if (rendition) {
       rendition.flow(scrollMode ? "scrolled-doc" : "paginated");
-      // ❌ bỏ dòng spread nếu không muốn quản lý viewMode
     }
   }, [rendition, scrollMode]);
+
   /** 📌 Save progress */
   const saveProgress = (page?: number, location?: string | number) => {
     if (!userId || !accessToken) return;
     if (book.fileType === "pdf" && page) {
       localStorage.setItem(`book-${book.id}-page`, String(page));
-      axios.post(API.read, { bookId: book.id, lastPage: page }, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      axios.post(
+        API.read,
+        { bookId: book.id, lastPage: page },
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
     } else if (book.fileType === "epub" && location) {
       localStorage.setItem(`book-${book.id}-location`, String(location));
-      axios.post(API.read, { bookId: book.id, lastLocation: location }, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      axios.post(
+        API.read,
+        { bookId: book.id, lastLocation: location },
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
     }
+  };
+
+  /** 📌 Giới hạn chọn chapter */
+  const handleSelectChapter = (href: string, index: number) => {
+    if (isGuest && index >= 2) {
+      setShowLogin(true);
+      return;
+    }
+    rendition?.display(href);
   };
 
   /** 📌 Swipe handlers */
@@ -83,11 +101,19 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
   /** 📌 Change PDF page */
   const handlePageChange = (offset: number) => {
     const newPage = currentPage + offset;
+
+    if (book.fileType === "pdf" && isGuest && newPage > MAX_PAGES_FOR_GUEST) {
+      setShowLogin(true);
+      return;
+    }
+
     if (newPage >= 1 && newPage <= numPages) {
       setCurrentPage(newPage);
       saveProgress(newPage, undefined);
     }
   };
+
+  /** 📌 Apply theme */
   useEffect(() => {
     if (!rendition) return;
     rendition.themes.fontSize(`${fontSize}px`);
@@ -100,9 +126,72 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
     rendition.themes.override("color", background === "#000000" ? "#ffffff" : "#000000");
   }, [rendition, fontSize, fontFamily, background]);
 
+
+  const lastValidLocationRef = useRef<string | null>(null);
+  const prevCfiRef = useRef<string | null>(null);
+  const [rollbackCfi, setRollbackCfi] = useState<string | null>(null);
+  const isRollbackingRef = useRef(false);
+  const isFirstLoadRef = useRef(true);
+
+  const checkGuestLimit = (location: any) => {
+    if (isRollbackingRef.current) {
+      return;
+    }
+    if (!isGuest || toc.length === 0) {
+      prevCfiRef.current = lastValidLocationRef.current;
+      lastValidLocationRef.current = location.start.cfi;
+      return;
+    }
+
+    const normalizeHref = (s: string) =>
+      (s.split("#")[0] || "").split("/").pop() || s;
+
+    const currentIndex = toc.findIndex(
+      (t) => normalizeHref(location.start.href) === normalizeHref(t.href)
+    );
+
+    if (currentIndex >= allowedChapters) {
+      setShowLogin(true);
+      const targetCfi = prevCfiRef.current || lastValidLocationRef.current;
+      if (
+        targetCfi &&
+        !isRollbackingRef.current &&
+        targetCfi !== location.start.cfi
+      ) {
+        setRollbackCfi(targetCfi);
+      }
+    } else if (currentIndex !== -1) {
+      prevCfiRef.current = lastValidLocationRef.current;
+      lastValidLocationRef.current = location.start.cfi;
+    }
+
+    if (isFirstLoadRef.current) {
+      isFirstLoadRef.current = false;
+    }
+  };
+
+  useEffect(() => {
+    if (rollbackCfi && rendition) {
+      isRollbackingRef.current = true;
+      rendition.display(rollbackCfi).then(() => {
+        setRollbackCfi(null);
+        setTimeout(() => {
+          isRollbackingRef.current = false;
+        }, 0);
+      });
+    }
+  }, [rollbackCfi, rendition]);
+
+
+  useEffect(() => {
+    if (rendition && toc.length > 0) {
+      rendition.on("relocated", checkGuestLimit);
+    }
+  }, [rendition, toc]);
+
+
   return (
     <div className="fixed inset-0 bg-white z-[99999] flex flex-col" {...handlers}>
-      {/* Header */}
       <ReaderHeader
         book={book}
         bookName={book.name}
@@ -112,7 +201,8 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
         onToggleToc={() => setOpenMenu(openMenu === "toc" ? null : "toc")}
       />
 
-      {openMenu == "font" && (
+      {/* Font menu */}
+      {openMenu === "font" && (
         <motion.div
           key="fontmenu"
           initial={{ opacity: 0, scale: 0.9, y: -10 }}
@@ -136,6 +226,7 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
         </motion.div>
       )}
 
+      {/* TOC menu */}
       {openMenu === "toc" && (
         <>
           <motion.div
@@ -146,8 +237,6 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
             className="fixed inset-0 bg-black z-[19999]"
             onClick={() => setOpenMenu(null)}
           />
-
-          {/* Sidebar */}
           <motion.div
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
@@ -159,7 +248,7 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
               toc={toc}
               notes={notes}
               onClose={() => setOpenMenu(null)}
-              onSelectChapter={(href) => rendition?.display(href)}
+              onSelectChapter={(href, index) => handleSelectChapter(href, index)}
               onSelectNote={(cfi) => rendition?.display(cfi)}
               isMobile={true}
             />
@@ -177,11 +266,7 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
             noData={<div className="text-center text-red-600">⚠ Không tìm thấy file PDF.</div>}
           >
             <div className="relative w-[400px] h-[535px] mx-auto max-[344px]:-left-[27px]">
-              <PdfPageWrapper
-                pageNumber={currentPage}
-                pageWidth={pageWidth}
-                fitMode="height"
-              />
+              <PdfPageWrapper pageNumber={currentPage} pageWidth={pageWidth} fitMode="height" />
             </div>
           </Document>
         ) : book.fileType === "epub" ? (
@@ -202,6 +287,7 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
               setRendition(rend);
               setToc(tocData);
               setNotes(noteData);
+              rend.on("relocated", checkGuestLimit)
             }}
             onNotesLoaded={(loadedNotes) => setNotes(loadedNotes)}
           />
@@ -210,7 +296,7 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
         )}
       </div>
 
-      {/* Footer */}
+      {/* Footer: page / progress */}
       {book.fileType === "pdf" ? (
         <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 bg-black/60 text-white px-3 py-1 rounded">
           Trang {currentPage} / {numPages}
@@ -218,6 +304,12 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
       ) : (
         <ChapterProgress rendition={rendition} />
       )}
+
+      {/* Modal login */}
+     <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+      />
     </div>
   );
 };

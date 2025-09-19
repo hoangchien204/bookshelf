@@ -1,7 +1,6 @@
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import NotFoundPage from './screens/NotFoundPage';
-import LoginPage from './screens/login';
 import DashboardLayout from './adminScreens/page/DashboardLayout';
 import UserManagement from './adminScreens/page/UserManagement';
 import BookManagement from './adminScreens/page/BookManagement';
@@ -66,7 +65,6 @@ useEffect(() => {
         <Route path="/reading" element={<ReadingPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path='/genres' element = {<GenresPage />} />
-        <Route path="/login" element={<LoginPage />} />
 
 
         {isAdmin && (

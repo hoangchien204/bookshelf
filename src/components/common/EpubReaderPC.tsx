@@ -1,5 +1,7 @@
 import { ReactReader } from "react-reader";
 import type { EpubReaderWrapperProps, HighlightNote } from "../../types/EpubReader";
+import { useState } from "react";
+import LoginModal from "../../screens/login";
 
 interface EpubReaderPCProps extends EpubReaderWrapperProps {
   bookData: ArrayBuffer | null;
@@ -32,6 +34,7 @@ interface EpubReaderPCProps extends EpubReaderWrapperProps {
     onReady?: (rend: any, toc: { label: string; href: string }[], notes: any[]) => void,
     openEditModal?: (cfiRange: string, contents: any) => void
   ) => void;
+  isGuest: boolean;
 }
 
 export default function EpubReaderPC({
@@ -61,10 +64,11 @@ export default function EpubReaderPC({
   setupRendition,
   onReady,
   onNotesLoaded,
+  isGuest,
 }: EpubReaderPCProps) {
   if (error) return <div className="text-center text-red-600">{error}</div>;
   if (!bookData) return <div className="text-center">⏳ Đang tải EPUB...</div>;
-
+  const [showLogin, setShowLogin] = useState(false)
   return (
     <div className="h-full flex flex-col">
       <ReactReader
@@ -91,6 +95,10 @@ export default function EpubReaderPC({
               onNotesLoaded?.(noteData);
             },
             (cfiRange, contents) => {
+              if (isGuest) {
+                setShowLogin(true);
+                return;
+              }
               setEditingNote(null);
               setTempCFI(cfiRange);
               setTempNote("");
@@ -136,7 +144,7 @@ export default function EpubReaderPC({
                         onDeleteNote?.(editingNote.id);
                         resetModal();
                       } else {
-                        // 👉 Nếu chọn màu khác => UPDATE
+
                         rendition?.annotations.remove(editingNote.cfiRange, "highlight");
                         rendition?.annotations.add(
                           "highlight",
@@ -206,6 +214,12 @@ export default function EpubReaderPC({
             )}
           </div>
         </div>
+      )}
+      {showLogin && (
+        <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+      />
       )}
     </div>
   );

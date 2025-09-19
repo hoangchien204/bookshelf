@@ -31,6 +31,7 @@ export default function CustomEpubReader({
   const [error, setError] = useState<string | null>(null);
   const [rendition, setRendition] = useState<any>(null);
   const isMobile = window.innerWidth < 1024;
+  const isGuest = !localStorage.getItem("accessToken");
 
   // Highlight + note
   const [notes, setNotes] = useState<HighlightNote[]>([]);
@@ -311,6 +312,7 @@ export default function CustomEpubReader({
         setupRendition={setupRendition}
         onReady={onReady}
         onNotesLoaded={onNotesLoaded}
+        isGuest={isGuest}
       />
     ) : (
       <EpubReaderPC
@@ -342,6 +344,7 @@ export default function CustomEpubReader({
         onReady={onReady}
         onNotesLoaded={onNotesLoaded}
         onDeleteNote={handleDeleteNote}
+        isGuest = {isGuest}
       />
     )
   );

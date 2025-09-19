@@ -96,7 +96,7 @@ export default function GenresPage() {
     if (loading) return <Loading />;
 
     return (
-        <div className="w-full min-h-screen bg-black text-white font-sans px-4 py-6 pt-28">
+        <div className="w-full min-h-screen bg-black text-white font-sans px-2 sm:px-4 md:px-6 lg:px-8 py-6 pt-32 sm:pt-20">
             {/* 🔹 Dropdown thể loại */}
             <div className="flex items-center gap-4 mb-8 mt-3">
                 <label className="text-base sm:text-lg lg:text-2xl font-semibold whitespace-nowrap">

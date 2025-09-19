@@ -27,7 +27,6 @@ const bookId = slugAndId?.substring(slugAndId.lastIndexOf("-") + 1);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  /** 📌 Fetch book & sync page */
   useEffect(() => {
   const fetchBook = async () => {
     try {
@@ -55,7 +54,6 @@ const bookId = slugAndId?.substring(slugAndId.lastIndexOf("-") + 1);
       }
       setBook(matched);
 
-      // ✅ Sync progress chỉ khi có login
       if (!isGuest) {
         let restoredPage = parseInt(localStorage.getItem(`book-${matched.id}-page`) || "1", 10);
 
@@ -109,7 +107,6 @@ const bookId = slugAndId?.substring(slugAndId.lastIndexOf("-") + 1);
       book={book}
       userId={userId}
       accessToken={accessToken} 
-      isGuest={isGuest}
     />
   );
 };
