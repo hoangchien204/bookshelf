@@ -9,7 +9,6 @@ import type { Book } from "../../types/Book";
 import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
 import LoginModal from "../../screens/login";
-import SignupModal from "../../screens/signup";
 
 interface Genre {
   id: string;
@@ -37,7 +36,6 @@ const TabBar = () => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
   const [showLogin, setShowLogin] = useState(false);
-  const [showSignup, setShowSignup] = useState(false)
 
   useEffect(() => {
     const fetchBooks = async () => {
