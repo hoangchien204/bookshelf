@@ -18,6 +18,7 @@ import ReadingPage from './screens/ReadingPage';
 
 import AuthWatcher from './components/common/GlobalAuthListener';
 import GenresPage from './screens/GenrePage';
+import { ModalProvider } from './components/common/GlobalModal';
 
 function AppRoutes() {
   const location = useLocation();
@@ -25,14 +26,14 @@ function AppRoutes() {
   const isAdmin = localStorage.getItem('role') === 'admin';
   const isBookDetail = /^\/book\/[^/]+$/.test(location.pathname);
   const book = location.state?.book;
-const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
 
-useEffect(() => {
-  const handleResize = () => setIsMobile(window.innerWidth < 768);
-  window.addEventListener("resize", handleResize);
-  return () => window.removeEventListener("resize", handleResize);
-}, []);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   useEffect(() => {
     if (isDashboard) {
       document.body.classList.add('dashboard-mode');
@@ -43,46 +44,48 @@ useEffect(() => {
 
   return (
     <>
-      <ToastProvider />
-      <AuthWatcher />
-      {!isDashboard && (
-        isBookDetail && isMobile ? (
-          <MobileTabBar
-            bookTitle={book?.name || ""}
-            onBack={() => window.history.back()}
-            onLike={() => console.log("like")}
-            onShare={() => console.log("share")}
-          />
-        ) : (
-          <TabBar />
-        )
-      )}
-      <Routes>
-        <Route path="/" element={<BookshelfApp />} />
-        <Route path="/read/:slugAndId" element={<BookReaderWrapper />} />
-        <Route path="/book/:slugAndId" element={<BookDetailPage />} />
-        <Route path="/favorites" element={<FavoritesPage />} />
-        <Route path="/reading" element={<ReadingPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path='/genres' element = {<GenresPage />} />
-
-
-        {isAdmin && (
-          <Route path="/admin" element={<DashboardLayout />}>
-            <Route index element={<Navigate to="users" />} />
-            <Route path="users" element={<UserManagement />} />
-            <Route path="books" element={<BookManagement />} />
-            <Route path="genre" element={<GenreBook />} />
-
-          </Route>
+      <ModalProvider>
+        <ToastProvider />
+        <AuthWatcher />
+        {!isDashboard && (
+          isBookDetail && isMobile ? (
+            <MobileTabBar
+              bookTitle={book?.name || ""}
+              onBack={() => window.history.back()}
+              onLike={() => console.log("like")}
+              onShare={() => console.log("share")}
+            />
+          ) : (
+            <TabBar />
+          )
         )}
+        <Routes>
+          <Route path="/" element={<BookshelfApp />} />
+          <Route path="/read/:slugAndId" element={<BookReaderWrapper />} />
+          <Route path="/book/:slugAndId" element={<BookDetailPage />} />
+          <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/reading" element={<ReadingPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path='/genres' element={<GenresPage />} />
 
-        {isDashboard && !isAdmin && (
-          <Route path="/admin/*" element={<NotFoundPage />} />
-        )}
 
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+          {isAdmin && (
+            <Route path="/admin" element={<DashboardLayout />}>
+              <Route index element={<Navigate to="users" />} />
+              <Route path="users" element={<UserManagement />} />
+              <Route path="books" element={<BookManagement />} />
+              <Route path="genre" element={<GenreBook />} />
+
+            </Route>
+          )}
+
+          {isDashboard && !isAdmin && (
+            <Route path="/admin/*" element={<NotFoundPage />} />
+          )}
+
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </ModalProvider>
     </>
   );
 }

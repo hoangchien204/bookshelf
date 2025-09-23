@@ -4,6 +4,7 @@ import CreatableSelect from 'react-select/creatable';
 import API from '../../services/API';
 import type { BookData } from '../../types/BookData';
 import Loading from '../../components/common/Loading';
+import axios from 'axios';
 
 interface GenreOption { label: string; value: string; }
 interface SeriesOption {
@@ -181,11 +182,12 @@ const AddBookModal: React.FC<AddBookModalProps> = ({
       if (bookData.file) formData.append('bookFile', bookData.file);
       if (bookData.cover) formData.append('cover', bookData.cover);
 
-      const res = await fetch(`${API.books}`, { method: 'POST', body: formData });
-      if (!res.ok) throw new Error(await res.text());
-
-      const book = await res.json();
-      console.log('Tạo sách thành công:', book);
+      await axios.post(API.books, formData, {
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`, // 👈 nhớ gửi token
+          "Content-Type": "multipart/form-data",
+        },
+      })
       if (onSuccess) onSuccess();
       onCancel();
     } catch (err) {

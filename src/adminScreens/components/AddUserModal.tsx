@@ -14,7 +14,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onUserAdded }) => 
     password: '',
     role: '0',
   });
-  const accessToken = localStorage.getItem('accessToken')
+  const token = localStorage.getItem('accessToken')
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -23,16 +23,26 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onUserAdded }) => 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post(API.users,formData,{
-        headers:{
+      await axios.post(API.users, formData, {
+        headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`
+          Authorization: `Bearer ${token}`
         }
       });
       onUserAdded();
       onClose();
-    } catch (error) {
-      console.error('Lỗi khi thêm người dùng:', error);
+    } catch (error: any) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 403) {
+          alert("Bạn không có quyền thêm user (chỉ admin mới được phép).");
+        } else if (error.response?.status === 401) {
+          alert("Token không hợp lệ hoặc đã hết hạn, vui lòng đăng nhập lại.");
+        } else {
+          alert(error.response?.data?.message || "Có lỗi xảy ra khi thêm user.");
+        }
+      } else {
+        alert("Không kết nối được server, vui lòng thử lại.");
+      }
     }
   };
 

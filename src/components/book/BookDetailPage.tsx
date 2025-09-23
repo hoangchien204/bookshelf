@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import CommentSection from "../user/CommentSection";
 import BookCard from "./BookCard";
 import HorizontalSlider from "../common/HorizontalSlider";
+import Loading from "../common/Loading";
 
 const BookDetailPage = () => {
   const navigate = useNavigate();
@@ -39,7 +40,9 @@ const BookDetailPage = () => {
     (async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${API.books}/${id}`);
+        const res = await axios.get(`${API.books}/${id}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
         setBook(res.data);
       } catch (error) {
         console.error("Lỗi:", error);
@@ -71,7 +74,7 @@ const BookDetailPage = () => {
     if (!book?.id) return;
     (async () => {
       try {
-        const res = await axios.get(`${API.books}/${book.id}/average`);
+        const res = await axios.get(`${API.ratings}/book/${book.id}/average`);
         setRating(res.data > 0 ? res.data : 5);
       } catch (err) {
         console.error("Lỗi:", err);
@@ -84,7 +87,9 @@ const BookDetailPage = () => {
   useEffect(() => {
     if (!book) return;
     (async () => {
-      const res = await fetch(`${API.books}/author/${encodeURIComponent(book.author)}`);
+      const res = await fetch(`${API.books}/author/${encodeURIComponent(book.author)}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
       if (res.ok) {
         const data = await res.json();
         setRelatedBooks(data.filter((b: Book) => b.id !== book.id));
@@ -96,7 +101,9 @@ const BookDetailPage = () => {
   useEffect(() => {
     if (!book) return;
     (async () => {
-      const res = await fetch(`${API.random}/${book.id}?limit=10`);
+      const res = await fetch(`${API.random}/${book.id}?limit=10`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
       if (res.ok) {
         setSuggestedBooks(await res.json());
       }
@@ -186,7 +193,7 @@ const BookDetailPage = () => {
   };
 
 
-  if (loading) return <div className="text-center py-8">Đang tải...</div>;
+  if (loading) return <Loading />;
   if (!book) return <div className="text-center py-8">Không tìm thấy sách</div>;
   const description = book.description || "Chưa có mô tả";
   const isLong = description.length > MAX_LENGTH;

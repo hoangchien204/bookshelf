@@ -78,7 +78,12 @@ export default function GenresPage() {
         const fetchBooks = async () => {
             setLoading(true);
             try {
-                const res = await axios.get(`${API.books}`);
+                const res = await axios.get(`${API.books}`, {
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                });
                 if (genreId) {
                     setBooks(res.data.filter((b: Book) => b.genre?.id === genreId));
                 } else {
@@ -170,7 +175,9 @@ export default function GenresPage() {
             {books.length === 0 ? (
                 <div className="text-gray-400">Không có sách trong thể loại này</div>
             ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 
+                                gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8 md:gap-x-10 md:gap-y-7 
+                                xl:gap-x-[55px] xl:gap-y-12">
                     {books.map((book) => (
                         <BookCard
                             key={book.id}

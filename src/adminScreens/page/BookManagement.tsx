@@ -12,7 +12,7 @@ interface Book {
   name: string;
   author: string;
   description: string;
-  genreId: string; // 👈 rõ ràng đây là FK tới Genre
+  genreId: string;
 }
 
 interface Genre {
@@ -27,15 +27,16 @@ const BookManagement = () => {
   const [bookData, setBookData] = useState<BookData>({
     name: '',
     author: '',
-    genre: null, // 👈 để trống ban đầu
+    genre: null,
     description: '',
     file: null,
     cover: null,
   });
+  const token = localStorage.getItem('accessToken')
   const [showDeleteSuccessModal, setShowDeleteSuccessModal] = useState(false);
   const [genres, setGenres] = useState<Genre[]>([]);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
-
+  // const booksPerPage = 5;
   useEffect(() => {
     axios
       .get(API.genres)
@@ -45,7 +46,7 @@ const BookManagement = () => {
 
   const fetchBooks = async () => {
     try {
-      const response = await axios.get(API.books);
+      const response = await axios.get(API.books, { headers: { Authorization: `Bearer ${token}`, } });
       setBooks(response.data);
     } catch (error) {
       console.error(error);
@@ -84,12 +85,12 @@ const BookManagement = () => {
 
       if (editingBook) {
         await axios.put(`${API.books}/${editingBook.id}`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
+          headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}`, },
         });
         setEditingBook(null);
       } else {
         await axios.post(API.books, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
+          headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}`, },
         });
       }
 
@@ -104,7 +105,7 @@ const BookManagement = () => {
   const deleteBook = async (id: string) => {
     if (confirm('Bạn có chắc chắn muốn xóa sách này?')) {
       try {
-        await axios.delete(`${API.books}/${id}`);
+        await axios.delete(`${API.books}/${id}`, { headers: { Authorization: `Bearer ${token}`, } });
         setBooks(books.filter((b) => b.id !== id));
         setShowDeleteSuccessModal(true);
       } catch (error) {

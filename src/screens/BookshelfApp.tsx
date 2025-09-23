@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import BookCard from '../components/book/BookCard';
 import API from '../services/API';
@@ -7,6 +7,7 @@ import Loading from '../components/common/Loading';
 import type { Book } from '../types/Book';
 import { useFavorites } from '../hooks/useFavorites';
 import { FaAngleDoubleDown } from "react-icons/fa";
+
 
 const BookshelfApp: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
@@ -131,9 +132,8 @@ const BookshelfApp: React.FC = () => {
                 </div>
               </section>
             )}
-
             <h1 className="text-xl font-semibold mb-4 text-left">Kho sách</h1>
-
+          
             {books.length === 0 ? (
               <p className="text-center text-gray-400">
                 Người này quá lười để thêm sách

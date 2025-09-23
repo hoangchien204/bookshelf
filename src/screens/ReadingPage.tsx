@@ -61,7 +61,7 @@ const ReadingPage: React.FC = () => {
 
           },
         });
-        setFavorites(res.data); // không map ra id
+        setFavorites(res.data); 
       } catch (err) {
 
       }

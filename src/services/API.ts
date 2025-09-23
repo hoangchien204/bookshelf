@@ -1,6 +1,6 @@
-const URL_LINK = "https://be-bookshelf.onrender.com";
+// const URL_LINK = "https://be-bookshelf.onrender.com";
 
-// const URL_LINK = "http://localhost:3000";
+const URL_LINK = "http://localhost:3000";
 
 // làm rối - RSA
 
@@ -18,6 +18,7 @@ const API = {
     ratings: `${URL_LINK}/ratings`,
     comments: `${URL_LINK}/comments`,
     highlights: `${URL_LINK}/highlights`,
+    verifyEmail: `${URL_LINK}/users/verifymail`,
     local: `${URL_LINK}`
 }
 export default API;
