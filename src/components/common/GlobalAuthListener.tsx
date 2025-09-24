@@ -33,7 +33,7 @@ export default function AuthWatcher() {
       if (isTokenExpired()) {
         toast.error("⏰ Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
         localStorage.clear();
-        navigate("/login");
+        navigate("/");
       }
     };
 

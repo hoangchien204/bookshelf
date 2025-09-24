@@ -11,7 +11,6 @@ interface AuthModalProps {
 
 const LoginModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [mode, setMode] = useState<"login" | "signup" | "forgot" | "verify">("login");
-
   // login states
   const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -72,6 +71,7 @@ const LoginModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     }
   };
   //singup
+  
   const handleSignupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setSignupData((prev) => ({ ...prev, [name]: value }));
