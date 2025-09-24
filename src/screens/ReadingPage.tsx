@@ -1,7 +1,7 @@
 // src/screens/ReadingPage.tsx
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import API from '../services/API';
+import api from '../types/api';
+import API from '../services/APIURL';
 import BookCard from '../components/book/BookCard';
 import Loading from '../components/common/Loading';
 import type { Book } from '../types/Book';
@@ -34,7 +34,7 @@ const ReadingPage: React.FC = () => {
       }
 
       try {
-        const res = await axios.get(API.activities, {
+        const res = await api.get(API.activities, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
@@ -54,7 +54,7 @@ const ReadingPage: React.FC = () => {
 
     const fetchFavorites = async () => {
       try {
-        const res = await axios.get(API.favorites, {
+        const res = await api.get(API.favorites, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`

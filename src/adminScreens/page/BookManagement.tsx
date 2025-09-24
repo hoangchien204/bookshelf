@@ -1,10 +1,10 @@
 // src/screens/BookManagement.tsx
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../types/api';
 import { FaPlus, FaSearch } from 'react-icons/fa';
 import AddBookModal from '../components/AddBookModal';
 import EditBookModal from '../components/EditBookModal';
-import API from '../../services/API';
+import API from '../../services/APIURL';
 import type { BookData } from '../../types/BookData';
 
 interface Book {
@@ -38,7 +38,7 @@ const BookManagement = () => {
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   // const booksPerPage = 5;
   useEffect(() => {
-    axios
+    api
       .get(API.genres)
       .then((res) => setGenres(res.data))
       .catch((err) => console.error('Lỗi khi lấy genres:', err));
@@ -46,7 +46,7 @@ const BookManagement = () => {
 
   const fetchBooks = async () => {
     try {
-      const response = await axios.get(API.books, { headers: { Authorization: `Bearer ${token}`, } });
+      const response = await api.get(API.books, { headers: { Authorization: `Bearer ${token}`, } });
       setBooks(response.data);
     } catch (error) {
       console.error(error);
@@ -84,12 +84,12 @@ const BookManagement = () => {
       }
 
       if (editingBook) {
-        await axios.put(`${API.books}/${editingBook.id}`, formData, {
+        await api.put(`${API.books}/${editingBook.id}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}`, },
         });
         setEditingBook(null);
       } else {
-        await axios.post(API.books, formData, {
+        await api.post(API.books, formData, {
           headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}`, },
         });
       }
@@ -105,7 +105,7 @@ const BookManagement = () => {
   const deleteBook = async (id: string) => {
     if (confirm('Bạn có chắc chắn muốn xóa sách này?')) {
       try {
-        await axios.delete(`${API.books}/${id}`, { headers: { Authorization: `Bearer ${token}`, } });
+        await api.delete(`${API.books}/${id}`, { headers: { Authorization: `Bearer ${token}`, } });
         setBooks(books.filter((b) => b.id !== id));
         setShowDeleteSuccessModal(true);
       } catch (error) {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../services/API";
+import API from "../services/APIURL";
+import api from "../types/api";
 import axios from "axios";
 import { useGlobalModal } from "../components/common/GlobalModal";
 
@@ -16,6 +17,7 @@ const LoginModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const { showModal } = useGlobalModal()
+  const [cooldown, setCooldown] = useState(0);
 
   // signup states
   const [signupData, setSignupData] = useState({
@@ -26,7 +28,7 @@ const LoginModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   });
 
   // verify states
-  const [verifyEmail, setVerifyEmail] = useState("");
+  const [, setVerifyEmail] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
 
   const navigate = useNavigate();
@@ -46,7 +48,7 @@ const LoginModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setErrorMessage("");
 
     try {
-      const res = await axios.post(
+      const res = await api.post(
         API.login,
         { email: emailOrUsername, password },
         { headers: { "Content-Type": "application/json" } }
@@ -54,6 +56,7 @@ const LoginModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
       if (res.data) {
         const data = res.data;
+        localStorage.setItem("accessToken", data.refreshToken);
         localStorage.setItem("accessToken", data.accessToken);
         localStorage.setItem("username", data.userName);
         localStorage.setItem("userId", data.userId);
@@ -71,7 +74,7 @@ const LoginModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     }
   };
   //singup
-  
+
   const handleSignupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setSignupData((prev) => ({ ...prev, [name]: value }));
@@ -80,32 +83,29 @@ const LoginModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
-
     if (signupData.password !== signupData.confirmPassword) {
       setErrorMessage("Mật khẩu nhập lại không khớp");
       return;
     }
     try {
-      const res = await axios.post(API.users, {
-        username: signupData.username,
+      const res = await api.post(API.verifyEmail, {
         email: signupData.email,
-        password: signupData.password,
       });
 
       if (res.data) {
-        showModal("Đăng ký thành công! Vui lòng kiểm tra email để xác thực.");
+        showModal("Vui lòng kiểm tra email để lấy mã xác thực.");
         setVerifyEmail(signupData.email);
         setMode("verify");
       }
     } catch (error: any) {
       if (axios.isAxiosError(error) && error.response) {
         const data = error.response.data;
-        let msg = "Lỗi khi đăng ký";
+        let msg = "Lỗi khi gửi mã xác thực";
 
         if (typeof data.message === "string") {
           msg = data.message;
         } else if (Array.isArray(data.message)) {
-          msg = data.message[0]; 
+          msg = data.message[0];
         }
 
         setErrorMessage(msg);
@@ -120,13 +120,15 @@ const LoginModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setErrorMessage("");
 
     try {
-      const res = await axios.post(API.verifyEmail, {
-        email: verifyEmail,
+      const res = await api.post(API.users, {
+        username: signupData.username,
+        email: signupData.email,
+        password: signupData.password,
         code: verifyCode,
       });
 
       if (res.data) {
-        showModal("Xác thực email thành công! Bạn có thể đăng nhập.");
+        showModal("Đăng ký & xác thực thành công! Bạn có thể đăng nhập.");
         setMode("login");
       }
     } catch (error: any) {
@@ -138,6 +140,21 @@ const LoginModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleResendCode = async () => {
+    if (cooldown > 0) return;
+    await handleSignup(new Event("submit") as any);
+    setCooldown(60);
+
+    const timer = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
   return (
     <div className="fixed inset-0 flex items-center justify-center z-[99999]">
       {/* Overlay */}
@@ -299,10 +316,11 @@ const LoginModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <p className="mt-6 text-center text-sm">
               Chưa nhận được email?{" "}
               <button
-                onClick={() => handleSignup(new Event("submit") as any)} // Gửi lại
-                className="hover:underline text-yellow-300"
+                onClick={handleResendCode} // Gửi lại
+                className={`hover:underline ${cooldown > 0 ? "text-gray-400 cursor-not-allowed" : "text-yellow-300"}`}
+                disabled={cooldown > 0}
               >
-                Gửi lại mã
+                {cooldown > 0 ? `Gửi lại sau ${cooldown}s` : "Gửi lại mã"}
               </button>
             </p>
           </>

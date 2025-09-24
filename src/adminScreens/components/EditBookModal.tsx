@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import API from '../../services/API';
-
+import API from '../../services/APIURL';
+import api from '../../types/api';
 interface Genre {
   id: string;
   name: string;
@@ -51,8 +50,8 @@ const EditBookModal: React.FC<EditBookModalProps> = ({
     if (file) {
       formData.append('file', file); 
     }
-    await axios.put(`${API.books}/${bookId}`, formData);
-    alert('✅ Cập nhật sách thành công!');
+    await api.put(`${API.books}/${bookId}`, formData);
+    alert('Cập nhật sách thành công!');
     onUpdated();
     onClose();
   } catch (err) {

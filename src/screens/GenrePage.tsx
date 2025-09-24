@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import axios from "axios";
-import API from "../services/API";
+import api from "../types/api";
+import API from "../services/APIURL";
 import BookCard from "../components/book/BookCard";
 import type { Book } from "../types/Book";
 import Loading from "../components/common/Loading";
@@ -32,7 +32,7 @@ export default function GenresPage() {
     useEffect(() => {
         const fetchGenres = async () => {
             try {
-                const res = await axios.get(API.genres);
+                const res = await api.get(API.genres);
                 setGenres(res.data.filter((g: Genre) => g.isActive));
             } catch (err) {
                 console.error("Lỗi:", err);
@@ -49,12 +49,12 @@ export default function GenresPage() {
                 return;
             }
             try {
-                const res = await axios.get(API.favorites, {
+                const res = await api.get(API.favorites, {
                     headers: { Authorization: `Bearer ${accessToken}` },
                 });
                 setFavorites(res.data);
             } catch (err) {
-                console.error("❌ Lỗi fetch favorites:", err);
+                console.error("Lỗi: ", err);
             }
         };
 
@@ -78,7 +78,7 @@ export default function GenresPage() {
         const fetchBooks = async () => {
             setLoading(true);
             try {
-                const res = await axios.get(`${API.books}`, {
+                const res = await api.get(`${API.books}`, {
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${accessToken}`,
@@ -90,7 +90,7 @@ export default function GenresPage() {
                     setBooks(res.data);
                 }
             } catch (err) {
-                console.error("❌ Lỗi fetch sách:", err);
+                console.error("Lỗi:", err);
             } finally {
                 setLoading(false);
             }

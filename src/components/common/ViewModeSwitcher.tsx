@@ -10,7 +10,6 @@ const ViewModeSwitcher: React.FC<ViewModeSwitcherProps> = ({ mode, onChange }) =
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  // 📌 Đóng khi click ngoài
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {

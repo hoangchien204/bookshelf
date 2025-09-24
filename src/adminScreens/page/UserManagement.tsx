@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 import AddUserModal from '../components/AddUserModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
-import axios from 'axios';
-import API from '../../services/API';
+import api from '../../types/api';
+import API from '../../services/APIURL';
 import toast from 'react-hot-toast';
 interface User {
   id: string;
@@ -24,7 +24,7 @@ const UserManagement = () => {
   const accessToken = localStorage.getItem('accessToken')
   const fetchUsers = async () => {
     try {
-      const response = await axios.get(API.users, {
+      const response = await api.get(API.users, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         }
@@ -45,7 +45,7 @@ const UserManagement = () => {
 
     if (confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
       try {
-        await axios.delete(`${API.users}/${id}`, {
+        await api.delete(`${API.users}/${id}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`
           }

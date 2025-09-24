@@ -1,7 +1,7 @@
 import { ReactReaderStyle, type IReactReaderStyle } from "react-reader";
 import { useState, useEffect } from "react";
-import axios from "axios";
-import API from "../../services/API";
+import api from "../../types/api";
+import API from "../../services/APIURL";
 import type { EpubReaderWrapperProps } from "../../types/EpubReader";
 import EpubReaderPC from "./EpubReaderPC";
 import EpubReaderMobile from "./EpubReaderMobi";
@@ -75,7 +75,7 @@ export default function CustomEpubReader({
   useEffect(() => {
     if (!bookId || !token) return;
 
-    axios.get(`${API.highlights}/${bookId}`, {
+    api.get(`${API.highlights}/${bookId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
@@ -139,7 +139,7 @@ export default function CustomEpubReader({
   const loadHighlights = async () => {
     if (!bookId || !token) return;
     try {
-      const res = await axios.get(`${API.highlights}/${bookId}`, {
+      const res = await api.get(`${API.highlights}/${bookId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const highlights = Array.isArray(res.data) ? res.data : res.data.data;
@@ -170,7 +170,7 @@ export default function CustomEpubReader({
     const finalColor = color || "#d5b8ff";
 
     try {
-      const res = await axios.post(
+      const res = await api.post(
         API.highlights,
         {
           bookId,
@@ -197,7 +197,7 @@ export default function CustomEpubReader({
       rendition?.annotations.remove(note.cfiRange, "highlight");
       setNotes((prev) => prev.filter((n) => n.id !== id));
 
-      await axios.delete(`${API.highlights}/${id}`, {
+      await api.delete(`${API.highlights}/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       await loadHighlights();
@@ -230,7 +230,7 @@ export default function CustomEpubReader({
   // Update existing highlight
   const handleUpdateNote = async (id: string, color?: string, note?: string) => {
     try {
-      const res = await axios.patch(
+      const res = await api.patch(
         `${API.highlights}/${id}`,
         { color, note },
         { headers: { Authorization: `Bearer ${token}` } }

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import API from "../../services/API";
+import API from "../../services/APIURL";
 import type { Book } from "../../types/Book";
 import Loading from "../common/Loading";
-import axios from "axios";
+import api from "../../types/api";
 
 import BookReaderPage from "./BookReaderPage";
 import BookReaderMobile from "./BookReaderMobile";
@@ -58,7 +58,7 @@ const bookId = slugAndId?.substring(slugAndId.lastIndexOf("-") + 1);
         let restoredPage = parseInt(localStorage.getItem(`book-${matched.id}-page`) || "1", 10);
 
         try {
-          const resAct = await axios.get(`${API.activities}/read/${matched.id}`, {
+          const resAct = await api.get(`${API.activities}/read/${matched.id}`, {
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${accessToken}`,
@@ -69,7 +69,7 @@ const bookId = slugAndId?.substring(slugAndId.lastIndexOf("-") + 1);
             restoredPage = serverPage;
             localStorage.setItem(`book-${matched.id}-page`, restoredPage.toString());
           } else if (serverPage && serverPage < restoredPage) {
-            await axios.post(
+            await api.post(
               API.read,
               { bookId: matched.id, page: restoredPage },
               {

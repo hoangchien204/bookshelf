@@ -1,7 +1,7 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../types/api";
 import toast from "react-hot-toast";
-import API from "../services/API";
+import API from "../services/APIURL";
 import type { Book } from "../types/Book";
 export function useFavorites(userId: string | null, accessToken: string | null) {
   const [favorites, setFavorites] = useState<Book[]>([]);
@@ -20,7 +20,7 @@ export function useFavorites(userId: string | null, accessToken: string | null) 
     );
 
     try {
-      const res = await axios.post(API.favorites, { bookId: book.id }, {
+      const res = await api.post(API.favorites, { bookId: book.id }, {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
 

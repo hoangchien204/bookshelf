@@ -4,9 +4,9 @@ import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { useEffect, useRef, useState } from "react";
 import AvatarMenu from "../user/AvatarMenu";
 import type { User } from "../../types/user";
-import API from "../../services/API";
+import API from "../../services/APIURL";
 import type { Book } from "../../types/Book";
-import axios from "axios";
+import api from "../../types/api";
 import { AnimatePresence, motion } from "framer-motion";
 import LoginModal from "../../screens/login";
 
@@ -40,7 +40,7 @@ const TabBar = () => {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const res = await axios.get<Book[]>(API.books)
+        const res = await api.get<Book[]>(API.books)
         setBooks(res.data);
       } catch (err) {
         console.error("Lỗi fetch books:", err);
@@ -52,7 +52,7 @@ const TabBar = () => {
   useEffect(() => {
     const fetchGenres = async () => {
       try {
-        const res = await axios.get(`${API.genres}`);
+        const res = await api.get(`${API.genres}`);
         setGenres(res.data.filter((g: Genre) => g.isActive));
       } catch (err) {
         console.error("Lỗi fetch thể loại:", err);
@@ -66,7 +66,7 @@ const TabBar = () => {
 
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${API.users}/${userId}`, {
+        const res = await api.get(`${API.users}/${userId}`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
@@ -325,7 +325,7 @@ const TabBar = () => {
                     setMenuOpen(false);
                     setShowLogin(true);
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                  className="w-full text-left"
                 >
                   Đăng nhập
                 </button>

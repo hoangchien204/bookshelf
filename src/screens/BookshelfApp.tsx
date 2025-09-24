@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import BookCard from '../components/book/BookCard';
-import API from '../services/API';
-import axios from 'axios';
+import API from '../services/APIURL';
+import api from '../types/api';
 import Loading from '../components/common/Loading';
 import type { Book } from '../types/Book';
 import { useFavorites } from '../hooks/useFavorites';
@@ -28,7 +28,7 @@ const BookshelfApp: React.FC = () => {
       if (!userId) return;
 
       try {
-        const res = await axios.get(API.favorites, {
+        const res = await api.get(API.favorites, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
@@ -51,7 +51,7 @@ const BookshelfApp: React.FC = () => {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const res = await axios.get(API.books);
+        const res = await api.get(API.books);
         setBooks(res.data);
       } catch (err) {
         console.error(err);
@@ -64,7 +64,7 @@ const BookshelfApp: React.FC = () => {
 
   const handleRead = async (book: Book) => {
     try {
-      const res = await axios.get(`${API.read}/${book.id}`, {
+      const res = await api.get(`${API.read}/${book.id}`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,

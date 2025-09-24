@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import API from '../../services/API';
+import api from '../../types/api';
+import API from '../../services/APIURL';
 
 interface Genre {
   id: string;
@@ -17,7 +17,7 @@ const GenreBook: React.FC = () => {
 
   const fetchGenres = async () => {
     try {
-      const res = await axios.get<Genre[]>(API.genres);
+      const res = await api.get<Genre[]>(API.genres);
       setGenres(res.data);
     } catch (err) {
       console.error('Lỗi khi lấy danh sách thể loại:', err);
@@ -35,7 +35,7 @@ const GenreBook: React.FC = () => {
     return;
   }
   try {
-    await axios.post(API.genres, { name: newGenre.trim() });
+    await api.post(API.genres, { name: newGenre.trim() });
     setNewGenre('');
     setError('');
     fetchGenres();
@@ -51,7 +51,7 @@ const GenreBook: React.FC = () => {
  const handleDelete = async (id: string) => {
   if (!window.confirm('Bạn có chắc muốn xóa thể loại này?')) return;
   try {
-    await axios.delete(`${API.genres}/${id}`);
+    await api.delete(`${API.genres}/${id}`);
     fetchGenres();
     setDeleteBlockedIds((prev) => prev.filter((gid) => gid !== id));
     alert("✅ Xóa thể loại thành công!");
@@ -85,7 +85,7 @@ const GenreBook: React.FC = () => {
       return;
     }
     try {
-      await axios.patch(`${API.genres}/${editGenreId}`, { name: editGenreName.trim() });
+      await api.patch(`${API.genres}/${editGenreId}`, { name: editGenreName.trim() });
       setEditGenreId(null);
       setEditGenreName('');
       setError('');

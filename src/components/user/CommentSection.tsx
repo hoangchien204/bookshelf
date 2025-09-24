@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { FaStar } from "react-icons/fa";
-import API from "../../services/API";
+import API from "../../services/APIURL";
 import type { User } from "../../types/user";
 import { FaPen } from "react-icons/fa";
+import api from "../../types/api";
 
 interface Comment {
   id: string;
@@ -35,14 +36,13 @@ const CommentSection: React.FC<CommentSectionProps> = ({ bookId }) => {
   const [activeTab, setActiveTab] = useState<"comments" | "reviews">("comments");
   const [visibleComments, setVisibleComments] = useState(5);
   const [visibleReviews, setVisibleReviews] = useState(5);
-  const accessToken = localStorage.getItem("accessToken")
   useEffect(() => {
-    fetch(`${API.comments}/book/${bookId}`)
-      .then((res) => res.json())
+    api(`${API.comments}/book/${bookId}`)
+      .then((res) => res.data)
       .then((data) => setComments(data));
 
-    fetch(`${API.ratings}/book/${bookId}`)
-      .then((res) => res.json())
+    api(`${API.ratings}/book/${bookId}`)
+      .then((res) => res.data)
       .then((data) => setReviews(data));
 
   }, [bookId]);
@@ -56,20 +56,11 @@ function maskUsername(username: string, visibleCount: number = 8): string {
     if (!newComment.trim()) return;
 
     try {
-      const res = await fetch(API.comments, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
+      const res = await api.post(API.comments, { 
           bookId,
-          content: newComment,
-        }),
+          content: newComment,    
       });
-
-      if (!res.ok) throw new Error(`Failed to post comment: ${res.statusText}`);
-      const created = await res.json();
+      const created = await res.data;
       setComments((prev) => [created, ...prev]);
       setNewComment("");
     } catch (err) {
@@ -84,23 +75,12 @@ function maskUsername(username: string, visibleCount: number = 8): string {
     if (!newReview.trim() || rating === 0) return;
 
     try {
-      const res = await fetch(API.ratings, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
+      const res = await api.post(API.ratings, {     
           bookId,
           score: rating,
           content: newReview,
-        }),
       });
-
-      if (!res.ok) throw new Error(`Failed to post review: ${res.statusText}`);
-      const created = await res.json();
-
-      // 🔑 Update nếu id đã tồn tại, nếu không thì thêm mới
+      const created = await res.data;
       setReviews((prev) => {
         const exists = prev.some((r) => r.id === created.id);
         return exists

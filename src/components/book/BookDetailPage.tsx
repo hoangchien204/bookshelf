@@ -1,10 +1,10 @@
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { slugify } from "../../utils/slug";
 import type { Book } from "../../types/Book";
-import API from "../../services/API";
+import API from "../../services/APIURL";
 import { useEffect, useState } from "react";
 import { FaHeart, FaRegHeart, FaStar, FaBookOpen, FaShareAlt } from "react-icons/fa";
-import axios from "axios";
+import api from "../../types/api";
 import toast from "react-hot-toast";
 import CommentSection from "../user/CommentSection";
 import BookCard from "./BookCard";
@@ -40,7 +40,7 @@ const BookDetailPage = () => {
     (async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${API.books}/${id}`, {
+        const res = await api.get(`${API.books}/${id}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
         setBook(res.data);
@@ -57,7 +57,7 @@ const BookDetailPage = () => {
     if (!userId || !accessToken) return;
     (async () => {
       try {
-        const res = await axios.get(API.favorites, {
+        const res = await api.get(API.favorites, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (Array.isArray(res.data)) {
@@ -74,7 +74,7 @@ const BookDetailPage = () => {
     if (!book?.id) return;
     (async () => {
       try {
-        const res = await axios.get(`${API.ratings}/book/${book.id}/average`);
+        const res = await api.get(`${API.ratings}/book/${book.id}/average`);
         setRating(res.data > 0 ? res.data : 5);
       } catch (err) {
         console.error("Lỗi:", err);
@@ -122,7 +122,7 @@ const BookDetailPage = () => {
         return;
       }
 
-      const response = await axios.post(
+      const response = await api.post(
         API.favorites,
         { bookId },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -162,7 +162,7 @@ const BookDetailPage = () => {
 
   const handleRead = async (book: Book) => {
     try {
-      const res = await axios.get(`${API.read}/${book.id}`, {
+      const res = await api.get(`${API.read}/${book.id}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const lastPage = res.data.page || 1;

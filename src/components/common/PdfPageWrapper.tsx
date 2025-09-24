@@ -9,7 +9,7 @@ interface PdfPageWrapperProps {
     rects: { x: number; y: number; w: number; h: number }[];
     color: string;
   }[];
-  isFullscreen?: boolean; // 👈 thêm vào
+  isFullscreen?: boolean;
 }
 
 export default function PdfPageWrapper({
@@ -17,7 +17,7 @@ export default function PdfPageWrapper({
   pageWidth,
   onTextSelect,
   fitMode = "width",
-  isFullscreen = false, // 👈 default
+  isFullscreen = false, 
 }: PdfPageWrapperProps) {
   return (
     <div

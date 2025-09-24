@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
-import API from '../../services/API';
+import APIURL from '../../services/APIURL';
 import type { BookData } from '../../types/BookData';
 import Loading from '../../components/common/Loading';
 import axios from 'axios';
-
 interface GenreOption { label: string; value: string; }
 interface SeriesOption {
   label: string;
@@ -55,7 +54,7 @@ const AddBookModal: React.FC<AddBookModalProps> = ({
     (async () => {
       try {
         setSeriesLoading(true);
-        const res = await fetch(`${API.series}?includeBooks=false`);
+        const res = await fetch(`${APIURL.series}?includeBooks=false`);
         const data = await res.json();
         const items = (data.items ?? data ?? []).map((s: any) => ({
           label: s.title,
@@ -122,7 +121,7 @@ const AddBookModal: React.FC<AddBookModalProps> = ({
       }
       (async () => {
         try {
-          const res = await fetch(`${API.series}/${bookData.seriesId}?includeBooks=true`);
+          const res = await fetch(`${APIURL.series}/${bookData.seriesId}?includeBooks=true`);
           const data = await res.json();
           const next = (data?.books?.length ?? 0) + 1;
           handleChange('volumeNumber', next);
@@ -182,7 +181,7 @@ const AddBookModal: React.FC<AddBookModalProps> = ({
       if (bookData.file) formData.append('bookFile', bookData.file);
       if (bookData.cover) formData.append('cover', bookData.cover);
 
-      await axios.post(API.books, formData, {
+      await axios.post(APIURL.books, formData, {
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("accessToken")}`, // 👈 nhớ gửi token
           "Content-Type": "multipart/form-data",

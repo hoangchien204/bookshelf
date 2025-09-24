@@ -1,6 +1,7 @@
 // components/AddUserModal.tsx
 import React, { useState } from 'react';
-import API from '../../services/API';
+import APIURL from '../../services/APIURL';
+import api from '../../types/api';
 import axios from 'axios';
 interface AddUserModalProps {
   onClose: () => void;
@@ -23,7 +24,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onUserAdded }) => 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post(API.users, formData, {
+      await api.post(APIURL.users, formData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`

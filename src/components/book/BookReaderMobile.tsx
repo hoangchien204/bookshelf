@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Document } from "react-pdf";
 import { useSwipeable } from "react-swipeable";
-import axios from "axios";
-import API from "../../services/API";
+import api from "../../types/api";
+import API from "../../services/APIURL";
 import type { Book } from "../../types/Book";
 
 import PdfPageWrapper from "../common/PdfPageWrapper";
@@ -67,14 +67,14 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
     if (!userId || !accessToken) return;
     if (book.fileType === "pdf" && page) {
       localStorage.setItem(`book-${book.id}-page`, String(page));
-      axios.post(
+      api.post(
         API.read,
         { bookId: book.id, lastPage: page },
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
     } else if (book.fileType === "epub" && location) {
       localStorage.setItem(`book-${book.id}-location`, String(location));
-      axios.post(
+      api.post(
         API.read,
         { bookId: book.id, lastLocation: location },
         { headers: { Authorization: `Bearer ${accessToken}` } }

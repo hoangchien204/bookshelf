@@ -1,20 +1,20 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Document, pdfjs } from "react-pdf";
-import API from "../../services/API";
-import Loading from "../common/Loading";
+import { motion } from "framer-motion";
 import type { Book } from "../../types/Book";
+import ChapterProgress from "../common/ReadingProgressCircle";
+import LoginModal from "../../screens/login";
+import Loading from "../common/Loading";
+import EpubReaderWrapper from "../common/EpubReaderWrapper";
+import FontMenu from "../common/FontMenuButton";
+import PdfPageWrapper from "../common/PdfPageWrapper";
+import ReaderHeader from "../common/ReaderHeader";
+import ReaderMenu from "../common/ReaderMenu";
+import API from "../../services/APIURL";
+import api from "../../types/api";
 import "react-pdf/dist/Page/TextLayer.css";
 import "react-pdf/dist/Page/AnnotationLayer.css";
-import axios from "axios";
-import PdfPageWrapper from "../common/PdfPageWrapper";
-import EpubReaderWrapper from "../common/EpubReaderWrapper";
-import ReaderHeader from "../common/ReaderHeader";
-import FontMenu from "../common/FontMenuButton";
-import ReaderMenu from "../common/ReaderMenu";
-import ChapterProgress from "../common/ReadingProgressCircle";
-import { motion } from "framer-motion";
-import LoginModal from "../../screens/login";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.js",
@@ -80,9 +80,9 @@ const BookReaderPage: React.FC = () => {
     const fetchBook = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API.books}/${bookId}`);
-        if (!res.ok) throw new Error("Không tìm thấy sách");
-        const matched: Book = await res.json();
+        const res = await api(`${API.books}/${bookId}`);
+        if (!res.data) throw new Error("Không tìm thấy sách");
+        const matched: Book = res.data;
         setBook(matched);
 
         if (matched.fileType === "pdf") {
@@ -90,7 +90,7 @@ const BookReaderPage: React.FC = () => {
 
           if (!isGuest) {
             try {
-              const resAct = await axios.get(`${API.activities}/read/${matched.id}`, {
+              const resAct = await api.get(`${API.activities}/read/${matched.id}`, {
                 headers: { Authorization: `Bearer ${accessToken}` },
               });
               const serverPage = resAct.data?.lastPage;
@@ -108,7 +108,7 @@ const BookReaderPage: React.FC = () => {
 
           if (!isGuest) {
             try {
-              const resAct = await axios.get(`${API.activities}/read/${matched.id}`, {
+              const resAct = await api.get(`${API.activities}/read/${matched.id}`, {
                 headers: { Authorization: `Bearer ${accessToken}` },
               });
 
@@ -161,7 +161,7 @@ const BookReaderPage: React.FC = () => {
         localStorage.setItem(`book-${book.id}-page`, newPage.toString());
         if (userId) {
           try {
-            await axios.post(
+            await api.post(
               API.read,
               { bookId: book.id, page: newPage },
               { headers: { Authorization: `Bearer ${accessToken}` } }
@@ -181,7 +181,7 @@ const BookReaderPage: React.FC = () => {
 
       rendition?.annotations.remove(note.cfiRange, "highlight");
 
-      await axios.delete(`${API.highlights}/${id}`, {
+      await api.delete(`${API.highlights}/${id}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
@@ -396,7 +396,7 @@ useEffect(() => {
                 setCurrentLocation(loc);
                 localStorage.setItem(`book-${book.id}-page`, String(loc));
                 if (userId) {
-                  axios
+                  api
                     .post(
                       API.read,
                       { bookId: book.id, lastLocation: loc },

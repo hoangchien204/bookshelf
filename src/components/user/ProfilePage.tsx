@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import API from "../../services/API";
+import API from "../../services/APIURL";
 import { toast } from "react-hot-toast";
+import api from "../../types/api";
 
 export default function ProfilePage() {
   const userId = localStorage.getItem("userId");
@@ -13,10 +14,8 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`${API.users}/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
+        const res = await api(`${API.users}/${userId}`);
+        const data = await res.data;
         setProfile(data);
       } catch (err) {
         toast.error("Không thể tải thông tin hồ sơ!");
