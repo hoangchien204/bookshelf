@@ -1,7 +1,6 @@
 // src/components/common/AuthWatcher.tsx
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
 
 function isTokenExpired() {
   const token = localStorage.getItem("accessToken");
