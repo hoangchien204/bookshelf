@@ -1,5 +1,6 @@
 // src/components/common/AuthWatcher.tsx
 import { useEffect } from "react";
+import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 function isTokenExpired() {
@@ -31,6 +32,8 @@ export default function AuthWatcher() {
     const handleAction = () => {
       if (isTokenExpired()) {
         localStorage.clear();
+          toast.error("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại");
+
         navigate("/");
       }
     };

@@ -57,7 +57,6 @@ const BookManagement = () => {
     fetchBooks();
   }, []);
 
-  // Xử lý nhấn nút sửa
   const handleEditClick = (book: Book) => {
     setEditingBook(book);
   };

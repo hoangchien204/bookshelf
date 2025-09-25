@@ -34,10 +34,13 @@ api.interceptors.response.use(
 
         const res = await axios.post(API.refresh, { refreshToken });
 
-        localStorage.setItem("accessToken", res.data.accessToken);
         localStorage.setItem("refreshToken", res.data.refreshToken);
+        localStorage.setItem("accessToken", res.data.accessToken);
 
-        originalRequest.headers.Authorization = `Bearer ${res.data.accessToken}`;
+        originalRequest.headers = {
+          ...originalRequest.headers,
+          Authorization: `Bearer ${res.data.accessToken}`,
+        };
         return api(originalRequest);
       } catch (err) {
         if (!isAlreadyHandled401) {

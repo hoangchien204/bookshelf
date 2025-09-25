@@ -64,7 +64,6 @@ function maskUsername(username: string, visibleCount: number = 8): string {
       setComments((prev) => [created, ...prev]);
       setNewComment("");
     } catch (err) {
-      console.error("Lỗi khi gửi comment:", err);
       alert("Không thể gửi bình luận. Vui lòng thử lại!");
     }
   };

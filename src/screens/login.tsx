@@ -56,14 +56,15 @@ const LoginModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
       if (res.data) {
         const data = res.data;
-        localStorage.setItem("accessToken", data.refreshToken);
+        localStorage.setItem("refreshToken", data.refreshToken);
         localStorage.setItem("accessToken", data.accessToken);
         localStorage.setItem("username", data.userName);
         localStorage.setItem("userId", data.userId);
         localStorage.setItem("role", data.role);
 
+
         onClose();
-        navigate(-1);
+        navigate("/");
       }
     } catch (error: any) {
       if (axios.isAxiosError(error) && error.response) {
@@ -282,10 +283,19 @@ const LoginModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 Đăng ký
               </button>
             </form>
+            <p className="text-center text-sm text-gray-300 mt-4">
+              Đã có tài khoản?{" "}
+              <button
+                type="button"
+                className="text-green-400 hover:underline"
+                onClick={() => setMode("login")}
+              >
+                Đăng nhập ngay
+              </button>
+            </p>
           </>
         )}
 
-        {/* Verify email */}
         {mode === "verify" && (
           <>
             <h2 className="text-2xl font-extrabold text-center mb-6 text-blue-400">

@@ -32,7 +32,6 @@ const ReadingPage: React.FC = () => {
         setLoading(false);
         return;
       }
-
       try {
         const res = await api.get(API.activities, {
           headers: {
