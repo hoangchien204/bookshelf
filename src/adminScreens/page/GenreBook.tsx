@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../types/api';
 import API from '../../services/APIURL';
+import { useGlobalModal } from '../../components/common/GlobalModal';
 
 interface Genre {
   id: string;
@@ -14,7 +15,7 @@ const GenreBook: React.FC = () => {
   const [editGenreName, setEditGenreName] = useState('');
   const [error, setError] = useState('');
   const [deleteBlockedIds, setDeleteBlockedIds] = useState<string[]>([]); // những thể loại không thể xóa
-
+  const { showModal } = useGlobalModal()
   const fetchGenres = async () => {
     try {
       const res = await api.get<Genre[]>(API.genres);
@@ -54,15 +55,14 @@ const GenreBook: React.FC = () => {
     await api.delete(`${API.genres}/${id}`);
     fetchGenres();
     setDeleteBlockedIds((prev) => prev.filter((gid) => gid !== id));
-    alert("✅ Xóa thể loại thành công!");
+    showModal("Xóa thể loại thành công!");
   } catch (err: any) {
     const msg = err.response?.data?.message || '';
     if (msg.includes('sách')) {
       setDeleteBlockedIds((prev) => [...prev, id]);
-      alert("❌ Không thể xóa: Thể loại đang liên kết với sách.");
+      showModal("Không thể xóa: Thể loại đang liên kết với sách.", "error");
     } else {
-      console.error('Xóa thể loại thất bại:', err);
-      alert("❌ Xóa thể loại thất bại. Vui lòng thử lại.");
+      showModal("Xóa thể loại thất bại. Vui lòng thử lại.", "error");
     }
   }
 };

@@ -4,6 +4,7 @@ import API from "../../services/APIURL";
 import type { User } from "../../types/user";
 import { FaPen } from "react-icons/fa";
 import api from "../../types/api";
+import { useGlobalModal } from "../common/GlobalModal";
 
 interface Comment {
   id: string;
@@ -36,6 +37,10 @@ const CommentSection: React.FC<CommentSectionProps> = ({ bookId }) => {
   const [activeTab, setActiveTab] = useState<"comments" | "reviews">("comments");
   const [visibleComments, setVisibleComments] = useState(5);
   const [visibleReviews, setVisibleReviews] = useState(5);
+  const { showModal } = useGlobalModal()
+
+
+
   useEffect(() => {
     api(`${API.comments}/book/${bookId}`)
       .then((res) => res.data)
@@ -46,25 +51,25 @@ const CommentSection: React.FC<CommentSectionProps> = ({ bookId }) => {
       .then((data) => setReviews(data));
 
   }, [bookId]);
-function maskUsername(username: string, visibleCount: number = 8): string {
-  if (!username) return "Ẩn danh";
-  if (username.length <= visibleCount) return username; 
-  return username.slice(0, visibleCount) + "*".repeat(5);
-}
+  function maskUsername(username: string, visibleCount: number = 8): string {
+    if (!username) return "Ẩn danh";
+    if (username.length <= visibleCount) return username;
+    return username.slice(0, visibleCount) + "*".repeat(5);
+  }
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
 
     try {
-      const res = await api.post(API.comments, { 
-          bookId,
-          content: newComment,    
+      const res = await api.post(API.comments, {
+        bookId,
+        content: newComment,
       });
       const created = await res.data;
       setComments((prev) => [created, ...prev]);
       setNewComment("");
     } catch (err) {
-      alert("Không thể gửi bình luận. Vui lòng thử lại!");
+      showModal("Không thể gửi bình luận. Vui lòng thử lại!", "error");
     }
   };
 
@@ -74,10 +79,10 @@ function maskUsername(username: string, visibleCount: number = 8): string {
     if (!newReview.trim() || rating === 0) return;
 
     try {
-      const res = await api.post(API.ratings, {     
-          bookId,
-          score: rating,
-          content: newReview,
+      const res = await api.post(API.ratings, {
+        bookId,
+        score: rating,
+        content: newReview,
       });
       const created = await res.data;
       setReviews((prev) => {
@@ -91,7 +96,7 @@ function maskUsername(username: string, visibleCount: number = 8): string {
       setRating(0);
     } catch (err) {
       console.error("Lỗi khi gửi review:", err);
-      alert("Không thể gửi đánh giá. Vui lòng thử lại!");
+      showModal("Không thể gửi đánh giá. Vui lòng thử lại!", "error");
     }
   };
   function formatDateVN(dateStr?: string) {
@@ -211,8 +216,8 @@ function maskUsername(username: string, visibleCount: number = 8): string {
                   key={star}
                   size={24}
                   onClick={() => setRating(star)}
-                  onMouseEnter={() => setHover(star)}   
-                  onMouseLeave={() => setHover(0)}     
+                  onMouseEnter={() => setHover(star)}
+                  onMouseLeave={() => setHover(0)}
                   className={`cursor-pointer transition-colors duration-200 
           ${star <= (hover || rating) ? "text-yellow-400" : "text-gray-500"}`}
                 />
@@ -240,7 +245,7 @@ function maskUsername(username: string, visibleCount: number = 8): string {
                     : "bg-green-500 hover:bg-green-600 text-white cursor-pointer"
                   }`}
               >
-              <FaPen className="inline mr-2" /> Gửi đánh giá
+                <FaPen className="inline mr-2" /> Gửi đánh giá
               </button>
             </div>
           </form>

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import APIURL from '../../services/APIURL';
 import api from '../../types/api';
 import axios from 'axios';
+import { useGlobalModal } from '../../components/common/GlobalModal';
 interface AddUserModalProps {
   onClose: () => void;
   onUserAdded: () => void;
@@ -15,6 +16,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onUserAdded }) => 
     password: '',
     role: '0',
   });
+  const { showModal } = useGlobalModal()
   const token = localStorage.getItem('accessToken')
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -35,14 +37,14 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onUserAdded }) => 
     } catch (error: any) {
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 403) {
-          alert("Bạn không có quyền thêm user (chỉ admin mới được phép).");
+          showModal("Bạn không có quyền thêm user.", "error");
         } else if (error.response?.status === 401) {
-          alert("Token không hợp lệ hoặc đã hết hạn, vui lòng đăng nhập lại.");
+          showModal("Token không hợp lệ hoặc đã hết hạn, vui lòng đăng nhập lại.", "error");
         } else {
-          alert(error.response?.data?.message || "Có lỗi xảy ra khi thêm user.");
+          showModal(error.response?.data?.message || "Có lỗi xảy ra khi thêm user.", "error");
         }
       } else {
-        alert("Không kết nối được server, vui lòng thử lại.");
+        showModal("Không kết nối được server, vui lòng thử lại.", "error");
       }
     }
   };

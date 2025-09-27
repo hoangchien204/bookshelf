@@ -7,6 +7,7 @@ import Loading from '../components/common/Loading';
 import type { Book } from '../types/Book';
 import { useFavorites } from '../hooks/useFavorites';
 import { FaAngleDoubleDown } from "react-icons/fa";
+import { useGlobalModal } from '../components/common/GlobalModal';
 
 
 const BookshelfApp: React.FC = () => {
@@ -18,7 +19,8 @@ const BookshelfApp: React.FC = () => {
 
   const location = useLocation();
   const [loadingBooks, setLoadingBooks] = useState(true);
- const [visibleCount, setVisibleCount] = useState(10);
+  const [visibleCount, setVisibleCount] = useState(10);
+  const { showModal } = useGlobalModal()
 
   const displayedBooks = books
     .filter((book) => !book.isSeries || book.volumeNumber === 1)
@@ -84,7 +86,7 @@ const BookshelfApp: React.FC = () => {
     } catch (err: any) {
       console.error(err);
       if (err.response?.status === 401) {
-        alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        showModal('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', "error");
       }
     }
   };
@@ -133,7 +135,7 @@ const BookshelfApp: React.FC = () => {
               </section>
             )}
             <h1 className="text-xl font-semibold mb-4 text-left">Kho sách</h1>
-          
+
             {books.length === 0 ? (
               <p className="text-center text-gray-400">
                 Người này quá lười để thêm sách

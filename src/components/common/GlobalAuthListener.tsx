@@ -31,9 +31,6 @@ export default function AuthWatcher() {
   useEffect(() => {
     const handleAction = () => {
       if (isTokenExpired()) {
-        localStorage.clear();
-          toast.error("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại");
-
         navigate("/");
       }
     };

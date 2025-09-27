@@ -87,7 +87,6 @@ export default function EpubReaderPC({
             });
           });
 
-          // gọi setupRendition giống file core
           setupRendition(
             rend,
             (rendition, tocData, noteData) => {
@@ -158,11 +157,9 @@ export default function EpubReaderPC({
                       }
                       resetModal();
                     } else if (!showTextbox) {
-                      //Highlight mới
                       handleAddNote(c);
                       resetModal();
                     } else {
-                      // Đang gõ note thì chỉ set màu tạm
                       setTempColor(c);
                     }
                   }}

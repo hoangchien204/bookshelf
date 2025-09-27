@@ -20,6 +20,8 @@ const API = {
     highlights: `${URL_LINK}/highlights`,
     verifyEmail: `${URL_LINK}/users/verifymail`,
     refresh: `${URL_LINK}/auth/refresh`,
+    resetPassword: `${URL_LINK}/users/reset-password`,
+    changePassword: `${URL_LINK}/users/changePassword`,
 
     local: `${URL_LINK}`
 }

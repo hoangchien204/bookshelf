@@ -8,6 +8,7 @@ const api = axios.create({
 
 let isAlreadyHandled401 = false;
 
+// 📌 Interceptor Request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("accessToken");
   if (token) {
@@ -16,11 +17,22 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// 📌 Interceptor Response
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    return res;
+  },
   async (error) => {
     const originalRequest = error.config;
+    const currentToken = localStorage.getItem("accessToken");
 
+    if (!currentToken) {
+      if (!isAlreadyHandled401) {
+        isAlreadyHandled401 = true;
+        toast.error("Bạn chưa đăng nhập");
+      }
+      return Promise.reject(error);
+    }
     if (originalRequest.url.includes("/auth/refresh")) {
       return Promise.reject(error);
     }
@@ -28,20 +40,29 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      if (!refreshToken) {
+        localStorage.clear();
+        toast.error("Hết phiên đăng nhập, vui lòng đăng nhập lại");
+        return Promise.reject(error);
+      }
+
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        if (!refreshToken) throw new Error("No refresh token");
+        const res = await api.post(API.refresh, { refreshToken });
 
-        const res = await axios.post(API.refresh, { refreshToken });
+        if (res.data?.accessToken && res.data?.refreshToken) {
 
-        localStorage.setItem("refreshToken", res.data.refreshToken);
-        localStorage.setItem("accessToken", res.data.accessToken);
+          localStorage.setItem("accessToken", res.data.accessToken);
+          localStorage.setItem("refreshToken", res.data.refreshToken);
+          originalRequest.headers["Authorization"] = `Bearer ${res.data.accessToken}`;
+          isAlreadyHandled401 = false;
 
-        originalRequest.headers = {
-          ...originalRequest.headers,
-          Authorization: `Bearer ${res.data.accessToken}`,
-        };
-        return api(originalRequest);
+          const retryResponse = await api(originalRequest);
+          return retryResponse;
+        } else {
+          throw new Error("Refresh token không hợp lệ");
+        }
       } catch (err) {
         if (!isAlreadyHandled401) {
           isAlreadyHandled401 = true;
@@ -50,7 +71,6 @@ api.interceptors.response.use(
         }
       }
     }
-
     return Promise.reject(error);
   }
 );

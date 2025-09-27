@@ -4,7 +4,7 @@ import CreatableSelect from 'react-select/creatable';
 import APIURL from '../../services/APIURL';
 import type { BookData } from '../../types/BookData';
 import Loading from '../../components/common/Loading';
-import axios from 'axios';
+import api from '../../types/api';
 interface GenreOption { label: string; value: string; }
 interface SeriesOption {
   label: string;
@@ -72,7 +72,6 @@ const AddBookModal: React.FC<AddBookModalProps> = ({
 
   const handleChange = (field: keyof BookData, value: any) => {
     setBookData((prev) => ({ ...prev, [field]: value }));
-    // clear lỗi khi người dùng sửa
     setErrors((prev) => ({ ...prev, [field]: '' }));
   };
 
@@ -181,16 +180,15 @@ const AddBookModal: React.FC<AddBookModalProps> = ({
       if (bookData.file) formData.append('bookFile', bookData.file);
       if (bookData.cover) formData.append('cover', bookData.cover);
 
-      await axios.post(APIURL.books, formData, {
+      await api.post(APIURL.books, formData, {
         headers: {
-          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`, // 👈 nhớ gửi token
           "Content-Type": "multipart/form-data",
         },
       })
       if (onSuccess) onSuccess();
       onCancel();
     } catch (err) {
-      console.error('Lỗi khi lưu sách:', err);
+      console.error('Lỗi:', err);
     } finally {
       setSaving(false);
     }

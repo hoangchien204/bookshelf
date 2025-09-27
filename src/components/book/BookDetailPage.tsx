@@ -10,6 +10,7 @@ import CommentSection from "../user/CommentSection";
 import BookCard from "./BookCard";
 import HorizontalSlider from "../common/HorizontalSlider";
 import Loading from "../common/Loading";
+import { useGlobalModal } from "../common/GlobalModal";
 
 const BookDetailPage = () => {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ const BookDetailPage = () => {
   const [book, setBook] = useState<Book | null>(location.state?.book || null);
   const [loading, setLoading] = useState(!location.state?.book);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const { showModal }= useGlobalModal()
 
   const userId = localStorage.getItem("userId");
   const accessToken = localStorage.getItem("accessToken");
@@ -170,7 +172,7 @@ const BookDetailPage = () => {
       navigate(`/book/${slug}-${book.id}`, { state: { startPage: lastPage } });
     } catch (err: any) {
       if (err.response?.status === 401) {
-        alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        showModal("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", "error");
       }
     }
   };

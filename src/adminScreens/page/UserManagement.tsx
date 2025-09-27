@@ -6,6 +6,7 @@ import { faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
 import api from '../../types/api';
 import API from '../../services/APIURL';
 import toast from 'react-hot-toast';
+import { useGlobalModal } from '../../components/common/GlobalModal';
 interface User {
   id: string;
   username: string;
@@ -22,6 +23,7 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const currentUserId = localStorage.getItem('userId')
   const accessToken = localStorage.getItem('accessToken')
+  const { notiFication }  = useGlobalModal();
   const fetchUsers = async () => {
     try {
       const response = await api.get(API.users, {
@@ -39,7 +41,7 @@ const UserManagement = () => {
 
   const deleteUser = async (id: string) => {
     if (id === currentUserId) {
-      alert("Bạn không thể xóa người này")
+      notiFication("Bạn không thể xóa người này", "error")
       return;
     }
 

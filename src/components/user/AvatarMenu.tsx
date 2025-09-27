@@ -7,7 +7,6 @@ const AvatarMenu = ({ avatarUrl, username }: { avatarUrl?: string; username?: st
     const hideTimeout = useRef<NodeJS.Timeout | null>(null);
 
     const handleEnter = () => {
-        // Huỷ timer ẩn nếu đang chạy
         if (hideTimeout.current) {
             clearTimeout(hideTimeout.current);
             hideTimeout.current = null;
@@ -55,12 +54,6 @@ const AvatarMenu = ({ avatarUrl, username }: { avatarUrl?: string; username?: st
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-100 transition-colors"
                     >
                         Hồ sơ
-                    </Link>
-                    <Link
-                        to="/settings"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-100 transition-colors"
-                    >
-                        Cài đặt
                     </Link>
                     <button
                         onClick={() => {

@@ -2,15 +2,14 @@ import { useEffect, useState } from "react";
 import API from "../../services/APIURL";
 import { toast } from "react-hot-toast";
 import api from "../../types/api";
+import ChangePasswordModal from "./ChangePasswordModal";
 
 export default function ProfilePage() {
   const userId = localStorage.getItem("userId");
   const token = localStorage.getItem("accessToken");
-
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
-  // Load thông tin user
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -162,13 +161,24 @@ export default function ProfilePage() {
 
       {/* Nút hành động */}
       <div className="flex justify-end gap-4 mt-6">
+
+        <button className="px-6 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition"
+          onClick={() => setShowChangePassword(true) }
+        >
+          Đổi mật khẩu
+        </button>
         <button
           onClick={handleSave}
           className="px-6 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition"
         >
           Cập nhật
         </button>
+
       </div>
+       <ChangePasswordModal
+        isOpen={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
+      />
     </div>
   );
 

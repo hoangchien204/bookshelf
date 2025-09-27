@@ -22,13 +22,13 @@ a:hover {
   color: #535bf2;
 }
 html, body {
-  overflow-x: hidden;          /* khóa cuộn ngang */
-  overscroll-behavior-x: none; /* chặn bounce khi vuốt ngang */
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 body {
   margin: 0;
   /* display: flex; */
-   background-color: #000;   /* nền đen */
+   background-color: #000;
   /* color: #fff;    */
   place-items: center;
   min-width: 320px;
@@ -70,6 +70,34 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pop {
+  0% { transform: scale(0); }
+  80% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pop {
+  animation: pop 0.5s ease-out forwards;
 }
 
 @tailwind base;

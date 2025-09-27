@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import API from '../../services/APIURL';
 import api from '../../types/api';
+import { useGlobalModal } from '../../components/common/GlobalModal';
 interface Genre {
   id: string;
   name: string;
@@ -25,9 +26,9 @@ const EditBookModal: React.FC<EditBookModalProps> = ({
 }) => {
   const [selectedGenreId, setSelectedGenreId] = useState<string>('');
   const [description, setDescription] = useState(currentDescription);
-  const [file, setFile] = useState<File | null>(null); // thêm file
+  const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
-
+  const { showModal } = useGlobalModal();
   useEffect(() => {
     if (genres.length > 0) {
       const isValidGenreId = genres.some((g) => g.id === currentGenreId);
@@ -51,12 +52,12 @@ const EditBookModal: React.FC<EditBookModalProps> = ({
       formData.append('file', file); 
     }
     await api.put(`${API.books}/${bookId}`, formData);
-    alert('Cập nhật sách thành công!');
+    showModal('Cập nhật sách thành công!');
     onUpdated();
     onClose();
   } catch (err) {
     console.error(err);
-    setError('Đã xảy ra lỗi khi cập nhật sách.');
+    showModal('Đã xảy ra lỗi khi cập nhật sách.', "error");
   }
 };
 
