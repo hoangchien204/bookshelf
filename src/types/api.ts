@@ -33,10 +33,12 @@ api.interceptors.response.use(
       }
       return Promise.reject(error);
     }
+
     if (originalRequest.url.includes("/auth/refresh")) {
       return Promise.reject(error);
     }
 
+    // 🌀 Gặp lỗi 401 → tiến hành refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
@@ -55,6 +57,7 @@ api.interceptors.response.use(
 
           localStorage.setItem("accessToken", res.data.accessToken);
           localStorage.setItem("refreshToken", res.data.refreshToken);
+
           originalRequest.headers["Authorization"] = `Bearer ${res.data.accessToken}`;
           isAlreadyHandled401 = false;
 
