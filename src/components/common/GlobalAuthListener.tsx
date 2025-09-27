@@ -1,6 +1,5 @@
 // src/components/common/AuthWatcher.tsx
 import { useEffect } from "react";
-import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 function isTokenExpired() {
