@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import API from '../../services/APIURL';
 import api from '../../types/api';
 import { useGlobalModal } from '../../components/common/GlobalModal';
+import Select from 'react-select'
 interface Genre {
   id: string;
   name: string;
@@ -9,8 +10,8 @@ interface Genre {
 
 interface EditBookModalProps {
   bookId: string;
-  currentGenreId: string;
-  currentDescription: string;
+  currentGenreIds: string[];   // mảng thay vì 1 id
+  currentDescription?: string;
   genres: Genre[];
   onClose: () => void;
   onUpdated: () => void;
@@ -18,48 +19,58 @@ interface EditBookModalProps {
 
 const EditBookModal: React.FC<EditBookModalProps> = ({
   bookId,
-  currentGenreId,
+  currentGenreIds,
   currentDescription,
   genres,
   onClose,
   onUpdated,
 }) => {
-  const [selectedGenreId, setSelectedGenreId] = useState<string>('');
-  const [description, setDescription] = useState(currentDescription);
+  const [selectedGenreIds, setSelectedGenreIds] = useState<string[]>([]);
+  const [description, setDescription] = useState(currentDescription ?? '');
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
   const { showModal } = useGlobalModal();
+  const genreOptions = genres.map((g) => ({
+    value: g.id,
+    label: g.name,
+  }));
+  // init selected genres
   useEffect(() => {
     if (genres.length > 0) {
-      const isValidGenreId = genres.some((g) => g.id === currentGenreId);
-      setSelectedGenreId(isValidGenreId ? currentGenreId : genres[0].id);
+      const validIds = currentGenreIds.filter((id) =>
+        genres.some((g) => g.id === id)
+      );
+      setSelectedGenreIds(validIds.length > 0 ? validIds : [genres[0].id]);
     }
-  }, [genres, currentGenreId]);
+  }, [genres, currentGenreIds]);
 
- const handleUpdate = async () => {
-  const selectedGenre = genres.find((g) => g.id === selectedGenreId);
-
-  if (!selectedGenre) {
-    setError('Không tìm thấy thể loại phù hợp.');
-    return;
-  }
-
-  try {
-    const formData = new FormData();
-    formData.append('genreId', selectedGenre.id);
-    formData.append('description', description);
-    if (file) {
-      formData.append('file', file); 
+  const handleUpdate = async () => {
+    if (selectedGenreIds.length === 0) {
+      setError('Vui lòng chọn ít nhất một thể loại.');
+      return;
     }
-    await api.put(`${API.books}/${bookId}`, formData);
-    showModal('Cập nhật sách thành công!');
-    onUpdated();
-    onClose();
-  } catch (err) {
-    console.error(err);
-    showModal('Đã xảy ra lỗi khi cập nhật sách.', "error");
-  }
-};
+
+    try {
+      const formData = new FormData();
+      selectedGenreIds.forEach((id) => formData.append('genres[]', id));
+
+
+      formData.append('description', description);
+
+      if (file) {
+        formData.append('file', file);
+      }
+
+      await api.put(`${API.books}/${bookId}`, formData);
+
+      showModal('Cập nhật sách thành công!');
+      onUpdated();
+      onClose();
+    } catch (err) {
+      console.error(err);
+      showModal('Đã xảy ra lỗi khi cập nhật sách.', 'error');
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -67,24 +78,18 @@ const EditBookModal: React.FC<EditBookModalProps> = ({
         <h2 className="text-xl font-semibold mb-4">Chỉnh sửa sách</h2>
 
         {/* Thể loại */}
-        <div className="mb-4">
+
           <label className="block mb-1 font-medium">Thể loại</label>
-          <select
-            value={selectedGenreId}
-            onChange={(e) => setSelectedGenreId(e.target.value)}
-            className="w-full border px-3 py-2 rounded"
-          >
-            {genres.length > 0 ? (
-              genres.map((genre) => (
-                <option key={genre.id} value={genre.id}>
-                  {genre.name}
-                </option>
-              ))
-            ) : (
-              <option disabled>Không có thể loại</option>
-            )}
-          </select>
-        </div>
+          <Select
+            isMulti
+            options={genreOptions}
+            value={genreOptions.filter((opt) => selectedGenreIds.includes(opt.value))}
+            onChange={(selected) =>
+              setSelectedGenreIds(selected.map((s) => s.value))
+            }
+            placeholder="Chọn thể loại..."
+            className="w-full"
+          />
 
         {/* Mô tả */}
         <div className="mb-4">

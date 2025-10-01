@@ -33,7 +33,7 @@ const AddBookModal: React.FC<AddBookModalProps> = ({
   const [bookData, setBookData] = useState<BookData>({
     name: '',
     author: '',
-    genre: null,
+    genres: [],
     description: '',
     file: null,
     cover: null,
@@ -171,8 +171,9 @@ const AddBookModal: React.FC<AddBookModalProps> = ({
       const formData = new FormData();
       formData.append('name', bookData.name);
       formData.append('author', bookData.author);
-      formData.append('genreId', bookData.genre?.id || '');
-      formData.append('description', bookData.description || '');
+      if (bookData.genres && bookData.genres.length > 0) {
+        formData.append('genres', JSON.stringify(bookData.genres.map((g) => g.id)));
+      } formData.append('description', bookData.description || '');
       formData.append('isSeries', String(!!bookData.isSeries));
       if (bookData.seriesId) formData.append('seriesId', bookData.seriesId);
       if (bookData.seriesTitleNew) formData.append('seriesTitleNew', bookData.seriesTitleNew);
@@ -228,18 +229,17 @@ const AddBookModal: React.FC<AddBookModalProps> = ({
         {errors.author && <p className="text-xs text-red-500 mb-2">{errors.author}</p>}
 
         <Select
+          isMulti
           options={genreOptions}
-          value={bookData.genre ? { label: bookData.genre.name, value: bookData.genre.id } : null}
+          value={bookData.genres?.map((g) => ({ label: g.name, value: g.id }))}
           onChange={(selected) => {
-            if (selected) {
-              const option = selected as GenreOption;
-              handleChange('genre', { id: option.value, name: option.label });
-            } else {
-              handleChange('genre', null);
-            }
+            const arr = (selected as GenreOption[]).map((opt) => ({
+              id: opt.value,
+              name: opt.label,
+            }));
+            handleChange('genres', arr);
           }}
           placeholder="Chọn thể loại..."
-          isClearable
           className="mb-1"
         />
         {errors.genre && <p className="text-xs text-red-500 mb-2">{errors.genre}</p>}

@@ -30,42 +30,42 @@ const GenreBook: React.FC = () => {
   }, []);
 
   const handleAddGenre = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!newGenre.trim()) {
-    setError('Vui lòng nhập tên thể loại.');
-    return;
-  }
-  try {
-    await api.post(API.genres, { name: newGenre.trim() });
-    setNewGenre('');
-    setError('');
-    fetchGenres();
-  } catch (err: any) {
-    if (err.response?.status === 409) {
-      setError('Tên thể loại đã tồn tại.');
-    } else {
-      setError(err.response?.data?.message || 'Thêm thể loại thất bại.');
+    e.preventDefault();
+    if (!newGenre.trim()) {
+      setError('Vui lòng nhập tên thể loại.');
+      return;
     }
-  }
-};
+    try {
+      await api.post(API.genres, { name: newGenre.trim() });
+      setNewGenre('');
+      setError('');
+      fetchGenres();
+    } catch (err: any) {
+      if (err.response?.status === 409) {
+        setError('Tên thể loại đã tồn tại.');
+      } else {
+        setError(err.response?.data?.message || 'Thêm thể loại thất bại.');
+      }
+    }
+  };
 
- const handleDelete = async (id: string) => {
-  if (!window.confirm('Bạn có chắc muốn xóa thể loại này?')) return;
-  try {
-    await api.delete(`${API.genres}/${id}`);
-    fetchGenres();
-    setDeleteBlockedIds((prev) => prev.filter((gid) => gid !== id));
-    showModal("Xóa thể loại thành công!");
-  } catch (err: any) {
-    const msg = err.response?.data?.message || '';
-    if (msg.includes('sách')) {
-      setDeleteBlockedIds((prev) => [...prev, id]);
-      showModal("Không thể xóa: Thể loại đang liên kết với sách.", "error");
-    } else {
-      showModal("Xóa thể loại thất bại. Vui lòng thử lại.", "error");
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Bạn có chắc muốn xóa thể loại này?')) return;
+    try {
+      await api.delete(`${API.genres}/${id}`);
+      fetchGenres();
+      setDeleteBlockedIds((prev) => prev.filter((gid) => gid !== id));
+      showModal("Xóa thể loại thành công!");
+    } catch (err: any) {
+      const msg = err.response?.data?.message || '';
+      if (msg.includes('sách')) {
+        setDeleteBlockedIds((prev) => [...prev, id]);
+        showModal("Không thể xóa: Thể loại đang liên kết với sách.", "error");
+      } else {
+        showModal("Xóa thể loại thất bại. Vui lòng thử lại.", "error");
+      }
     }
-  }
-};
+  };
 
   const handleEdit = (genre: Genre) => {
     setEditGenreId(genre.id);
@@ -96,20 +96,23 @@ const GenreBook: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-6 bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-6 text-center">Quản lý Thể loại sách</h2>
+<div className="w-full min-h-screen p-6 bg-white rounded-lg shadow">
+      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+        Quản lý Thể loại Sách
+      </h2>
 
+      {/* Form thêm thể loại */}
       <form onSubmit={handleAddGenre} className="flex gap-3 mb-6">
         <input
           type="text"
           value={newGenre}
           onChange={(e) => setNewGenre(e.target.value)}
-          placeholder="Nhập tên thể loại mới"
-          className="flex-1 px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+          placeholder="Nhập tên thể loại mới..."
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button
           type="submit"
-          className="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 transition"
+          className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition"
         >
           Thêm
         </button>
@@ -117,7 +120,8 @@ const GenreBook: React.FC = () => {
 
       {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
-      <div className="grid gap-4">
+      {/* Danh sách thể loại */}
+      <div className="space-y-3">
         {genres.map((genre) => {
           const isBlocked = deleteBlockedIds.includes(genre.id);
           const isEditing = editGenreId === genre.id;
@@ -125,19 +129,20 @@ const GenreBook: React.FC = () => {
           return (
             <div
               key={genre.id}
-              className={`flex justify-between items-center border px-4 py-2 rounded shadow-sm hover:shadow-md transition ${
-                isBlocked ? 'bg-gray-100 text-gray-400' : ''
-              }`}
+              className={`flex justify-between items-center px-5 py-3 rounded-lg border shadow-sm hover:shadow-md transition-all ${isBlocked
+                  ? "bg-gray-100 text-gray-400 border-gray-200"
+                  : "bg-gray-50 text-gray-800 border-gray-300"
+                }`}
             >
               {isEditing ? (
                 <input
                   type="text"
                   value={editGenreName}
                   onChange={(e) => setEditGenreName(e.target.value)}
-                  className="flex-1 mr-3 px-3 py-1 border rounded"
+                  className="flex-1 mr-3 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               ) : (
-                <span className="text-gray-800 font-medium">{genre.name}</span>
+                <span className="text-lg font-medium">{genre.name}</span>
               )}
 
               <div className="flex gap-2">
@@ -145,21 +150,25 @@ const GenreBook: React.FC = () => {
                   <>
                     <button
                       onClick={handleUpdate}
-                      className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                      className="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600"
                     >
                       Lưu
                     </button>
                     <button
                       onClick={handleCancelEdit}
-                      className="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500"
+                      className="bg-gray-400 text-white px-3 py-1 rounded-lg hover:bg-gray-500"
                     >
                       Hủy
                     </button>
                   </>
                 ) : isBlocked ? (
                   <button
-                    onClick={() => setDeleteBlockedIds((prev) => prev.filter((gid) => gid !== genre.id))}
-                    className="text-gray-500 hover:underline"
+                    onClick={() =>
+                      setDeleteBlockedIds((prev) =>
+                        prev.filter((gid) => gid !== genre.id)
+                      )
+                    }
+                    className="px-3 py-1 text-sm text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300"
                   >
                     Hủy xóa
                   </button>
@@ -167,13 +176,13 @@ const GenreBook: React.FC = () => {
                   <>
                     <button
                       onClick={() => handleEdit(genre)}
-                      className="text-blue-600 hover:underline"
+                      className="px-3 py-1 text-sm text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition"
                     >
                       Sửa
                     </button>
                     <button
                       onClick={() => handleDelete(genre.id)}
-                      className="text-red-600 hover:underline"
+                      className="px-3 py-1 text-sm text-red-600 border border-red-600 rounded-lg hover:bg-red-600 hover:text-white transition"
                     >
                       Xóa
                     </button>
@@ -186,6 +195,7 @@ const GenreBook: React.FC = () => {
       </div>
     </div>
   );
+
 };
 
 export default GenreBook;

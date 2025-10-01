@@ -85,7 +85,11 @@ export default function GenresPage() {
                     },
                 });
                 if (genreId) {
-                    setBooks(res.data.filter((b: Book) => b.genre?.id === genreId));
+                    setBooks(
+                        res.data.filter((b: Book) =>
+                            b.genres?.some((g) => g.id === genreId) || b.genre?.id === genreId,
+                        )
+                    );
                 } else {
                     setBooks(res.data);
                 }

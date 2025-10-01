@@ -13,4 +13,6 @@ export interface Book {
   isSeries?: boolean;
   volumeNumber?: number;
   seriesId?: string;
+  genres?: Genre[];
+  genreId?: string | null;
 }

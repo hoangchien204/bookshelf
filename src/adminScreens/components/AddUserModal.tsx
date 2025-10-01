@@ -26,7 +26,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onUserAdded }) => 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post(APIURL.users, formData, {
+      await api.post(`${APIURL.users}/admin`, formData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`

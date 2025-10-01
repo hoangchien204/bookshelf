@@ -6,14 +6,7 @@ import AddBookModal from '../components/AddBookModal';
 import EditBookModal from '../components/EditBookModal';
 import API from '../../services/APIURL';
 import type { BookData } from '../../types/BookData';
-
-interface Book {
-  id: string;
-  name: string;
-  author: string;
-  description: string;
-  genreId: string;
-}
+import type { Book } from '../../types/Book';
 
 interface Genre {
   id: string;
@@ -168,7 +161,9 @@ const BookManagement = () => {
                 <td className="border p-2">{book.name}</td>
                 <td className="border p-2">{book.author}</td>
                 <td className="border p-2">
-                  {genres.find((g) => g.id === book.genreId)?.name || 'Không xác định'}
+                  {book.genres && book.genres.length > 0
+                    ? book.genres.map((g) => g.name).join(', ')
+                    : genres.find((g) => g.id === book.genreId)?.name || 'Không xác định'}
                 </td>
                 <td className="border p-2 text-center space-x-2">
                   <button
@@ -230,7 +225,7 @@ const BookManagement = () => {
           setBookData={setBookData}
           onSave={handleSaveBook}
           onCancel={() => setShowAddModal(false)}
-          genreOptions={genres.map((g) => ({ label: g.name, value: g.id }))} // 👈 truyền option chuẩn
+          genreOptions={genres.map((g) => ({ label: g.name, value: g.id }))}
         />
       )}
 
@@ -238,7 +233,13 @@ const BookManagement = () => {
       {editingBook && (
         <EditBookModal
           bookId={editingBook.id}
-          currentGenreId={editingBook.genreId} // 👈 gửi id
+          currentGenreIds={
+            editingBook.genres
+              ? editingBook.genres.map((g) => g.id)
+              : editingBook.genreId
+                ? [editingBook.genreId]
+                : []
+          }
           currentDescription={editingBook.description}
           genres={genres}
           onClose={() => setEditingBook(null)}

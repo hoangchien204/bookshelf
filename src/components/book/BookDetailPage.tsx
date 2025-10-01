@@ -270,8 +270,9 @@ const BookDetailPage = () => {
             <RatingBadge score={rating} />
           </span>
           <span className="bg-gray-700 text-white text-sm px-3 py-1 rounded-full flex justify-center items-center">
-            {book.genre?.name || "Không rõ"}
-          </span>
+            {book.genres && book.genres.length > 0
+              ? book.genres.map((g) => g.name).join(", ")
+              : "Không rõ"}          </span>
         </div>
 
         <div className="hidden md:block md:w-[400px] flex-shrink-0 md:sticky md:top-0 self-start p-6">
@@ -297,7 +298,11 @@ const BookDetailPage = () => {
               </div>
               <div>
                 <div className="text-gray-300 font-medium">Thể loại</div>
-                <div className="text-white">{book.genre?.name || "Không rõ"}</div>
+                <div className="text-white">
+                  {book.genres && book.genres.length > 0
+                    ? book.genres.map((g) => g.name).join(", ")
+                    : "Không rõ"}
+                </div>
               </div>
               <div>
                 <div className="text-gray-300 font-medium">Trạng thái</div>

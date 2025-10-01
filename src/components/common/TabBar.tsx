@@ -183,7 +183,8 @@ const TabBar = () => {
         </div>
 
         {/* Nhóm phải */}
-        <div className="flex items-center gap-8 ml-10">
+        <div className="flex items-center gap-8 ml-10 relative">
+
           {searchOpen ? (
             <input
               type="text"
@@ -208,7 +209,20 @@ const TabBar = () => {
               <FontAwesomeIcon icon={faSearch} />
             </button>
           )}
-
+          {searchOpen && filteredBooks.length > 0 && (
+            <ul className="absolute right-4 top-12 bg-gray-800 text-white rounded shadow-lg w-64 max-h-64 overflow-y-auto z-50 hide-scrollbar">
+              {filteredBooks.map((book) => (
+                <li
+                  key={book.id}
+                  className="px-3 py-2 hover:bg-gray-400 cursor-pointer"
+                  onMouseDown={() => (window.location.href = `/book/${book.id}`)}
+                >
+                  <span className="font-medium">{book.name}</span>
+                  <span className="text-gray-500 text-sm ml-1">— {book.author}</span>
+                </li>
+              ))}
+            </ul>
+          )}
           {isLoggedIn ? (
             <AvatarMenu
               avatarUrl={user?.avatarUrl || "/default-avatar.png"}
@@ -246,6 +260,21 @@ const TabBar = () => {
               <FontAwesomeIcon icon={faSearch} />
             </button>
           )}
+
+          {searchOpen && filteredBooks.length > 0 && (
+            <ul className="absolute right-4 top-12 bg-gray-800 text-white rounded shadow-lg w-64 max-h-64 overflow-y-auto z-50 hide-scrollbar">
+              {filteredBooks.map((book) => (
+                <li
+                  key={book.id}
+                  className="px-3 py-2 hover:bg-gray-400 cursor-pointer"
+                  onMouseDown={() => (window.location.href = `/book/${book.id}`)}
+                >
+                  <span className="font-medium">{book.name}</span>
+                  <span className="text-gray-500 text-sm ml-1">— {book.author}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <motion.div
           initial={{ y: 0 }}
@@ -260,20 +289,6 @@ const TabBar = () => {
         </motion.div>
       </div>
 
-      {searchOpen && filteredBooks.length > 0 && (
-        <ul className="absolute right-4 top-16 bg-gray-800 text-white rounded shadow-lg w-64 max-h-64 overflow-y-auto z-50 hide-scrollbar">
-          {filteredBooks.map((book) => (
-            <li
-              key={book.id}
-              className="px-3 py-2 hover:bg-gray-400 cursor-pointer"
-              onMouseDown={() => (window.location.href = `/book/${book.id}`)}
-            >
-              <span className="font-medium">{book.name}</span>
-              <span className="text-gray-500 text-sm ml-1">— {book.author}</span>
-            </li>
-          ))}
-        </ul>
-      )}
       {menuOpen && (
         <div className="fixed inset-0 z-50 flex">
           <div
@@ -339,7 +354,7 @@ const TabBar = () => {
         isOpen={showLogin}
         onClose={() => setShowLogin(false)}
       />
-    
+
     </div>
   );
 

@@ -1,6 +1,6 @@
 export interface Genre {
   id: string;
-  name: string;
+  name?: string;
 }
 export interface BookData {
   name: string;
@@ -13,4 +13,5 @@ export interface BookData {
   seriesId?: string | null;
   seriesTitleNew?: string | null;
   volumeNumber?: number | null;
+  genres?: Genre[] | null
 }
