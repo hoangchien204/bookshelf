@@ -23,7 +23,7 @@ const BookDetailPage = () => {
   const [book, setBook] = useState<Book | null>(location.state?.book || null);
   const [loading, setLoading] = useState(!location.state?.book);
   const [showFullDescription, setShowFullDescription] = useState(false);
-  const { showModal }= useGlobalModal()
+  const { showModal } = useGlobalModal()
 
   const userId = localStorage.getItem("userId");
   const accessToken = localStorage.getItem("accessToken");
@@ -33,7 +33,8 @@ const BookDetailPage = () => {
     slugParam?.match(
       /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/
     )?.[0] || "";
-
+  const [volumes, setVolumes] = useState<Book[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const MAX_LENGTH = 200;
 
   // Fetch chi tiết sách
@@ -43,8 +44,8 @@ const BookDetailPage = () => {
       try {
         setLoading(true);
         const res = await api.get(`${API.books}/${id}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
         setBook(res.data);
       } catch (error) {
         console.error("Lỗi:", error);
@@ -111,7 +112,18 @@ const BookDetailPage = () => {
       }
     })();
   }, [book]);
-
+  // Danh sách tập 
+  useEffect(() => {
+    if (!book?.id || !book?.seriesId) return
+    (async () => {
+      try {
+        const res = await api.get(`${API.series}/${book.seriesId}/books`);
+        setVolumes(res.data);
+      } catch (err) {
+        console.error("Lỗi khi lấy danh sách chương:", err);
+      }
+    })();
+  }, [book?.id]);
   // Toggle favorite (chung cho mọi sách)
   const handleToggleFavorite = async (bookId: string) => {
     if (isProcessing) return;
@@ -345,17 +357,87 @@ const BookDetailPage = () => {
 
           {/* Danh sách tập */}
           <div>
-            {book.volumeNumber ? (
+            {book.seriesId ? (
               <>
                 <h2 className="text-xl font-semibold mb-2">Danh sách tập</h2>
-                {/* render danh sách tập ở đây */}
-                <h2 className="text-xl font-semibold mb-2">Độc giả nói gì về "{book.name}"</h2>
-                {<CommentSection bookId={book.id} />}
+
+                {(() => {
+                  const itemsPerPage = 4;
+                  const totalPages = Math.ceil(volumes.length / itemsPerPage);
+                  const startIndex = (currentPage - 1) * itemsPerPage;
+                  const endIndex = startIndex + itemsPerPage;
+                  const currentVolumes = volumes.slice(startIndex, endIndex);
+
+                  return (
+                    <>
+                      <div className="space-y-3 mb-4">
+                        {currentVolumes.length > 0 ? (
+                          currentVolumes.map((vol) => (
+                            <div
+                              key={vol.id}
+                              className={`flex justify-between items-center bg-gray-800 hover:bg-gray-700 transition p-4 rounded-xl cursor-pointer ${String(vol.id) === String(book.id)
+                                ? "ring-2 ring-green-500"
+                                : ""
+                                }`}
+                              onClick={() =>
+                                navigate(`/book/${slugify(vol.name)}-${vol.id}`)
+                              }
+                            >
+                              <h3 className="font-semibold text-white truncate">
+                                {vol.name}
+                              </h3>
+                              <button className="bg-black hover:bg-gray-900 text-white px-4 py-2 rounded-full font-semibold text-sm whitespace-nowrap">
+                                Đọc Ngay
+                              </button>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-gray-400">
+                            Chưa có tập nào khác trong series này.
+                          </p>
+                        )}
+                      </div>
+
+                      {totalPages > 1 && (
+                        <div className="flex justify-center items-center gap-2 mb-6">
+                          <button
+                            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="w-10 h-10 bg-gray-700 text-white rounded disabled:opacity-50 rounded-full"
+                          >
+                            ←
+                          </button>
+
+                          <span className="text-white text-sm">
+                            Trang {currentPage} / {totalPages}
+                          </span>
+
+                          <button
+                            onClick={() =>
+                              setCurrentPage((p) => Math.min(p + 1, totalPages))
+                            }
+                            disabled={currentPage === totalPages}
+                            className="w-10 h-10 bg-gray-700 text-white rounded disabled:opacity-50 rounded-full"
+                          >
+                            →
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+
+                <h2 className="text-xl font-semibold mb-2">
+                  Độc giả nói gì về "{book.name}"
+                </h2>
+                <CommentSection bookId={book.id} />
               </>
             ) : (
               <>
-                <h2 className="text-xl font-semibold mb-2">Độc giả nói gì về "{book.name}"</h2>
-                {<CommentSection bookId={book.id} />}
+                <h2 className="text-xl font-semibold mb-2">
+                  Độc giả nói gì về "{book.name}"
+                </h2>
+                <CommentSection bookId={book.id} />
               </>
             )}
           </div>

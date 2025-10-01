@@ -1,4 +1,3 @@
-// screens/UserManagement.tsx
 import { useEffect, useState } from 'react';
 import AddUserModal from '../components/AddUserModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -7,6 +6,7 @@ import api from '../../types/api';
 import API from '../../services/APIURL';
 import toast from 'react-hot-toast';
 import { useGlobalModal } from '../../components/common/GlobalModal';
+
 interface User {
   id: string;
   username: string;
@@ -21,9 +21,13 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const currentUserId = localStorage.getItem('userId')
-  const accessToken = localStorage.getItem('accessToken')
-  const { notiFication }  = useGlobalModal();
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 20;
+
+  const currentUserId = localStorage.getItem('userId');
+  const accessToken = localStorage.getItem('accessToken');
+  const { notiFication } = useGlobalModal();
+
   const fetchUsers = async () => {
     try {
       const response = await api.get(API.users, {
@@ -41,7 +45,7 @@ const UserManagement = () => {
 
   const deleteUser = async (id: string) => {
     if (id === currentUserId) {
-      notiFication("Bạn không thể xóa người này", "error")
+      notiFication("Bạn không thể xóa người này", "error");
       return;
     }
 
@@ -53,7 +57,7 @@ const UserManagement = () => {
           }
         });
         setUsers(users.filter((u) => u.id !== id));
-        toast("Xóa thành công")
+        toast("Xóa thành công");
       } catch (error) {
         console.error('Lỗi khi xóa người dùng:', error);
       }
@@ -67,6 +71,14 @@ const UserManagement = () => {
   const filteredUsers = users.filter((user) =>
     user.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  const startIndex = (currentPage - 1) * usersPerPage;
+  const currentUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   return (
     <div>
@@ -95,37 +107,68 @@ const UserManagement = () => {
       {loading ? (
         <p>Đang tải dữ liệu...</p>
       ) : (
-        <table className="w-full border border-gray-300 text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              {/* <th className="border px-4 py-2">ID</th> ID ẩn đi */}
-              <th className="border px-4 py-2">Tên đăng nhập</th>
-              <th className="border px-4 py-2">Email</th>
-              <th className="border px-4 py-2">Quyền</th>
-              <th className="border px-4 py-2">Ngày tạo</th>
-              <th className="border px-4 py-2">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.map((user) => (
-              <tr key={user.id}>
-                {/* <td className="border px-4 py-2">{user.id}</td> */}
-                <td className="border px-4 py-2">{user.username}</td>
-                <td className="border px-4 py-2">{user.email}</td>
-                <td className="border px-4 py-2 capitalize">{user.role}</td>
-                <td className="border px-4 py-2">{new Date(user.createdAt).toLocaleString('vi-VN')}</td>
-                <td className="border px-4 py-2 text-center">
-                  <button
-                    onClick={() => deleteUser(user.id)}
-                    className="text-red-600 hover:underline"
-                  >
-                    Xóa
-                  </button>
-                </td>
+        <>
+          <table className="w-full border border-gray-300 text-sm">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="border px-4 py-2">Tên đăng nhập</th>
+                <th className="border px-4 py-2">Email</th>
+                <th className="border px-4 py-2">Quyền</th>
+                <th className="border px-4 py-2">Ngày tạo</th>
+                <th className="border px-4 py-2">Thao tác</th>
               </tr>
+            </thead>
+            <tbody>
+              {currentUsers.map((user) => (
+                <tr key={user.id}>
+                  <td className="border px-4 py-2">{user.username}</td>
+                  <td className="border px-4 py-2">{user.email}</td>
+                  <td className="border px-4 py-2 capitalize">{user.role}</td>
+                  <td className="border px-4 py-2">
+                    {new Date(user.createdAt).toLocaleString('vi-VN', {
+                      timeZone: 'Asia/Ho_Chi_Minh',
+                    })}
+                  </td>
+                  <td className="border px-4 py-2 text-center">
+                    <button
+                      onClick={() => deleteUser(user.id)}
+                      className="text-red-600 hover:underline"
+                    >
+                      Xóa
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="flex justify-center items-center mt-4 space-x-2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className="w-10 h-10 rounded-full bg-gray-200  disabled:opacity-50"
+            >←
+            </button>
+
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-3 py-1 rounded-full ${
+                  currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200"
+                }`}
+              >
+                {i + 1}
+              </button>
             ))}
-          </tbody>
-        </table>
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="w-10 h-10 rounded-full bg-gray-200  disabled:opacity-50"
+            >→
+            </button>
+          </div>
+        </>
       )}
 
       {showModal && (

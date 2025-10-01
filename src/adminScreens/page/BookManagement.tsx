@@ -36,6 +36,10 @@ const BookManagement = () => {
   const [showDeleteSuccessModal, setShowDeleteSuccessModal] = useState(false);
   const [genres, setGenres] = useState<Genre[]>([]);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const bookPage = 15;
+
+
   // const booksPerPage = 5;
   useEffect(() => {
     api
@@ -118,6 +122,9 @@ const BookManagement = () => {
     book.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const totalPages = Math.ceil(filteredBooks.length / bookPage);
+  const startIndex = (currentPage - 1) * bookPage;
+  const currentBooks = filteredBooks.slice(startIndex, startIndex + bookPage);
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Quản lý sách</h1>
@@ -154,8 +161,8 @@ const BookManagement = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredBooks.length > 0 ? (
-            filteredBooks.map((book) => (
+          {currentBooks.length > 0 ? (
+            currentBooks.map((book) => (
               <tr key={book.id}>
                 <td className="border p-2">{book.id}</td>
                 <td className="border p-2">{book.name}</td>
@@ -188,6 +195,32 @@ const BookManagement = () => {
           )}
         </tbody>
       </table>
+      <div className="flex justify-center items-center mt-4 space-x-2">
+        <button
+          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+          disabled={currentPage === 1}
+          className="w-10 h-10 rounded-full bg-gray-200  disabled:opacity-50"
+        >←
+        </button>
+
+        {[...Array(totalPages)].map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrentPage(i + 1)}
+            className={`px-3 py-1 rounded-full ${currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200"
+              }`}
+          >
+            {i + 1}
+          </button>
+        ))}
+
+        <button
+          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+          disabled={currentPage === totalPages}
+          className="w-10 h-10 rounded-full bg-gray-200  disabled:opacity-50"
+        >→
+        </button>
+      </div>
 
       {/* Modal Thêm sách */}
       {showAddModal && (

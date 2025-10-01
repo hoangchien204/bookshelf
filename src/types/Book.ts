@@ -12,4 +12,5 @@ export interface Book {
   createdAt: string;
   isSeries?: boolean;
   volumeNumber?: number;
+  seriesId?: string;
 }
