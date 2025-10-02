@@ -262,7 +262,7 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
           <Document
             file={book.fileUrl}
             onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-            loading={<div className="text-center">Đang tải PDF...</div>}
+            loading={<div className="text-center">Đang tải ...</div>}
             noData={<div className="text-center text-red-600">⚠ Không tìm thấy file PDF.</div>}
           >
             <div className="relative w-[400px] h-[535px] mx-auto max-[344px]:-left-[27px]">

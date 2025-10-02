@@ -67,7 +67,7 @@ export default function EpubReaderPC({
   isGuest,
 }: EpubReaderPCProps) {
   if (error) return <div className="text-center text-red-600">{error}</div>;
-  if (!bookData) return <div className="text-center">⏳ Đang tải EPUB...</div>;
+  if (!bookData) return <div className="text-center">⏳ Đang tải...</div>;
   const [showLogin, setShowLogin] = useState(false)
   return (
     <div className="h-full flex flex-col">

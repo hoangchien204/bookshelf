@@ -147,9 +147,10 @@ const AddBookModal: React.FC<AddBookModalProps> = ({
     const newErrors: { [key: string]: string } = {};
     if (!bookData.name?.trim()) newErrors.name = 'Vui lòng nhập tên sách';
     if (!bookData.author?.trim()) newErrors.author = 'Vui lòng nhập tên tác giả';
-    if (!bookData.genre || !bookData.genre.id || !bookData.genre.id.trim()) {
-      newErrors.genre = 'Vui lòng chọn thể loại';
-    } if (!bookData.file) newErrors.file = 'Vui lòng chọn file PDF';
+    if (!bookData.genres || bookData.genres.length === 0) {
+      newErrors.genres = 'Vui lòng chọn thể loại';
+    }
+    if (!bookData.file) newErrors.file = 'Vui lòng chọn file PDF';
     if (!bookData.cover) newErrors.cover = 'Vui lòng chọn ảnh bìa';
 
     if (bookData.isSeries) {
@@ -173,7 +174,8 @@ const AddBookModal: React.FC<AddBookModalProps> = ({
       formData.append('author', bookData.author);
       if (bookData.genres && bookData.genres.length > 0) {
         formData.append('genres', JSON.stringify(bookData.genres.map((g) => g.id)));
-      } formData.append('description', bookData.description || '');
+      }
+      formData.append('description', bookData.description || '');
       formData.append('isSeries', String(!!bookData.isSeries));
       if (bookData.seriesId) formData.append('seriesId', bookData.seriesId);
       if (bookData.seriesTitleNew) formData.append('seriesTitleNew', bookData.seriesTitleNew);

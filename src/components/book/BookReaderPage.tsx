@@ -370,7 +370,7 @@ useEffect(() => {
               file={book.fileUrl}
               onLoadSuccess={({ numPages }) => setNumPages(numPages)}
               onLoadError={(error) => console.error("PDF load error:", error)}
-              loading={<div className="text-center">Đang tải file PDF...</div>}
+              loading={<div className="text-center">Đang tải ...</div>}
               noData={<div className="text-center text-red-600">⚠ Không tìm thấy file PDF.</div>}
             >
               <div className="flex justify-center gap-6">
