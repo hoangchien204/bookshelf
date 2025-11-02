@@ -33,7 +33,7 @@ const ReadingPage: React.FC = () => {
         return;
       }
       try {
-        const res = await api.get(API.activities, {
+        const res = await api.get(`${API.activities}/user/${userId}`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
@@ -41,8 +41,8 @@ const ReadingPage: React.FC = () => {
         });
 
         const filtered = res.data
-          .filter((activity: Activity) => activity.user.id === userId && activity.lastPage > 0)
-          .map((activity: Activity) => activity.book);
+          .map((activity: Activity) => activity.book) 
+          .slice(0, 10);
         setReadingBooks(filtered);
       } catch (err) {
         setError('Không thể tải danh sách đang đọc.');
@@ -60,7 +60,7 @@ const ReadingPage: React.FC = () => {
 
           },
         });
-        setFavorites(res.data); 
+        setFavorites(res.data);
       } catch (err) {
 
       }
