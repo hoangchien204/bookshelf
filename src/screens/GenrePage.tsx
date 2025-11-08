@@ -6,7 +6,7 @@ import BookCard from "../components/book/BookCard";
 import type { Book } from "../types/Book";
 import Loading from "../components/common/Loading";
 import { useFavorites } from "../hooks/useFavorites";
-import { FaAngleDown } from "react-icons/fa";
+import { FaAngleDoubleDown, FaAngleDown } from "react-icons/fa";
 
 interface Genre {
     id: string;
@@ -29,6 +29,8 @@ export default function GenresPage() {
 
     const [selectedGenre, setSelectedGenre] = useState<Genre | null>(null);
     const [showGenreDropdown, setShowGenreDropdown] = useState(false);
+    const [visibleCount, setVisibleCount] = useState(10);
+
     useEffect(() => {
         const fetchGenres = async () => {
             try {
@@ -92,6 +94,7 @@ export default function GenresPage() {
                     );
                 } else {
                     setBooks(res.data);
+                    setVisibleCount(10); 
                 }
             } catch (err) {
                 console.error("Lỗi:", err);
@@ -103,6 +106,7 @@ export default function GenresPage() {
     }, [genreId]);
 
     if (loading) return <Loading />;
+    const displayedBooks = books.slice(0, visibleCount);
 
     return (
         <div className="w-full min-h-screen bg-black text-white font-sans px-2 sm:px-4 md:px-6 lg:px-8 py-6 pt-32 sm:pt-20">
@@ -179,10 +183,11 @@ export default function GenresPage() {
             {books.length === 0 ? (
                 <div className="text-gray-400">Không có sách trong thể loại này</div>
             ) : (
+                <>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 
                                 gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8 md:gap-x-10 md:gap-y-7 
                                 xl:gap-x-[55px] xl:gap-y-12">
-                    {books.map((book) => (
+                    {displayedBooks.map((book) => (
                         <BookCard
                             key={book.id}
                             book={book}
@@ -192,6 +197,18 @@ export default function GenresPage() {
                         />
                     ))}
                 </div>
+
+                    {visibleCount <= books.length && (
+                        <div className="text-center mt-6">
+                            <button
+                                onClick={() => setVisibleCount((prev) => prev + 10)}
+                                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-full transition"
+                            >
+                                <FaAngleDoubleDown />
+                            </button>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );

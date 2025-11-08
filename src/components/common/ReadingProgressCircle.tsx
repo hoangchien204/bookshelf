@@ -25,7 +25,6 @@ export default function ChapterProgress({ rendition }: ChapterProgressProps) {
 
   return (
    <div className="fixed bottom-0 left-0 right-0 bg-gray-900 text-white px-6 py-3 z-50 z-[100000]">
-  {/* Hàng 1: tên chương + % */}
    <div className="w-2/3 mx-auto">
     {/* Hàng 1: tên chương + % */}
     <div className="flex justify-between text-sm mb-1">

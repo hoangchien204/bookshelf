@@ -7,7 +7,6 @@ interface EpubReaderPCProps extends EpubReaderWrapperProps {
   bookData: ArrayBuffer | null;
   error: string | null;
   setRendition: (rend: any) => void;
-
   // state + handler cho modal
   showModal: boolean;
   resetModal: () => void;

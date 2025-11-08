@@ -30,9 +30,10 @@ body {
   /* display: flex; */
    background-color: #000;
   /* color: #fff;    */
-  place-items: center;
+  place-items: center !important;
   min-width: 320px;
   min-height: 100vh;
+  display: block !important;
 }
 
 h1 {
@@ -99,6 +100,7 @@ button:focus-visible {
 .animate-pop {
   animation: pop 0.5s ease-out forwards;
 }
+
 
 @tailwind base;
 @tailwind components;

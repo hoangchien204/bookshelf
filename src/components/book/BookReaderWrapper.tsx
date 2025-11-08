@@ -31,7 +31,7 @@ const bookId = slugAndId?.substring(slugAndId.lastIndexOf("-") + 1);
   const fetchBook = async () => {
     try {
       setLoading(true);
-      // ✅ Bỏ chặn guest, luôn fetch sách
+      // Bỏ chặn guest, luôn fetch sách
       const res = await fetch(API.books, {
         headers: {
           "Content-Type": "application/json",

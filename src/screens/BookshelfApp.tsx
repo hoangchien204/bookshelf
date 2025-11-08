@@ -8,7 +8,9 @@ import type { Book } from '../types/Book';
 import { useFavorites } from '../hooks/useFavorites';
 import { FaAngleDoubleDown } from "react-icons/fa";
 import { useGlobalModal } from '../components/common/GlobalModal';
-
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Navigation } from 'swiper/modules';
+import RecentBanner from '../components/common/banner';
 
 const BookshelfApp: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
@@ -115,24 +117,12 @@ const BookshelfApp: React.FC = () => {
           <section>
             {/* Sách mới nhất */}
             {recentBooks.length > 0 && (
-              <section className="mb-10">
-                <h1 className="text-xl font-semibold mb-4 mt-10 text-left">
-                  Mới nhất
-                </h1>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 
-                                gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8 md:gap-x-10 md:gap-y-10 
-                                xl:gap-x-[100px] xl:gap-y-12">
-                  {recentBooks.map((book) => (
-                    <BookCard
-                      key={book.id}
-                      book={book}
-                      onRead={handleRead}
-                      onToggleFavorite={() => handleToggleFavorite(book)}
-                      isFavorite={favorites.some((b) => b.id === book.id)}
-                    />
-                  ))}
-                </div>
-              </section>
+              <RecentBanner
+                books={recentBooks}
+                onRead={handleRead}
+                onToggleFavorite={handleToggleFavorite}
+                favorites={favorites}
+              />
             )}
             <h1 className="text-xl font-semibold mb-4 text-left">Kho sách</h1>
 
