@@ -8,8 +8,6 @@ import type { Book } from '../types/Book';
 import { useFavorites } from '../hooks/useFavorites';
 import { FaAngleDoubleDown } from "react-icons/fa";
 import { useGlobalModal } from '../components/common/GlobalModal';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, Navigation } from 'swiper/modules';
 import RecentBanner from '../components/common/banner';
 
 const BookshelfApp: React.FC = () => {
