@@ -54,7 +54,7 @@ export default function RecentBanner({
   }, []);
 
   const displayBooks =
-    books.length < 5 && books.length > 2
+    books.length < 5
       ? Array(3) 
         .fill(null)
         .flatMap((_, i) =>
@@ -118,7 +118,7 @@ export default function RecentBanner({
               slidesPerView="auto"
               loop={books.length > 2}
               autoplay={{
-                delay: 10500,
+                delay: 3500,
                 disableOnInteraction: false,
                 pauseOnMouseEnter: true,
               }}
@@ -141,7 +141,7 @@ export default function RecentBanner({
               {displayBooks.map((book) => (
                 <SwiperSlide
                   key={book.id}
-                  className="swiper-slide !w-[280px] md:!w-[220px] xl:!w-[320px] cursor-pointer"
+                  className="swiper-slide !w-[280px] md:!w-[220px] xl:!w-[220px] cursor-pointer"
                 >
                   <div
                     className="relative group h-full flex justify-center items-center"
