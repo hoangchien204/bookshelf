@@ -234,7 +234,7 @@ const LoginModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       });
 
       if (res.data) {
-        showModal("📩 Mã đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra email.");
+        showModal("Mã đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra email.");
         setVerifyEmail(forgotEmail);
         setVerifyPurpose("reset");
         setMode("verify");

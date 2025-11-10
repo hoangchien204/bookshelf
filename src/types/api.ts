@@ -1,6 +1,7 @@
 import axios from "axios";
 import API from "../services/APIURL";
 import toast from "react-hot-toast";
+import { useAuth } from "../components/user/AuthContext";
 
 const api = axios.create({
   baseURL: API.local,
@@ -47,7 +48,9 @@ api.interceptors.response.use(
       if (!refreshToken) {
         localStorage.clear();
         toast.error("Hết phiên đăng nhập, vui lòng đăng nhập lại");
-        return Promise.reject(error);
+        const {logout} = useAuth ();
+        logout(true);
+        return Promise.reject( error);
       }
 
       try {
