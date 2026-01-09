@@ -1,6 +1,5 @@
 import axios from "axios";
 import API from "../services/APIURL";
-import toast from "react-hot-toast";
 
 const api = axios.create({
   baseURL: API.local,
