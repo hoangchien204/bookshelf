@@ -134,7 +134,6 @@ const BookshelfApp: React.FC = () => {
                 onRead={handleRead}
                 onToggleFavorite={handleToggleFavorite}
                 favorites={favorites}
-                // Truyền props động để đổi tiêu đề và icon
                 label={bannerType === 'hot' ? "Sách Hot - Đọc Nhiều Nhất" : "Sách Mới Cập Nhật"}
                 iconType={bannerType}
               />

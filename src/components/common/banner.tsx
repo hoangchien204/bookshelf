@@ -150,7 +150,7 @@ export default function RecentBanner({
               onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
               className="my-coverflow w-full h-[480px] sm:h-[520px] [perspective:1200px] overflow-visible"
             >
-              {displayBooks.map((book, idx) => (
+              {displayBooks.map((book) => (
                 <SwiperSlide
                   key={book.id} // Sử dụng uniqueId nếu là bản duplicate
                   className="swiper-slide !w-[240px] sm:!w-[260px] cursor-pointer"
