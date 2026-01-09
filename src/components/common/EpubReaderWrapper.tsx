@@ -5,6 +5,7 @@ import API from "../../services/APIURL";
 import type { EpubReaderWrapperProps } from "../../types/EpubReader";
 import EpubReaderPC from "./EpubReaderPC";
 import EpubReaderMobile from "./EpubReaderMobi";
+import { useAuth } from "../user/AuthContext";
 
 export interface HighlightNote {
   id: string;
@@ -31,7 +32,9 @@ export default function CustomEpubReader({
   const [error, setError] = useState<string | null>(null);
   const [rendition, setRendition] = useState<any>(null);
   const isMobile = window.innerWidth < 1024;
-  const isGuest = !localStorage.getItem("accessToken");
+  
+  const {user} = useAuth()
+  const isGuest = !user;
 
   // Highlight + note
   const [notes, setNotes] = useState<HighlightNote[]>([]);
@@ -44,7 +47,6 @@ export default function CustomEpubReader({
   const [tempColor, setTempColor] = useState("");
   const [charCount, setCharCount] = useState(0);
   const [showTextbox, setShowTextbox] = useState(false);
-  const token = localStorage.getItem("accessToken");
 
   const resetModal = () => {
     setShowModal(false);
@@ -73,18 +75,16 @@ export default function CustomEpubReader({
 
   // Load highlights from API
   useEffect(() => {
-    if (!bookId || !token) return;
+    if (!bookId) return;
 
-    api.get(`${API.highlights}/${bookId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    api.get(`${API.highlights}/${bookId}`)
       .then((res) => {
         const highlights = Array.isArray(res.data) ? res.data : res.data.data;
         setNotes(highlights || []);
         onNotesLoaded?.(highlights || []);
       })
       .catch((err) => console.error("❌ Load highlights error:", err));
-  }, [bookId, token]);
+  }, [bookId]);
 
   useEffect(() => {
     if (!rendition) return;
@@ -137,11 +137,9 @@ export default function CustomEpubReader({
   }, [rendition, notes]);
 
   const loadHighlights = async () => {
-    if (!bookId || !token) return;
+    if (!bookId) return;
     try {
-      const res = await api.get(`${API.highlights}/${bookId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get(`${API.highlights}/${bookId}`);
       const highlights = Array.isArray(res.data) ? res.data : res.data.data;
       setNotes(highlights || []);
       onNotesLoaded?.(highlights || []);
@@ -152,7 +150,7 @@ export default function CustomEpubReader({
 
   useEffect(() => {
     loadHighlights();
-  }, [bookId, token]);
+  }, [bookId]);
 
   useEffect(() => {
     if (rendition) {
@@ -178,7 +176,6 @@ export default function CustomEpubReader({
           color: finalColor,
           note,
         },
-        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const savedNote = res.data;
@@ -197,9 +194,7 @@ export default function CustomEpubReader({
       rendition?.annotations.remove(note.cfiRange, "highlight");
       setNotes((prev) => prev.filter((n) => n.id !== id));
 
-      await api.delete(`${API.highlights}/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`${API.highlights}/${id}`);
       await loadHighlights();
     } catch (err) {
       console.error("❌ Delete highlight error:", err);
@@ -233,7 +228,6 @@ export default function CustomEpubReader({
       const res = await api.patch(
         `${API.highlights}/${id}`,
         { color, note },
-        { headers: { Authorization: `Bearer ${token}` } }
       );
       const updated = res.data;
       setNotes((prev) =>

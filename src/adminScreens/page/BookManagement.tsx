@@ -25,7 +25,6 @@ const BookManagement = () => {
     file: null,
     cover: null,
   });
-  const token = localStorage.getItem('accessToken')
   const [showDeleteSuccessModal, setShowDeleteSuccessModal] = useState(false);
   const [genres, setGenres] = useState<Genre[]>([]);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
@@ -43,7 +42,7 @@ const BookManagement = () => {
 
   const fetchBooks = async () => {
     try {
-      const response = await api.get(API.books, { headers: { Authorization: `Bearer ${token}`, } });
+      const response = await api.get(API.books);
       setBooks(response.data);
     } catch (error) {
       console.error(error);
@@ -80,14 +79,10 @@ const BookManagement = () => {
       }
 
       if (editingBook) {
-        await api.put(`${API.books}/${editingBook.id}`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}`, },
-        });
+        await api.put(`${API.books}/${editingBook.id}`, formData);
         setEditingBook(null);
       } else {
-        await api.post(API.books, formData, {
-          headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}`, },
-        });
+        await api.post(API.books, formData);
       }
 
       setShowAddModal(false);
@@ -101,7 +96,7 @@ const BookManagement = () => {
   const deleteBook = async (id: string) => {
     if (confirm('Bạn có chắc chắn muốn xóa sách này?')) {
       try {
-        await api.delete(`${API.books}/${id}`, { headers: { Authorization: `Bearer ${token}`, } });
+        await api.delete(`${API.books}/${id}`);
         setBooks(books.filter((b) => b.id !== id));
         setShowDeleteSuccessModal(true);
       } catch (error) {

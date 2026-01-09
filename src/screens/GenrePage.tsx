@@ -7,6 +7,7 @@ import type { Book } from "../types/Book";
 import Loading from "../components/common/Loading";
 import { useFavorites } from "../hooks/useFavorites";
 import { FaAngleDoubleDown, FaAngleDown } from "react-icons/fa";
+import { useAuth } from "../components/user/AuthContext";
 
 interface Genre {
     id: string;
@@ -18,11 +19,10 @@ export default function GenresPage() {
     const [genres, setGenres] = useState<Genre[]>([]);
     const [books, setBooks] = useState<Book[]>([]);
     const [loading, setLoading] = useState(true);
+    const {user} = useAuth()
+    const userId = user?.id;
 
-    const accessToken = localStorage.getItem("accessToken");
-    const userId = localStorage.getItem("userId");
-
-    const { favorites, setFavorites, handleToggleFavorite } = useFavorites(userId, accessToken);
+    const { favorites, setFavorites, handleToggleFavorite } = useFavorites(userId);
 
     const [searchParams, setSearchParams] = useSearchParams();
     const genreId = searchParams.get("genreId");
@@ -46,14 +46,12 @@ export default function GenresPage() {
 
     useEffect(() => {
         const fetchFavorites = async () => {
-            if (!userId || !accessToken) {
+            if (!userId) {
                 setFavorites([]);
                 return;
             }
             try {
-                const res = await api.get(API.favorites, {
-                    headers: { Authorization: `Bearer ${accessToken}` },
-                });
+                const res = await api.get(API.favorites);
                 setFavorites(res.data);
             } catch (err) {
                 console.error("Lỗi: ", err);
@@ -61,7 +59,7 @@ export default function GenresPage() {
         };
 
         fetchFavorites();
-    }, [userId, accessToken]);
+    }, [userId]);
 
 
     useEffect(() => {
@@ -75,7 +73,6 @@ export default function GenresPage() {
         }
     }, [genreId, genres]);
 
-    // 🔹 Fetch books khi genreId thay đổi
     useEffect(() => {
         const fetchBooks = async () => {
             setLoading(true);
@@ -83,7 +80,6 @@ export default function GenresPage() {
                 const res = await api.get(`${API.books}`, {
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: `Bearer ${accessToken}`,
                     },
                 });
                 if (genreId) {

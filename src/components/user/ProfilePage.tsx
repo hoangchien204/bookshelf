@@ -5,66 +5,57 @@ import api from "../../types/api";
 import ChangePasswordModal from "./ChangePasswordModal";
 
 export default function ProfilePage() {
-  const userId = localStorage.getItem("userId");
-  const token = localStorage.getItem("accessToken");
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const currentUserId = profile?.id || profile?.userId;
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await api.get(`${API.users}/${userId}`);
-        const data = await res.data;
-        setProfile(data);
+        const res = await api.get(API.ME);
+        setProfile(res.data.user || res.data);
       } catch (err) {
-        toast.error("Không thể tải thông tin hồ sơ!");
+        toast.error("Không thể tải thông tin hồ sơ! Vui lòng đăng nhập lại.");
       } finally {
         setLoading(false);
       }
     };
     fetchProfile();
-  }, [userId, token]);
+  }, []);
 
-  // Upload avatar (gửi kèm với profile)
+  // Upload avatar
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !profile) return;
 
     try {
-      // Giả sử bạn có API upload file riêng để lấy URL
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch(`${API.users}/${userId}/avatar`, {
-        method: "POST",
-        body: formData,
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.post(
+        `${API.users}/${currentUserId}/avatar`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-      const data = await res.json();
-
-      setProfile({ ...profile, avatarUrl: data.url });
-
+      setProfile({ ...profile, avatarUrl: res.data.url || res.data.avatarUrl });
       toast.success("Ảnh đại diện đã được tải lên!");
     } catch (err) {
       toast.error("Upload ảnh thất bại!");
     }
   };
 
-  // Lưu thông tin hồ sơ (PUT 1 lần cho tất cả)
   const handleSave = async () => {
+    if (!profile) return;
+
     try {
-      const res = await fetch(`${API.users}/${userId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(profile),
-      });
+      const res = await api.put(`${API.users}/${currentUserId}`, profile);
 
-      if (!res.ok) throw new Error("Update failed");
-
+      if (!res.data) throw new Error("Update failed");
       toast.success("Cập nhật hồ sơ thành công!");
     } catch (err) {
       toast.error("Cập nhật hồ sơ thất bại!");
@@ -74,11 +65,16 @@ export default function ProfilePage() {
   if (loading) return <p className="text-center mt-10">Đang tải...</p>;
   if (!profile) return <p className="text-center mt-10">Không tìm thấy user.</p>;
 
+  const safeDate = profile.dateOfBirth
+    ? (typeof profile.dateOfBirth === 'string' ? profile.dateOfBirth.substring(0, 10) : '')
+    : '';
+
+  const displayId = profile.id || profile.userId || "";
+
   return (
     <div className="max-w-4xl mx-auto mt-10 bg-gray-900 text-white shadow-md rounded-lg p-6">
       <h2 className="text-2xl font-bold mb-6">Quản lý thông tin</h2>
 
-      {/* Grid 2 cột */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Cột trái: thông tin */}
         <div className="md:col-span-2">
@@ -87,21 +83,21 @@ export default function ProfilePage() {
             type="text"
             disabled
             value={profile.username || ""}
-            className="w-full bg-gray-800 border border-gray-700 px-3 py-2 rounded mb-4 text-gray-400"
+            className="w-full bg-gray-800 border border-gray-700 px-3 py-2 rounded mb-4 text-gray-400 cursor-not-allowed"
           />
 
           <label className="block mb-2 text-sm font-medium">ID người dùng</label>
           <input
             type="text"
             disabled
-            value={profile.id || ""}
-            className="w-full bg-gray-800 border border-gray-700 px-3 py-2 rounded mb-4 text-gray-400"
+            value={displayId}
+            className="w-full bg-gray-800 border border-gray-700 px-3 py-2 rounded mb-4 text-gray-400 cursor-not-allowed"
           />
 
           <label className="block mb-2 text-sm font-medium">Họ và tên</label>
           <input
             type="text"
-            className="w-full bg-gray-800 border border-gray-700 px-3 py-2 rounded mb-4 text-white"
+            className="w-full bg-gray-800 border border-gray-700 px-3 py-2 rounded mb-4 text-white focus:outline-none focus:border-green-500"
             value={profile.fullName || ""}
             onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
           />
@@ -111,8 +107,8 @@ export default function ProfilePage() {
               <label className="block mb-2 text-sm font-medium">Ngày sinh</label>
               <input
                 type="date"
-                className="w-full bg-gray-800 border border-gray-700 px-3 py-2 rounded mb-4 text-white"
-                value={profile.dateOfBirth ? profile.dateOfBirth.substring(0, 10) : ""}
+                className="w-full bg-gray-800 border border-gray-700 px-3 py-2 rounded mb-4 text-white focus:outline-none focus:border-green-500"
+                value={safeDate}
                 onChange={(e) =>
                   setProfile({ ...profile, dateOfBirth: e.target.value })
                 }
@@ -121,7 +117,7 @@ export default function ProfilePage() {
             <div>
               <label className="block mb-2 text-sm font-medium">Giới tính</label>
               <select
-                className="w-full bg-gray-800 border border-gray-700 px-3 py-2 rounded mb-4 text-white"
+                className="w-full bg-gray-800 border border-gray-700 px-3 py-2 rounded mb-4 text-white focus:outline-none focus:border-green-500"
                 value={profile.gender || ""}
                 onChange={(e) =>
                   setProfile({ ...profile, gender: e.target.value })
@@ -141,7 +137,7 @@ export default function ProfilePage() {
           <img
             src={profile.avatarUrl || "/default-avatar.png"}
             alt="Avatar"
-            className="w-28 h-28 rounded-full border mb-3 object-cover"
+            className="w-28 h-28 rounded-full border border-gray-600 mb-3 object-cover shadow-lg"
           />
           <input
             id="avatarUpload"
@@ -159,11 +155,9 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Nút hành động */}
       <div className="flex justify-end gap-4 mt-6">
-
         <button className="px-6 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition"
-          onClick={() => setShowChangePassword(true) }
+          onClick={() => setShowChangePassword(true)}
         >
           Đổi mật khẩu
         </button>
@@ -173,13 +167,11 @@ export default function ProfilePage() {
         >
           Cập nhật
         </button>
-
       </div>
-       <ChangePasswordModal
+      <ChangePasswordModal
         isOpen={showChangePassword}
         onClose={() => setShowChangePassword(false)}
       />
     </div>
   );
-
 }

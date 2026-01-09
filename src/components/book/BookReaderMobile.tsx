@@ -17,10 +17,9 @@ import LoginModal from "../../screens/login";
 interface Props {
   book: Book;
   userId: string | null;
-  accessToken: string | null;
 }
 
-const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
+const BookReaderMobile: React.FC<Props> = ({ book, userId }) => {
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [currentLocation, setCurrentLocation] = useState<string | number>(0);
@@ -42,9 +41,10 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
   // Guest check
   const MAX_PAGES_FOR_GUEST = 10;
   const [showLogin, setShowLogin] = useState(false);
-  const isGuest = !accessToken;
+  const isGuest = !userId;
   const allowedChapters = 2;
   /** 📌 Restore progress */
+  
   useEffect(() => {
     if (!book || !userId) return;
     if (book.fileType === "pdf") {
@@ -64,20 +64,18 @@ const BookReaderMobile: React.FC<Props> = ({ book, userId, accessToken }) => {
 
   /** 📌 Save progress */
   const saveProgress = (page?: number, location?: string | number) => {
-    if (!userId || !accessToken) return;
+    if (!userId) return;
     if (book.fileType === "pdf" && page) {
       localStorage.setItem(`book-${book.id}-page`, String(page));
       api.post(
         API.read,
         { bookId: book.id, lastPage: page },
-        { headers: { Authorization: `Bearer ${accessToken}` } }
       );
     } else if (book.fileType === "epub" && location) {
       localStorage.setItem(`book-${book.id}-location`, String(location));
       api.post(
         API.read,
         { bookId: book.id, lastLocation: location },
-        { headers: { Authorization: `Bearer ${accessToken}` } }
       );
     }
   };

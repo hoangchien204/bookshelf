@@ -1,106 +1,123 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { FaAngleDoubleDown } from "react-icons/fa";
 import BookCard from '../components/book/BookCard';
+import RecentBanner from '../components/common/banner';
+import Loading from '../components/common/Loading';
+import { useFavorites } from '../hooks/useFavorites';
 import API from '../services/APIURL';
 import api from '../types/api';
-import Loading from '../components/common/Loading';
 import type { Book } from '../types/Book';
-import { useFavorites } from '../hooks/useFavorites';
-import { FaAngleDoubleDown } from "react-icons/fa";
-import { useGlobalModal } from '../components/common/GlobalModal';
-import RecentBanner from '../components/common/banner';
+import { useAuth } from '../components/user/AuthContext';
+
+// Hàm tạo slug cho URL
+const generateSlug = (name: string) => {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9 ]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+};
 
 const BookshelfApp: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
-  const navigate = useNavigate();
-  const userId = localStorage.getItem("userId");
-  const accessToken = localStorage.getItem("accessToken");
-  const { favorites, setFavorites, handleToggleFavorite } = useFavorites(userId, accessToken);
-
-  const location = useLocation();
+  const [bannerData, setBannerData] = useState<Book[]>([]);
+  const [bannerType, setBannerType] = useState<'hot' | 'new'>('new'); // State để quản lý loại banner
+  
   const [loadingBooks, setLoadingBooks] = useState(true);
   const [visibleCount, setVisibleCount] = useState(10);
-  const { showModal } = useGlobalModal()
+  
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
 
-  const displayedBooks = books
-    .filter((book) => !book.isSeries || book.volumeNumber === 1)
-    .slice(0, visibleCount);
+  const userId = user?.id; 
+  const { favorites, setFavorites, handleToggleFavorite } = useFavorites(userId); 
+
+  // 1. Fetch Favorites
   useEffect(() => {
     const fetchFavorites = async () => {
-      if (!userId) return;
-
+      if (!userId) return; 
       try {
-        const res = await api.get(API.favorites, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
+        const res = await api.get(API.favorites);
         if (Array.isArray(res.data)) {
           setFavorites(res.data);
-        } else {
-          console.warn(res.data);
         }
       } catch (error) {
-        console.error(error);
+        console.error("Lỗi fetch favorites:", error);
       }
     };
-
     fetchFavorites();
-  }, [location]);
+  }, [location, userId, setFavorites]);
 
+  // 2. Fetch Books & Xử lý Logic Banner
   useEffect(() => {
-    const fetchBooks = async () => {
+    const fetchBooksAndBanner = async () => {
       try {
+        setLoadingBooks(true);
+        // a. Lấy tất cả sách
         const res = await api.get(API.books);
-        setBooks(res.data);
+        const allBooks = res.data;
+        setBooks(allBooks);
+
+        // b. Tính toán sách MỚI (trong 30 ngày gần đây)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(new Date().getDate() - 30);
+        
+        const recentBooks = allBooks.filter((book: Book) => {
+          const createdDate = new Date(book.createdAt);
+          return createdDate >= thirtyDaysAgo;
+        });
+
+        // c. Logic chọn Banner
+        if (recentBooks.length >= 5) {
+          // Nếu đủ 5 sách mới -> Dùng Banner Sách Mới
+          setBannerData(recentBooks);
+          setBannerType('new');
+        } else {
+          // Nếu KHÔNG đủ 5 sách mới -> Gọi API Hot -> Dùng Banner Sách Hot
+          try {
+            const resHot = await api.get(API.hot); // Giả sử API.hot đã được định nghĩa
+            const hotBooks = resHot.data.slice(0, 7); // Lấy top 7
+            setBannerData(hotBooks);
+            setBannerType('hot');
+          } catch (hotErr) {
+            console.error("Lỗi fetch hot books, fallback về recent books dù ít:", hotErr);
+            setBannerData(recentBooks); // Fallback nếu API hot lỗi
+            setBannerType('new');
+          }
+        }
+
       } catch (err) {
-        console.error(err);
+        console.error("Lỗi fetch books:", err);
       } finally {
         setLoadingBooks(false);
       }
     };
-    fetchBooks();
+
+    fetchBooksAndBanner();
   }, []);
 
+  // 3. Danh sách hiển thị ở lưới bên dưới (Grid)
+  const displayedBooks = useMemo(() => {
+    return books
+      .filter((book) => !book.isSeries || book.volumeNumber === 1)
+      .slice(0, visibleCount);
+  }, [books, visibleCount]);
+
+  // 4. Xử lý Đọc sách
   const handleRead = async (book: Book) => {
     try {
-      const res = await api.get(`${API.read}/${book.id}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
+      const res = await api.get(`${API.read}/${book.id}`);
       const lastPage = res.data.page || 1;
-
-      const slug = book.name
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9 ]/g, '')
-        .trim()
-        .replace(/\s+/g, '-');
+      const slug = generateSlug(book.name);
       navigate(`/book/${slug}-${book.id}`, { state: { startPage: lastPage } });
     } catch (err: any) {
       console.error(err);
-      if (err.response?.status === 401) {
-        showModal('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', "error");
-      }
     }
   };
-
-
-  const now = new Date();
-  const twoWeeksAgo = new Date();
-  twoWeeksAgo.setDate(now.getDate() - 14);
-
-  const recentBooks = books.filter((book) => {
-    const createdDate = new Date(book.createdAt);
-    return createdDate >= twoWeeksAgo;
-  });
-
 
   return (
     <>
@@ -108,25 +125,28 @@ const BookshelfApp: React.FC = () => {
         <Loading />
       ) : (
         <div className="w-full min-h-screen bg-black text-white font-sans px-2 sm:px-4 md:px-6 lg:px-8 py-6 pt-32 sm:pt-20">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">Kệ sách của bạn</h1>
-          </div>
-
+          
           <section>
-            {/* Sách mới nhất */}
-            {recentBooks.length > 0 && (
+            {/* Hiển thị Banner động dựa trên logic */}
+            {bannerData.length > 0 && (
               <RecentBanner
-                books={recentBooks}
+                books={bannerData}
                 onRead={handleRead}
                 onToggleFavorite={handleToggleFavorite}
                 favorites={favorites}
+                // Truyền props động để đổi tiêu đề và icon
+                label={bannerType === 'hot' ? "Sách Hot - Đọc Nhiều Nhất" : "Sách Mới Cập Nhật"}
+                iconType={bannerType}
               />
             )}
-            <h1 className="text-xl font-semibold mb-4 text-left">Kho sách</h1>
+
+            <div className="flex justify-between items-center mb-6 mt-12 border-t border-gray-800 pt-8">
+              <h1 className="text-2xl font-bold text-white">Kho sách</h1>
+            </div>
 
             {books.length === 0 ? (
-              <p className="text-center text-gray-400">
-                Người này quá lười để thêm sách
+              <p className="text-center text-gray-400 mt-10">
+                Chưa có sách nào trong thư viện...
               </p>
             ) : (
               <>
@@ -144,13 +164,14 @@ const BookshelfApp: React.FC = () => {
                   ))}
                 </div>
 
+                {/* Nút xem thêm */}
                 {visibleCount < books.length && (
-                  <div className="text-center mt-6">
+                  <div className="text-center mt-12 mb-10">
                     <button
                       onClick={() => setVisibleCount((prev) => prev + 10)}
-                      className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-full transition"
+                      className="group px-6 py-3 bg-gray-800/80 hover:bg-gray-700 text-white rounded-full transition-all duration-300 shadow-lg border border-gray-700"
                     >
-                      <FaAngleDoubleDown />
+                      <FaAngleDoubleDown className="group-hover:translate-y-1 transition-transform duration-300" size={20} />
                     </button>
                   </div>
                 )}

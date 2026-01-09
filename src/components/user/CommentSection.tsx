@@ -219,7 +219,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ bookId }) => {
                   onMouseEnter={() => setHover(star)}
                   onMouseLeave={() => setHover(0)}
                   className={`cursor-pointer transition-colors duration-200 
-          ${star <= (hover || rating) ? "text-yellow-400" : "text-gray-500"}`}
+                  ${star <= (hover || rating) ? "text-yellow-400" : "text-gray-500"}`}
                 />
               ))}
             </div>

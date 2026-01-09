@@ -6,6 +6,7 @@ import api from '../../types/api';
 import API from '../../services/APIURL';
 import toast from 'react-hot-toast';
 import { useGlobalModal } from '../../components/common/GlobalModal';
+import { useAuth } from '../../components/user/AuthContext';
 
 interface User {
   id: string;
@@ -23,18 +24,13 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 20;
-
-  const currentUserId = localStorage.getItem('userId');
-  const accessToken = localStorage.getItem('accessToken');
+  const {user} = useAuth()
+  const userId = user?.id;
   const { notiFication } = useGlobalModal();
 
   const fetchUsers = async () => {
     try {
-      const response = await api.get(API.users, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        }
-      });
+      const response = await api.get(API.users);
       setUsers(response.data);
     } catch (error) {
       console.error('Lỗi khi lấy dữ liệu người dùng:', error);
@@ -44,18 +40,14 @@ const UserManagement = () => {
   };
 
   const deleteUser = async (id: string) => {
-    if (id === currentUserId) {
+    if (id === userId) {
       notiFication("Bạn không thể xóa người này", "error");
       return;
     }
 
     if (confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
       try {
-        await api.delete(`${API.users}/${id}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        });
+        await api.delete(`${API.users}/${id}`);
         setUsers(users.filter((u) => u.id !== id));
         toast("Xóa thành công");
       } catch (error) {

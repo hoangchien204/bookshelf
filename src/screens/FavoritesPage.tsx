@@ -7,14 +7,14 @@ import Loading from '../components/common/Loading';
 import type { Book } from '../types/Book';
 import { useFavorites } from '../hooks/useFavorites';
 import LoginModal from './login';
-
+import { useAuth } from '../components/user/AuthContext';
 
 const FavoritesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const accessToken = localStorage.getItem("accessToken")
-  const userId = localStorage.getItem('userId')
-  const { favorites, setFavorites, handleToggleFavorite } = useFavorites(userId, accessToken);
+  const {user} = useAuth()
+  const userId = user?.id
+  const { favorites, setFavorites, handleToggleFavorite } = useFavorites(userId);
   const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
@@ -25,7 +25,6 @@ const FavoritesPage: React.FC = () => {
         const res = await api.get(API.favorites, {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
           },
         });
         setFavorites(res.data);

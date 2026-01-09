@@ -17,7 +17,6 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onUserAdded }) => 
     role: '0',
   });
   const { showModal } = useGlobalModal()
-  const token = localStorage.getItem('accessToken')
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -29,7 +28,6 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onUserAdded }) => 
       await api.post(`${APIURL.users}/admin`, formData, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
         }
       });
       onUserAdded();

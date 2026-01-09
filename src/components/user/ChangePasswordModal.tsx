@@ -42,11 +42,6 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
             const res = await api.post(
                 `${API.changePassword}`,
                 { currentPassword, newPassword },
-                {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-                    },
-                }
             );
 
             if (res.data) {

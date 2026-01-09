@@ -1,49 +1,30 @@
 // src/components/common/AuthWatcher.tsx
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../user/AuthContext";
 
-function isTokenExpired() {
-  const token = localStorage.getItem("accessToken");
-  if (!token) return false;
-
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    if (payload.exp) {
-      const now = Math.floor(Date.now() / 1000);
-      return payload.exp < now;
-    }
-  } catch {
-    // ignore
-  }
-  const loginTime = localStorage.getItem("loginTime");
-  if (loginTime) {
-    const now = Date.now();
-    const expired = parseInt(loginTime, 10) + 3 * 60 * 60 * 1000;
-    return now > expired;
-  }
-  return false;
-}
+const protectedPrefixes = [
+  "/profile",
+  "/favorites",
+  "/reading",
+  "/admin",
+  "/read",
+];
 
 export default function AuthWatcher() {
+  const { user } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleAction = () => {
-      if (isTokenExpired()) {
-        navigate("/");
-      }
-    };
+    const needAuth = protectedPrefixes.some((p) =>
+      location.pathname.startsWith(p)
+    );
 
-    window.addEventListener("click", handleAction);
-    window.addEventListener("keydown", handleAction);
-    window.addEventListener("scroll", handleAction);
-
-    return () => {
-      window.removeEventListener("click", handleAction);
-      window.removeEventListener("keydown", handleAction);
-      window.removeEventListener("scroll", handleAction);
-    };
-  }, [navigate]);
+    if (!user && needAuth) {
+      navigate("/", { replace: true });
+    }
+  }, [user, location.pathname, navigate]);
 
   return null;
 }

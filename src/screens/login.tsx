@@ -15,6 +15,7 @@ const LoginModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   // login states
   const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
+
   const { showModal } = useGlobalModal()
   const [cooldown, setCooldown] = useState(0);
   // error
@@ -70,21 +71,14 @@ const LoginModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       const res = await api.post(
         API.login,
         { email: emailOrUsername, password },
-        { headers: { "Content-Type": "application/json" } }
       );
 
       if (res.data) {
-        const data = res.data;
-        localStorage.setItem("refreshToken", data.refreshToken);
-        localStorage.setItem("accessToken", data.accessToken);
-        localStorage.setItem("username", data.userName);
-        localStorage.setItem("userId", data.userId);
-        localStorage.setItem("role", data.role);
-
-
+        localStorage.clear();
         onClose();
         navigate("/");
         window.location.reload();
+        
       }
     } catch (error: any) {
       if (axios.isAxiosError(error) && error.response) {

@@ -19,16 +19,22 @@ import ReadingPage from './screens/ReadingPage';
 import AuthWatcher from './components/common/GlobalAuthListener';
 import GenresPage from './screens/GenrePage';
 import { ModalProvider } from './components/common/GlobalModal';
+import { useAuth } from './components/user/AuthContext';
 
 function AppRoutes() {
   const location = useLocation();
+  const { user } = useAuth();
   const isDashboard = location.pathname.startsWith('/admin');
-  const isAdmin = localStorage.getItem('role') === 'admin';
+  const isAdmin = user?.role === 'admin';
   const isBookDetail = /^\/book\/[^/]+$/.test(location.pathname);
   const book = location.state?.book;
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-
+  useEffect(() => {
+    if (!localStorage.getItem("user")) {
+      localStorage.removeItem("isLoggingOut");
+    }
+  }, []);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);

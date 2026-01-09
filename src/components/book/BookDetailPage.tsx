@@ -10,7 +10,7 @@ import CommentSection from "../user/CommentSection";
 import BookCard from "./BookCard";
 import HorizontalSlider from "../common/HorizontalSlider";
 import Loading from "../common/Loading";
-import { useGlobalModal } from "../common/GlobalModal";
+import { useAuth } from "../user/AuthContext";
 
 const BookDetailPage = () => {
   const navigate = useNavigate();
@@ -23,11 +23,10 @@ const BookDetailPage = () => {
   const [book, setBook] = useState<Book | null>(location.state?.book || null);
   const [loading, setLoading] = useState(!location.state?.book);
   const [showFullDescription, setShowFullDescription] = useState(false);
-  const { showModal } = useGlobalModal()
 
-  const userId = localStorage.getItem("userId");
-  const accessToken = localStorage.getItem("accessToken");
-
+    const {user} = useAuth()
+  const userId = user?.id;
+  
   const { slugAndId: slugParam } = useParams();
   const id =
     slugParam?.match(
@@ -43,9 +42,7 @@ const BookDetailPage = () => {
     (async () => {
       try {
         setLoading(true);
-        const res = await api.get(`${API.books}/${id}`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
+        const res = await api.get(`${API.books}/${id}`);
         setBook(res.data);
       } catch (error) {
         console.error("Lỗi:", error);
@@ -57,12 +54,10 @@ const BookDetailPage = () => {
 
   // Fetch danh sách yêu thích
   useEffect(() => {
-    if (!userId || !accessToken) return;
+    if (!userId ) return;
     (async () => {
       try {
-        const res = await api.get(API.favorites, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
+        const res = await api.get(API.favorites);
         if (Array.isArray(res.data)) {
           setFavorites(res.data.map((fav: any) => fav.id));
         }
@@ -70,7 +65,7 @@ const BookDetailPage = () => {
         console.error("Lỗi:", error);
       }
     })();
-  }, [userId, accessToken]);
+  }, [userId]);
 
   // Fetch rating
   useEffect(() => {
@@ -90,9 +85,7 @@ const BookDetailPage = () => {
   useEffect(() => {
     if (!book) return;
     (async () => {
-      const res = await fetch(`${API.books}/author/${encodeURIComponent(book.author)}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const res = await fetch(`${API.books}/author/${encodeURIComponent(book.author)}`);
       if (res.ok) {
         const data = await res.json();
         setRelatedBooks(data.filter((b: Book) => b.id !== book.id));
@@ -104,9 +97,7 @@ const BookDetailPage = () => {
   useEffect(() => {
     if (!book) return;
     (async () => {
-      const res = await fetch(`${API.random}/${book.id}?limit=10`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const res = await fetch(`${API.random}/${book.id}?limit=10`);
       if (res.ok) {
         setSuggestedBooks(await res.json());
       }
@@ -130,8 +121,8 @@ const BookDetailPage = () => {
     setIsProcessing(true);
 
     try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
+    const {user} = useAuth();
+      if (!user) {
         toast.error("Bạn cần đăng nhập để yêu thích sách");
         return;
       }
@@ -139,7 +130,6 @@ const BookDetailPage = () => {
       const response = await api.post(
         API.favorites,
         { bookId },
-        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (typeof response.data.isFavorite !== "undefined") {
@@ -176,15 +166,12 @@ const BookDetailPage = () => {
 
   const handleRead = async (book: Book) => {
     try {
-      const res = await api.get(`${API.read}/${book.id}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const res = await api.get(`${API.read}/${book.id}`);
       const lastPage = res.data.page || 1;
       const slug = slugify(book.name);
       navigate(`/book/${slug}-${book.id}`, { state: { startPage: lastPage } });
     } catch (err: any) {
       if (err.response?.status === 401) {
-        showModal("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", "error");
       }
     }
   };

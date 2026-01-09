@@ -4,6 +4,7 @@ import { slugify } from "../../utils/slug";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import type { Book } from '../../types/Book';
+import { useAuth } from "../user/AuthContext";
 
 
 interface BookCardProps {
@@ -30,9 +31,9 @@ const BookCard: React.FC<BookCardProps> = ({
 
 
   const handleFavoriteClick = () => {
-    const token = localStorage.getItem("accessToken");
-    const userId = localStorage.getItem("userId");
-    if (!token || !userId) {
+    const { user } = useAuth()
+    const userId = user?.id;
+    if (!userId) {
       setShowLoginModal(true);
       return;
     }

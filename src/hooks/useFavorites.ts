@@ -3,7 +3,7 @@ import api from "../types/api";
 import toast from "react-hot-toast";
 import API from "../services/APIURL";
 import type { Book } from "../types/Book";
-export function useFavorites(userId: string | null, accessToken: string | null) {
+export function useFavorites(userId: string | null) {
   const [favorites, setFavorites] = useState<Book[]>([]);
   const [processingBookId, setProcessingBookId] = useState<string | null>(null);
 
@@ -20,9 +20,7 @@ export function useFavorites(userId: string | null, accessToken: string | null) 
     );
 
     try {
-      const res = await api.post(API.favorites, { bookId: book.id }, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
+      const res = await api.post(API.favorites, { bookId: book.id });
 
       if (res.data.isFavorite) {
         toast.success("Yêu thích thành công");

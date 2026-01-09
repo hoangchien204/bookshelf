@@ -1,7 +1,13 @@
 import { Link } from "react-router-dom";
 import { useState, useRef } from "react";
 
-const AvatarMenu = ({ avatarUrl, username }: { avatarUrl?: string; username?: string }) => {
+interface AvatarMenuProps {
+  avatarUrl?: string;
+  username?: string;
+  onLogout: () => void;
+}
+
+const AvatarMenu = ({ avatarUrl, username, onLogout }: AvatarMenuProps) => {
     const [isVisible, setIsVisible] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const hideTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -15,7 +21,7 @@ const AvatarMenu = ({ avatarUrl, username }: { avatarUrl?: string; username?: st
             setIsVisible(true);
             setTimeout(() => setIsOpen(true), 10);
         } else {
-            setIsOpen(true); 
+            setIsOpen(true);
         }
     };
 
@@ -45,8 +51,8 @@ const AvatarMenu = ({ avatarUrl, username }: { avatarUrl?: string; username?: st
                     className={`absolute right-0 mt-2 w-40 rounded-lg shadow-lg border text-left z-50
                     transform transition-all duration-300 ease-out
                     ${isOpen
-                    ? "opacity-100 translate-y-0 scale-100 bg-white border-gray-200"
-                    : "opacity-0 -translate-y-2 scale-95 bg-white border-gray-200"}
+                        ? "opacity-100 translate-y-0 scale-100 bg-white border-gray-200"
+                        : "opacity-0 -translate-y-2 scale-95 bg-white border-gray-200"}
                     `}
                 >
                     <Link
@@ -55,10 +61,11 @@ const AvatarMenu = ({ avatarUrl, username }: { avatarUrl?: string; username?: st
                     >
                         Hồ sơ
                     </Link>
+                    
                     <button
                         onClick={() => {
-                            localStorage.clear();
-                            window.location.reload();
+                            setIsOpen(false); 
+                            onLogout();     
                         }}
                         className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100 transition-colors"
                     >

@@ -15,6 +15,7 @@ import API from "../../services/APIURL";
 import api from "../../types/api";
 import "react-pdf/dist/Page/TextLayer.css";
 import "react-pdf/dist/Page/AnnotationLayer.css";
+import { useAuth } from "../user/AuthContext";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.js",
@@ -24,8 +25,8 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 const BookReaderPage: React.FC = () => {
   const { slugAndId } = useParams();
   const navigate = useNavigate();
-  const userId = localStorage.getItem("userId");
-  const accessToken = localStorage.getItem("accessToken");
+  const {user} = useAuth()
+  const userId = user?.id;
   const bookId = slugAndId?.split("-").slice(-5).join("-");
 
   const [book, setBook] = useState<Book | null>(null);
@@ -55,7 +56,7 @@ const BookReaderPage: React.FC = () => {
   // Đọc trước 7 page gới guset
   const previewLimit = 7;
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const isGuest = !accessToken;
+  const isGuest = !user;
   const [openMenu, setOpenMenu] = useState<"font" | "toc" | null>(null);
   const allowedChapters = 2
 
@@ -90,9 +91,7 @@ const BookReaderPage: React.FC = () => {
 
           if (!isGuest) {
             try {
-              const resAct = await api.get(`${API.activities}/read/${matched.id}`, {
-                headers: { Authorization: `Bearer ${accessToken}` },
-              });
+              const resAct = await api.get(`${API.activities}/read/${matched.id}`);
               const serverPage = resAct.data?.lastPage;
               if (serverPage && serverPage > restoredPage) {
                 restoredPage = serverPage;
@@ -108,9 +107,7 @@ const BookReaderPage: React.FC = () => {
 
           if (!isGuest) {
             try {
-              const resAct = await api.get(`${API.activities}/read/${matched.id}`, {
-                headers: { Authorization: `Bearer ${accessToken}` },
-              });
+              const resAct = await api.get(`${API.activities}/read/${matched.id}`);
 
               const serverLocation = resAct.data?.lastLocation;
               if (serverLocation) {
@@ -139,7 +136,7 @@ const BookReaderPage: React.FC = () => {
     };
 
     fetchBook();
-  }, [bookId, navigate, isGuest, accessToken]);
+  }, [bookId, navigate, isGuest]);
 
   /** 📌 Change PDF page manually */
   const handlePageChange = async (offset: number) => {
@@ -163,8 +160,7 @@ const BookReaderPage: React.FC = () => {
           try {
             await api.post(
               API.read,
-              { bookId: book.id, page: newPage },
-              { headers: { Authorization: `Bearer ${accessToken}` } }
+              { bookId: book.id, page: newPage }
             );
           } catch (error) {
             console.error("Save progress error:", error);
@@ -181,9 +177,7 @@ const BookReaderPage: React.FC = () => {
 
       rendition?.annotations.remove(note.cfiRange, "highlight");
 
-      await api.delete(`${API.highlights}/${id}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      await api.delete(`${API.highlights}/${id}`);
 
       setNotes((prev) => prev.filter((n) => n.id !== id));
     } catch (err) {
@@ -399,8 +393,7 @@ useEffect(() => {
                   api
                     .post(
                       API.read,
-                      { bookId: book.id, lastLocation: loc },
-                      { headers: { Authorization: `Bearer ${accessToken}` } }
+                      { bookId: book.id, lastLocation: loc }
                     )
                     .catch((err) => console.error("Save EPUB progress error:", err));
                 }

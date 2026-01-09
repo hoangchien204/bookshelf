@@ -1,14 +1,14 @@
 // const URL_LINK = "https://be-bookshelf.onrender.com";
-const URL_LINK = "https://api.zenly.id.vn";
+// const URL_LINK = "https://api.zenly.id.vn";
 
-// const URL_LINK = "http://localhost:3000";
+const URL_LINK = "http://localhost:3000";
 
 // làm rối - RSA
 
 const API = {
     books: `${URL_LINK}/books`,
     users: `${URL_LINK}/users`,
-    profile: `${URL_LINK}/profile`,
+    ME: `${URL_LINK}/auth/me`,
     login: `${URL_LINK}/auth/login`,
     activities: `${URL_LINK}/activities`,
     read: `${URL_LINK}/activities/read`,
@@ -23,7 +23,8 @@ const API = {
     refresh: `${URL_LINK}/auth/refresh`,
     resetPassword: `${URL_LINK}/users/reset-password`,
     changePassword: `${URL_LINK}/users/changePassword`,
-
+    logout: `${URL_LINK}/auth/logout`,
+    hot: `${URL_LINK}/books/hot`,
     local: `${URL_LINK}`
 }
 export default API;

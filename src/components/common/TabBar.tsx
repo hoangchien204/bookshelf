@@ -18,7 +18,6 @@ interface Genre {
 
 const TabBar = () => {
   const { pathname } = useLocation();
-  const isLoggedIn = !!localStorage.getItem("accessToken");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [user, setUser] = useState<User | null>(null)
@@ -30,7 +29,7 @@ const TabBar = () => {
   const tabClass = (active: boolean) =>
     `flex-1 text-center py-2 ${active ? "text-blue-400" : "text-gray-300"
     } transition`;
-  const accessToken = localStorage.getItem('accessToken')
+  const isLoggedIn = !!user
   const [genres, setGenres] = useState<Genre[]>([]);
   const [showGenreDropdown, setShowGenreDropdown] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -61,20 +60,12 @@ const TabBar = () => {
     fetchGenres();
   }, []);
   useEffect(() => {
-    const userId = localStorage.getItem("userId");
-    if (!userId) return;
-
     const fetchUser = async () => {
       try {
-        const res = await api.get(`${API.users}/${userId}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        const user = res.data
-        setUser(user);
+        const res = await api.get(`${API.ME}`);
+        setUser(res.data.user);
       } catch (err) {
+        setUser(null);
         console.error("Lỗi fetch user:", err);
       }
     };
@@ -108,7 +99,25 @@ const TabBar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
+  //logout
+  useEffect(() => {
+    localStorage.removeItem("isLoggingOut");
+  }, []);
+  const handleLogout = async () => {
+    localStorage.setItem("isLoggingOut", "true");
 
+    try {
+      await api.post(API.logout);
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      localStorage.clear();
+      setUser(null);
+      setMenuOpen(false);
+      navigate("/", { replace: true });
+    }
+  };
+  
   return (
     <div className="w-full">
       {/* 🔹 Desktop */}
@@ -227,6 +236,7 @@ const TabBar = () => {
             <AvatarMenu
               avatarUrl={user?.avatarUrl || "/default-avatar.png"}
               username={user?.username || "Guest"}
+              onLogout={handleLogout}
             />
           ) : (
             <button
@@ -325,11 +335,7 @@ const TabBar = () => {
               <Link to="/favorites" onClick={() => setMenuOpen(false)}>Yêu thích</Link>
               {isLoggedIn ? (
                 <button
-                  onClick={() => {
-                    localStorage.clear();
-                    setMenuOpen(false);
-                    window.location.href = "/";
-                  }}
+                  onClick={handleLogout}
                   className="text-left text-red-400"
                 >
                   Đăng xuất
