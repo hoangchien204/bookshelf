@@ -20,7 +20,7 @@ import AuthWatcher from './components/common/GlobalAuthListener';
 import GenresPage from './screens/GenrePage';
 import { ModalProvider } from './components/common/GlobalModal';
 import { useAuth } from './components/user/AuthContext';
-import AntiDevTools from './services/AntiDevTools';
+// import AntiDevTools from './services/AntiDevTools';
 
 function AppRoutes() {
   const location = useLocation();
@@ -54,7 +54,7 @@ function AppRoutes() {
       <ModalProvider>
         <ToastProvider />
         <AuthWatcher />
-        <AntiDevTools />
+        {/* <AntiDevTools /> */}
         {!isDashboard && (
           isBookDetail && isMobile ? (
             <MobileTabBar
