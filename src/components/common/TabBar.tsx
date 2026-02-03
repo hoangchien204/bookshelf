@@ -39,8 +39,7 @@ const TabBar = () => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   /** 📱 UI */
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [showTabs, setShowTabs] = useState(true);
+  // const [showTabs, setShowTabs] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
   const tabClass = (active: boolean) =>
@@ -95,7 +94,6 @@ const TabBar = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setShowTabs(window.scrollY <= lastScrollY);
       setLastScrollY(window.scrollY);
     };
     window.addEventListener("scroll", handleScroll);
