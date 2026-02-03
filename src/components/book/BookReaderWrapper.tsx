@@ -99,7 +99,7 @@ const BookReaderWrapper: React.FC = () => {
   if (!book) return <div className="p-5 text-red-500">Không tìm thấy sách.</div>;
 
   return isLaptop ? (
-    <BookReaderPage />
+    <BookReaderPage book={book}/>
   ) : (
     <BookReaderMobile
       book={book}

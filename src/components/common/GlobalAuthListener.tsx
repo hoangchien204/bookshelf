@@ -8,7 +8,6 @@ const protectedPrefixes = [
   "/favorites",
   "/reading",
   "/admin",
-  "/read",
 ];
 
 export default function AuthWatcher() {

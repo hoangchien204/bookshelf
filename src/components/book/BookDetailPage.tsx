@@ -3,7 +3,13 @@ import { slugify } from "../../utils/slug";
 import type { Book } from "../../types/Book";
 import API from "../../services/APIURL";
 import { useEffect, useState } from "react";
-import { FaHeart, FaRegHeart, FaStar, FaBookOpen, FaShareAlt } from "react-icons/fa";
+import {
+  FaHeart,
+  FaRegHeart,
+  FaStar,
+  FaBookOpen,
+  FaShareAlt,
+} from "react-icons/fa";
 import api from "../../types/api";
 import toast from "react-hot-toast";
 import CommentSection from "../user/CommentSection";
@@ -24,13 +30,13 @@ const BookDetailPage = () => {
   const [loading, setLoading] = useState(!location.state?.book);
   const [showFullDescription, setShowFullDescription] = useState(false);
 
-    const {user} = useAuth()
+  const { user } = useAuth();
   const userId = user?.id;
-  
+
   const { slugAndId: slugParam } = useParams();
   const id =
     slugParam?.match(
-      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/
+      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/,
     )?.[0] || "";
   const [volumes, setVolumes] = useState<Book[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -54,7 +60,7 @@ const BookDetailPage = () => {
 
   // Fetch danh sách yêu thích
   useEffect(() => {
-    if (!userId ) return;
+    if (!userId) return;
     (async () => {
       try {
         const res = await api.get(API.favorites);
@@ -85,7 +91,9 @@ const BookDetailPage = () => {
   useEffect(() => {
     if (!book) return;
     (async () => {
-      const res = await fetch(`${API.books}/author/${encodeURIComponent(book.author)}`);
+      const res = await fetch(
+        `${API.books}/author/${encodeURIComponent(book.author)}`,
+      );
       if (res.ok) {
         const data = await res.json();
         setRelatedBooks(data.filter((b: Book) => b.id !== book.id));
@@ -103,9 +111,9 @@ const BookDetailPage = () => {
       }
     })();
   }, [book]);
-  // Danh sách tập 
+  // Danh sách tập
   useEffect(() => {
-    if (!book?.id || !book?.seriesId) return
+    if (!book?.id || !book?.seriesId) return;
     (async () => {
       try {
         const res = await api.get(`${API.series}/${book.seriesId}/books`);
@@ -121,28 +129,25 @@ const BookDetailPage = () => {
     setIsProcessing(true);
 
     try {
-    const {user} = useAuth();
+      const { user } = useAuth();
       if (!user) {
         toast.error("Bạn cần đăng nhập để yêu thích sách");
         return;
       }
 
-      const response = await api.post(
-        API.favorites,
-        { bookId },
-      );
+      const response = await api.post(API.favorites, { bookId });
 
       if (typeof response.data.isFavorite !== "undefined") {
         setFavorites((prev) =>
           response.data.isFavorite
             ? [...prev, bookId]
-            : prev.filter((id) => id !== bookId)
+            : prev.filter((id) => id !== bookId),
         );
 
         toast.success(
           response.data.isFavorite
             ? "Yêu thích thành công"
-            : "Bỏ yêu thích thành công"
+            : "Bỏ yêu thích thành công",
         );
       }
     } catch (error) {
@@ -153,28 +158,38 @@ const BookDetailPage = () => {
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href)
+    navigator.clipboard
+      .writeText(window.location.href)
       .then(() => toast.success("Đã sao chép liên kết!"))
       .catch(() => toast.error("Không thể sao chép liên kết"));
   };
 
-  const handleReadClick = () => {
-    if (!book) return;
+  const handleReadBook = async (book: Book) => {
     const slug = slugify(book.name);
-    navigate(`/read/${slug}-${book.id}`);
-  };
-
-  const handleRead = async (book: Book) => {
+    if (!user) {
+      navigate(`/read/${slug}-${book.id}`, {
+        state: {
+          startPage: 1,
+          isGuest: true,
+        },
+      });
+      return;
+    }
     try {
       const res = await api.get(`${API.read}/${book.id}`);
       const lastPage = res.data.page || 1;
-      const slug = slugify(book.name);
-      navigate(`/book/${slug}-${book.id}`, { state: { startPage: lastPage } });
-    } catch (err: any) {
-      if (err.response?.status === 401) {
-      }
+
+      navigate(`/read/${slug}-${book.id}`, {
+        state: {
+          startPage: lastPage,
+          isGuest: false,
+        },
+      });
+    } catch (err) {
+      console.error("Lỗi đọc sách:", err);
     }
   };
+
   useEffect(() => {
     document.body.style.placeItems = "unset";
     document.body.style.display = "block";
@@ -193,7 +208,6 @@ const BookDetailPage = () => {
     );
   };
 
-
   if (loading) return <Loading />;
   if (!book) return <div className="text-center py-8">Không tìm thấy sách</div>;
   const description = book.description || "Chưa có mô tả";
@@ -202,12 +216,12 @@ const BookDetailPage = () => {
     ? description
     : description.slice(0, MAX_LENGTH) + (isLong ? "..." : "");
 
-
-
   return (
     <div className="bg-gradient-to-br from-gray-900 to-gray-800">
-      <div className="book-detail-page w-screen flex flex-col md:flex-row bg-gradient-to-br 
-                    from-gray-900 to-gray-800 text-white pt-0 sm:pt-20 roboto-slab">
+      <div
+        className="book-detail-page w-screen flex flex-col md:flex-row bg-gradient-to-br 
+                    from-gray-900 to-gray-800 text-white pt-0 sm:pt-20 roboto-slab"
+      >
         {/* mobi */}
         <div className="w-full md:hidden relative flex flex-col items-center pb-6">
           <img
@@ -231,7 +245,7 @@ const BookDetailPage = () => {
           </div>
           <div className="relative z-10 flex items-center gap-3 mt-4 px-6 w-full">
             <button
-              onClick={handleReadClick}
+              onClick={() => book && handleReadBook(book)}
               className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 flex text-center justify-center items-center
             rounded-3xl font-semibold transition gap-2 text-lg"
             >
@@ -241,7 +255,11 @@ const BookDetailPage = () => {
               onClick={() => handleToggleFavorite(id)}
               className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full transition text-lg"
             >
-              {favorites.includes(id) ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
+              {favorites.includes(id) ? (
+                <FaHeart className="text-red-500" />
+              ) : (
+                <FaRegHeart />
+              )}
             </button>
             <button
               onClick={handleCopyLink}
@@ -259,7 +277,8 @@ const BookDetailPage = () => {
           <span className="bg-gray-700 text-white text-sm px-3 py-1 rounded-full flex justify-center items-center">
             {book.genres && book.genres.length > 0
               ? book.genres.map((g) => g.name).join(", ")
-              : "Không rõ"}          </span>
+              : "Không rõ"}{" "}
+          </span>
         </div>
 
         <div className="hidden md:block md:w-[400px] flex-shrink-0 md:sticky md:top-0 self-start p-6">
@@ -274,7 +293,6 @@ const BookDetailPage = () => {
 
         {/* Nội dung Desktop */}
         <div className="flex-1 p-6 space-y-6 overflow-y-auto text-left max-w-3xl">
-
           {/* Thông tin chung - chỉ Desktop */}
           <div className="hidden md:block">
             <h1 className="text-2xl font-bold mb-4">{book.name}</h1>
@@ -293,7 +311,9 @@ const BookDetailPage = () => {
               </div>
               <div>
                 <div className="text-gray-300 font-medium">Trạng thái</div>
-                <div className="text-white">{book.isSeries ? "Đang ra" : "Hoàn thành"}</div>
+                <div className="text-white">
+                  {book.isSeries ? "Đang ra" : "Hoàn thành"}
+                </div>
               </div>
               <div>
                 <div className="text-gray-300 font-medium">Nhà xuất bản</div>
@@ -311,17 +331,22 @@ const BookDetailPage = () => {
           {/* Nút hành động - Desktop */}
           <div className="hidden md:flex items-center gap-3 flex-wrap">
             <button
-              onClick={handleReadClick}
+              onClick={() => book && handleReadBook(book)}
               className="bg-green-500 hover:bg-green-600 text-white flex text-center justify-center items-center gap-2 px-6 py-2 
                         rounded-2xl font-semibold transition w-[201px]"
             >
-              <FaBookOpen />Đọc sách
+              <FaBookOpen />
+              Đọc sách
             </button>
             <button
               onClick={() => handleToggleFavorite(id)}
               className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full transition text-2xl"
             >
-              {favorites.includes(id) ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
+              {favorites.includes(id) ? (
+                <FaHeart className="text-red-500" />
+              ) : (
+                <FaRegHeart />
+              )}
             </button>
             <button
               onClick={handleCopyLink}
@@ -338,7 +363,7 @@ const BookDetailPage = () => {
               {displayedText}
               {isLong && (
                 <button
-                  onClick={() => setShowFullDescription(prev => !prev)}
+                  onClick={() => setShowFullDescription((prev) => !prev)}
                   className="ml-2 text-green-400 no-underline cursor-pointer focus:outline-none"
                 >
                   {showFullDescription ? "Rút gọn" : "Xem thêm"}
@@ -367,10 +392,11 @@ const BookDetailPage = () => {
                           currentVolumes.map((vol) => (
                             <div
                               key={vol.id}
-                              className={`flex justify-between items-center bg-gray-800 hover:bg-gray-700 transition p-4 rounded-xl cursor-pointer ${String(vol.id) === String(book.id)
-                                ? "ring-2 ring-green-500"
-                                : ""
-                                }`}
+                              className={`flex justify-between items-center bg-gray-800 hover:bg-gray-700 transition p-4 rounded-xl cursor-pointer ${
+                                String(vol.id) === String(book.id)
+                                  ? "ring-2 ring-green-500"
+                                  : ""
+                              }`}
                               onClick={() =>
                                 navigate(`/book/${slugify(vol.name)}-${vol.id}`)
                               }
@@ -393,7 +419,9 @@ const BookDetailPage = () => {
                       {totalPages > 1 && (
                         <div className="flex justify-center items-center gap-2 mb-6">
                           <button
-                            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                            onClick={() =>
+                              setCurrentPage((p) => Math.max(p - 1, 1))
+                            }
                             disabled={currentPage === 1}
                             className="w-10 h-10 bg-gray-700 text-white rounded disabled:opacity-50 rounded-full"
                           >
@@ -434,7 +462,6 @@ const BookDetailPage = () => {
             )}
           </div>
         </div>
-
       </div>
 
       {/* Nếu có sách cùng tác giả */}
@@ -444,7 +471,10 @@ const BookDetailPage = () => {
             Sách cùng tác giả
           </h2>
 
-          <HorizontalSlider itemWidth={250} gap="gap-4 sm:gap-6 md:gap-10 lg:gap-20">
+          <HorizontalSlider
+            itemWidth={250}
+            gap="gap-4 sm:gap-6 md:gap-10 lg:gap-20"
+          >
             {relatedBooks.map((b) => (
               <div
                 key={b.id}
@@ -452,7 +482,7 @@ const BookDetailPage = () => {
               >
                 <BookCard
                   book={b}
-                  onRead={() => handleRead(b)}
+                  onRead={() => handleReadBook(b)}
                   onToggleFavorite={handleToggleFavorite}
                   isFavorite={favorites.includes(b.id)}
                 />
@@ -470,10 +500,13 @@ const BookDetailPage = () => {
 
         <HorizontalSlider itemWidth={250} gap="gap-6 md:gap-10 lg:gap-20">
           {suggestedBooks.map((b) => (
-            <div key={b.id} className="flex-shrink-0 w-[140px] sm:w-[160px] md:w-48">
+            <div
+              key={b.id}
+              className="flex-shrink-0 w-[140px] sm:w-[160px] md:w-48"
+            >
               <BookCard
                 book={b}
-                onRead={() => handleRead(b)}
+                onRead={() => handleReadBook(b)}
                 onToggleFavorite={handleToggleFavorite}
                 isFavorite={favorites.includes(b.id)}
               />
@@ -481,7 +514,6 @@ const BookDetailPage = () => {
           ))}
         </HorizontalSlider>
       </div>
-
     </div>
   );
 };

@@ -1,11 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { Document, pdfjs } from "react-pdf";
 import { motion } from "framer-motion";
 import type { Book } from "../../types/Book";
 import ChapterProgress from "../common/ReadingProgressCircle";
 import LoginModal from "../../screens/login";
-import Loading from "../common/Loading";
 import EpubReaderWrapper from "../common/EpubReaderWrapper";
 import FontMenu from "../common/FontMenuButton";
 import PdfPageWrapper from "../common/PdfPageWrapper";
@@ -19,31 +17,29 @@ import { useAuth } from "../user/AuthContext";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.js",
-  import.meta.url
+  import.meta.url,
 ).toString();
 
-const BookReaderPage: React.FC = () => {
-  const { slugAndId } = useParams();
-  const navigate = useNavigate();
-  const {user} = useAuth()
-  const userId = user?.id;
-  const bookId = slugAndId?.split("-").slice(-5).join("-");
+interface Props {
+  book: Book;
+}
 
-  const [book, setBook] = useState<Book | null>(null);
+const BookReaderPage: React.FC<Props> = ({ book }) => {
+  const { user } = useAuth();
+  const userId = user?.id;
+
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [currentLocation, setCurrentLocation] = useState<string | number>(0);
-  const [loading, setLoading] = useState(true);
   const [pageWidth, setPageWidth] = useState<number>(600);
 
   const isMobile = window.innerWidth < 768;
   const [viewMode, setViewMode] = useState<"double" | "single">(
-    isMobile ? "single" : "double"
+    isMobile ? "single" : "double",
   );
   const [scrollMode, setScrollMode] = useState(false);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
-
 
   //  Reader settings
   const [fontSize, setFontSize] = useState(16);
@@ -58,9 +54,29 @@ const BookReaderPage: React.FC = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const isGuest = !user;
   const [openMenu, setOpenMenu] = useState<"font" | "toc" | null>(null);
-  const allowedChapters = 2
+  const allowedChapters = 2;
+  useEffect(() => {
+    if (!book) return;
 
+    // 1️⃣ Ưu tiên backend nếu đã login
+    if (userId) {
+      api
+        .get(`${API.read}/${book.id}`)
+        .then((res) => {
+          if (res.data?.lastLocation) {
+            setCurrentLocation(res.data.lastLocation);
+          }
+        })
+        .catch(() => {});
+      return;
+    }
 
+    // 2️⃣ Guest → lấy từ localStorage
+    const savedLocation = localStorage.getItem(`book-${book.id}-page`);
+    if (savedLocation) {
+      setCurrentLocation(savedLocation);
+    }
+  }, [book?.id, userId]);
 
   /**Resize handler */
   useEffect(() => {
@@ -75,68 +91,6 @@ const BookReaderPage: React.FC = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-
-  useEffect(() => {
-    const fetchBook = async () => {
-      try {
-        setLoading(true);
-        const res = await api(`${API.books}/${bookId}`);
-        if (!res.data) throw new Error("Không tìm thấy sách");
-        const matched: Book = res.data;
-        setBook(matched);
-
-        if (matched.fileType === "pdf") {
-          let restoredPage = parseInt(localStorage.getItem(`book-${matched.id}-page`) || "1", 10);
-
-          if (!isGuest) {
-            try {
-              const resAct = await api.get(`${API.activities}/read/${matched.id}`);
-              const serverPage = resAct.data?.lastPage;
-              if (serverPage && serverPage > restoredPage) {
-                restoredPage = serverPage;
-                localStorage.setItem(`book-${matched.id}-page`, restoredPage.toString());
-              }
-            } catch (err) {
-              console.error("Sync server error:", err);
-            }
-          }
-          setCurrentPage(restoredPage);
-        } else if (matched.fileType === "epub") {
-          let restoredLocation = localStorage.getItem(`book-${matched.id}-location`) || "0";
-
-          if (!isGuest) {
-            try {
-              const resAct = await api.get(`${API.activities}/read/${matched.id}`);
-
-              const serverLocation = resAct.data?.lastLocation;
-              if (serverLocation) {
-                restoredLocation = serverLocation;
-              } else {
-                restoredLocation = localStorage.getItem(`book-${matched.id}-location`) || "0";
-              }
-
-              localStorage.setItem(`book-${matched.id}-location`, restoredLocation);
-            } catch (err) {
-              console.error("Sync server error:", err);
-              restoredLocation = localStorage.getItem(`book-${matched.id}-location`) || "0";
-            }
-          } else {
-            restoredLocation = localStorage.getItem(`book-${matched.id}-location`) || "0";
-          }
-
-          setCurrentLocation(restoredLocation);
-        }
-      } catch (err) {
-        console.error(err);
-        navigate("/");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBook();
-  }, [bookId, navigate, isGuest]);
 
   /** 📌 Change PDF page manually */
   const handlePageChange = async (offset: number) => {
@@ -158,10 +112,7 @@ const BookReaderPage: React.FC = () => {
         localStorage.setItem(`book-${book.id}-page`, newPage.toString());
         if (userId) {
           try {
-            await api.post(
-              API.read,
-              { bookId: book.id, page: newPage }
-            );
+            await api.post(API.read, { bookId: book.id, page: newPage });
           } catch (error) {
             console.error("Save progress error:", error);
           }
@@ -191,71 +142,68 @@ const BookReaderPage: React.FC = () => {
     return () => document.removeEventListener("fullscreenchange", onFs);
   }, []);
 
-
- const lastValidLocationRef = useRef<string | null>(null);
+  const lastValidLocationRef = useRef<string | null>(null);
   const prevCfiRef = useRef<string | null>(null);
   const [rollbackCfi, setRollbackCfi] = useState<string | null>(null);
   const isRollbackingRef = useRef(false);
   const isFirstLoadRef = useRef(true);
 
-const checkGuestLimit = (location: any) => {
-  if (isRollbackingRef.current) {
-    return;
-  }
-
-  if (!isGuest || toc.length === 0) {
-    prevCfiRef.current = lastValidLocationRef.current;
-    lastValidLocationRef.current = location.start.cfi;
-    return;
-  }
-
-  const normalizeHref = (s: string) =>
-    (s.split("#")[0] || "").split("/").pop() || s;
-
-  const currentIndex = toc.findIndex(
-    (t) => normalizeHref(location.start.href) === normalizeHref(t.href)
-  );
-
-  if (currentIndex >= allowedChapters) {
-    setShowLoginModal(true);
-    const targetCfi = prevCfiRef.current || lastValidLocationRef.current;
-    if (
-      targetCfi &&
-      !isRollbackingRef.current &&
-      targetCfi !== location.start.cfi
-    ) {
-      setRollbackCfi(targetCfi);
+  const checkGuestLimit = (location: any) => {
+    if (isRollbackingRef.current) {
+      return;
     }
-  } else if (currentIndex !== -1) {
-    prevCfiRef.current = lastValidLocationRef.current;
-    lastValidLocationRef.current = location.start.cfi;
-  }
 
-  if (isFirstLoadRef.current) {
-    isFirstLoadRef.current = false;
-  }
-};
+    if (!isGuest || toc.length === 0) {
+      prevCfiRef.current = lastValidLocationRef.current;
+      lastValidLocationRef.current = location.start.cfi;
+      return;
+    }
 
-useEffect(() => {
-  if (rollbackCfi && rendition) {
-    console.log("🚫 Rollback to:", rollbackCfi);
-    isRollbackingRef.current = true;
-    rendition.display(rollbackCfi).then(() => {
-      setRollbackCfi(null);
-      setTimeout(() => {
-        isRollbackingRef.current = false;
-      }, 0);
-    });
-  }
-}, [rollbackCfi, rendition]);
+    const normalizeHref = (s: string) =>
+      (s.split("#")[0] || "").split("/").pop() || s;
 
+    const currentIndex = toc.findIndex(
+      (t) => normalizeHref(location.start.href) === normalizeHref(t.href),
+    );
+
+    if (currentIndex >= allowedChapters) {
+      setShowLoginModal(true);
+      const targetCfi = prevCfiRef.current || lastValidLocationRef.current;
+      if (
+        targetCfi &&
+        !isRollbackingRef.current &&
+        targetCfi !== location.start.cfi
+      ) {
+        setRollbackCfi(targetCfi);
+      }
+    } else if (currentIndex !== -1) {
+      prevCfiRef.current = lastValidLocationRef.current;
+      lastValidLocationRef.current = location.start.cfi;
+    }
+
+    if (isFirstLoadRef.current) {
+      isFirstLoadRef.current = false;
+    }
+  };
+
+  useEffect(() => {
+    if (rollbackCfi && rendition) {
+      console.log("🚫 Rollback to:", rollbackCfi);
+      isRollbackingRef.current = true;
+      rendition.display(rollbackCfi).then(() => {
+        setRollbackCfi(null);
+        setTimeout(() => {
+          isRollbackingRef.current = false;
+        }, 0);
+      });
+    }
+  }, [rollbackCfi, rendition]);
 
   useEffect(() => {
     if (rendition && toc.length > 0) {
       rendition.on("relocated", checkGuestLimit);
     }
   }, [rendition, toc]);
-
 
   const handleSelectChapter = (href: string) => {
     if (isGuest && toc.length > 0) {
@@ -278,8 +226,8 @@ useEffect(() => {
     rendition?.display(cfi);
   };
 
-  if (loading) return <Loading />;
-  if (!book) return <div className="p-5 text-red-500">Không tìm thấy sách.</div>;
+  if (!book)
+    return <div className="p-5 text-red-500">Không tìm thấy sách.</div>;
 
   return (
     <div className="fixed inset-0 bg-white z-[9999] flex flex-col ">
@@ -348,15 +296,16 @@ useEffect(() => {
       {/* modal đăng yêu cầu đăng nhập */}
       {showLoginModal && (
         <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-      />
+          isOpen={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
+        />
       )}
       {/* Content */}
       <div
         id="book-container"
-        className={`flex-1  relative z-[100] w-full ${isMobile ? "overflow-hidden" : "overflow-y-auto overflow-x-hidden"
-          }`}
+        className={`flex-1  relative z-[100] w-full ${
+          isMobile ? "overflow-hidden" : "overflow-y-auto overflow-x-hidden"
+        }`}
       >
         {book.fileUrl ? (
           book.fileType === "pdf" ? (
@@ -365,22 +314,26 @@ useEffect(() => {
               onLoadSuccess={({ numPages }) => setNumPages(numPages)}
               onLoadError={(error) => console.error("PDF load error:", error)}
               loading={<div className="text-center">Đang tải ...</div>}
-              noData={<div className="text-center text-red-600">⚠ Không tìm thấy file PDF.</div>}
+              noData={
+                <div className="text-center text-red-600">
+                  ⚠ Không tìm thấy file PDF.
+                </div>
+              }
             >
               <div className="flex justify-center gap-6">
-
                 <PdfPageWrapper
                   pageNumber={currentPage}
-                  pageWidth={pageWidth} />
+                  pageWidth={pageWidth}
+                />
 
                 {currentPage + 1 <= numPages && (
                   <PdfPageWrapper
                     pageNumber={currentPage + 1}
-                    pageWidth={pageWidth} />
+                    pageWidth={pageWidth}
+                  />
                 )}
               </div>
             </Document>
-
           ) : book.fileType === "epub" ? (
             <EpubReaderWrapper
               fileUrl={book.fileUrl}
@@ -391,11 +344,10 @@ useEffect(() => {
                 localStorage.setItem(`book-${book.id}-page`, String(loc));
                 if (userId) {
                   api
-                    .post(
-                      API.read,
-                      { bookId: book.id, lastLocation: loc }
-                    )
-                    .catch((err) => console.error("Save EPUB progress error:", err));
+                    .post(API.read, { bookId: book.id, lastLocation: loc })
+                    .catch((err) =>
+                      console.error("Save EPUB progress error:", err),
+                    );
                 }
               }}
               fontSize={fontSize}
@@ -408,10 +360,8 @@ useEffect(() => {
                 setToc(tocData);
                 setNotes(noteData);
                 rend.on("relocated", checkGuestLimit);
-
               }}
               onNotesLoaded={(loadedNotes) => setNotes(loadedNotes)}
-
             />
           ) : (
             <div className="text-center text-red-600">
@@ -424,8 +374,10 @@ useEffect(() => {
       </div>
       {book?.fileType === "pdf" && (
         <>
-          <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 
-                          bg-white/70 px-3 py-1 rounded shadow z-[15000]">
+          <div
+            className="absolute bottom-3 left-1/2 transform -translate-x-1/2 
+                          bg-white/70 px-3 py-1 rounded shadow z-[15000]"
+          >
             Trang {currentPage} / {numPages}
           </div>
           <button
@@ -446,9 +398,7 @@ useEffect(() => {
           </button>
         </>
       )}
-      {book.fileType === "epub" && (
-        <ChapterProgress rendition={rendition} />
-      )}
+      {book.fileType === "epub" && <ChapterProgress rendition={rendition} />}
     </div>
   );
 };

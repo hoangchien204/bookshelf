@@ -108,16 +108,32 @@ const BookshelfApp: React.FC = () => {
   }, [books, visibleCount]);
 
   // 4. Xử lý Đọc sách
+
   const handleRead = async (book: Book) => {
-    try {
-      const res = await api.get(`${API.read}/${book.id}`);
-      const lastPage = res.data.page || 1;
-      const slug = generateSlug(book.name);
-      navigate(`/book/${slug}-${book.id}`, { state: { startPage: lastPage } });
-    } catch (err: any) {
-      console.error(err);
-    }
-  };
+  const slug = generateSlug(book.name);
+
+  // 👀 GUEST MODE
+  if (!user) {
+    navigate(`/book/${slug}-${book.id}`, {
+      state: { startPage: 1, isGuest: true },
+    });
+    return;
+  }
+
+  // 👤 USER MODE
+  try {
+    const res = await api.get(`${API.read}/${book.id}`);
+    const lastPage = res.data.page || 1;
+
+    navigate(`/book/${slug}-${book.id}`, {
+      state: { startPage: lastPage, isGuest: false },
+    });
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+  
 
   return (
     <>
