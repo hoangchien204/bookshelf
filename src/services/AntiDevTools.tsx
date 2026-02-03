@@ -2,51 +2,62 @@ import { useEffect } from "react";
 
 export default function AntiDevTools() {
   useEffect(() => {
-    // Hàm kiểm tra chính - Chạy mỗi 500ms
-    const checkDevTools = setInterval(() => {
+    const triggerBan = () => {
+      document.body.innerHTML = "<h1>⚠️ Don't try to inspect this page!</h1>";
+      document.body.style.backgroundColor = "black";
+      document.body.style.color = "red";
+      document.body.style.textAlign = "center";
+      document.body.style.paddingTop = "20%";
+
+      setTimeout(() => {
+        window.location.replace("https://www.google.com");
+      }, 200);
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isCtrlOrMeta = e.ctrlKey || e.metaKey; // Ctrl (Win) hoặc Command (Mac)
+
+      if (
+        e.key === "F12" || // F12
+        (isCtrlOrMeta && e.shiftKey && ["I", "J", "C"].includes(e.key.toUpperCase())) || // Ctrl+Shift+I/J/C
+        (isCtrlOrMeta && e.key.toUpperCase() === "U") || // Ctrl+U (Xem source)
+        (isCtrlOrMeta && e.key.toUpperCase() === "S") // Ctrl+S (Lưu trang)
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        triggerBan();
+      }
+    };
+
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
+    const intervalId = setInterval(() => {
       const threshold = 160;
       const widthDiff = window.outerWidth - window.innerWidth;
       const heightDiff = window.outerHeight - window.innerHeight;
 
-      // 1. ƯU TIÊN KIỂM TRA KÍCH THƯỚC (Cho trường hợp DevTools dính liền)
       if (widthDiff > threshold || heightDiff > threshold) {
-        // Nếu phát hiện -> Đá ngay lập tức!
-        window.location.href = "https://www.google.com";
-        return; // ⛔ Dừng ngay, không chạy xuống đoạn debugger bên dưới nữa
+        triggerBan();
       }
 
-      // 2. NẾU KHÔNG PHÁT HIỆN KÍCH THƯỚC (DevTools tách rời / Undocked)
-      // Mới dùng đến "cực hình" debugger để làm lag
-      // (function() {}.constructor("debugger")()); 
-      // 👆 Tạm thời mình comment dòng này lại để bạn test tính năng "Đá" trước đã.
-      // Nếu bạn muốn chặn cả loại tách rời (undocked) thì bỏ comment ra,
-      // nhưng chấp nhận là loại tách rời sẽ bị TREO máy thay vì bị ĐÁ.
-      
-    }, 500);
+      const start = performance.now();
+      debugger; 
+      const end = performance.now();
 
-    // Chặn phím tắt F12...
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.key === "F12" ||
-        (e.ctrlKey && e.shiftKey && e.key === "I") ||
-        (e.ctrlKey && e.shiftKey && e.key === "J") ||
-        (e.ctrlKey && e.key === "U")
-      ) {
-        e.preventDefault();
-        window.location.href = "https://www.google.com"; // Bấm phím tắt cũng đá luôn
+      if (end - start > 100) {
+        triggerBan();
       }
-    };
-    
-    // Chặn chuột phải
-    const handleContextMenu = (e: MouseEvent) => e.preventDefault();
+    }, 1000); 
 
+    // Đăng ký sự kiện
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("contextmenu", handleContextMenu);
 
     return () => {
-      clearInterval(checkDevTools);
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("contextmenu", handleContextMenu);
+      clearInterval(intervalId);
     };
   }, []);
 
