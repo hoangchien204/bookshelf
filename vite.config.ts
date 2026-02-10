@@ -15,7 +15,7 @@ export default defineConfig({
         controlFlowFlatteningThreshold: 0.75,
         deadCodeInjection: true, // Chèn code rác
         deadCodeInjectionThreshold: 0.4,
-        debugProtection: true, // Chặn debugger
+        debugProtection: true, 
         debugProtectionInterval: 2000,
         disableConsoleOutput: true, // Tắt console.log
         identifierNamesGenerator: 'hexadecimal', // Đổi tên biến: _0x1a2b

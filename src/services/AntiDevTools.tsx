@@ -6,16 +6,13 @@ export default function AntiDevTools() {
   const nukedRef = useRef(false);
 
   useEffect(() => {
-    // 1. QUAN TRỌNG: Nếu đang chạy localhost (Dev mode) thì KHÔNG chạy anti-cheat
-    // Để bạn còn code được chứ!
     if (import.meta.env.MODE === "development") {
       console.log("AntiDevTools: Disabled in Development Mode");
       return;
     }
 
-    // Hàm Hủy Diệt (Nuclear Option)
     const nukeEverything = () => {
-      if (nukedRef.current) return; // Nếu đã nuke rồi thì thôi
+      if (nukedRef.current) return;
       nukedRef.current = true;
 
       try {
