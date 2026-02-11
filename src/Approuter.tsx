@@ -54,7 +54,7 @@ function AppRoutes() {
       <ModalProvider>
         <ToastProvider />
         <AuthWatcher />
-        <AntiDevTools />
+        {/* <AntiDevTools /> */}
         {!isDashboard && (
           isBookDetail && isMobile ? (
             <MobileTabBar

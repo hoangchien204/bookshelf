@@ -27,13 +27,12 @@ export default function CustomEpubReader({
   onReady,
   onNotesLoaded,
 }: EpubReaderWrapperProps) {
-
   const [bookData, setBookData] = useState<ArrayBuffer | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [rendition, setRendition] = useState<any>(null);
   const isMobile = window.innerWidth < 1024;
-  
-  const {user} = useAuth()
+
+  const { user } = useAuth();
   const isGuest = !user;
 
   // Highlight + note
@@ -77,7 +76,8 @@ export default function CustomEpubReader({
   useEffect(() => {
     if (!bookId) return;
 
-    api.get(`${API.highlights}/${bookId}`)
+    api
+      .get(`${API.highlights}/${bookId}`)
       .then((res) => {
         const highlights = Array.isArray(res.data) ? res.data : res.data.data;
         setNotes(highlights || []);
@@ -102,8 +102,8 @@ export default function CustomEpubReader({
     if (rendition) {
       rendition.themes.register("custom", {
         body: {
-          "background": background,
-          "color": background === "#000000" ? "white" : "black",
+          background: background,
+          color: background === "#000000" ? "white" : "black",
           "line-height": "1.6",
         },
       });
@@ -130,8 +130,8 @@ export default function CustomEpubReader({
         n.cfiRange,
         { note: n.note },
         () => openEditModal(n),
-        `hl-${n.id}`,   // class unique
-        { fill: n.color || "#d5b8ff" }
+        `hl-${n.id}`, // class unique
+        { fill: n.color || "#d5b8ff" },
       );
     });
   }, [rendition, notes]);
@@ -168,18 +168,18 @@ export default function CustomEpubReader({
     const finalColor = color || "#d5b8ff";
 
     try {
-      const res = await api.post(
-        API.highlights,
-        {
-          bookId,
-          cfiRange: tempCFI,
-          color: finalColor,
-          note,
-        },
-      );
+      const res = await api.post(API.highlights, {
+        bookId,
+        cfiRange: tempCFI,
+        color: finalColor,
+        note,
+      });
 
       const savedNote = res.data;
-      setNotes((prev) => [...prev.filter((n) => n.cfiRange !== tempCFI), savedNote]);
+      setNotes((prev) => [
+        ...prev.filter((n) => n.cfiRange !== tempCFI),
+        savedNote,
+      ]);
       loadHighlights();
     } catch (err) {
       console.error("❌ Save highlight error:", err);
@@ -223,15 +223,18 @@ export default function CustomEpubReader({
     },
   };
   // Update existing highlight
-  const handleUpdateNote = async (id: string, color?: string, note?: string) => {
+  const handleUpdateNote = async (
+    id: string,
+    color?: string,
+    note?: string,
+  ) => {
     try {
-      const res = await api.patch(
-        `${API.highlights}/${id}`,
-        { color, note },
-      );
+      const res = await api.patch(`${API.highlights}/${id}`, { color, note });
       const updated = res.data;
       setNotes((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, color: updated.color, note: updated.note } : n))
+        prev.map((n) =>
+          n.id === id ? { ...n, color: updated.color, note: updated.note } : n,
+        ),
       );
     } catch (err) {
       console.error("❌ Update highlight error:", err);
@@ -242,13 +245,12 @@ export default function CustomEpubReader({
     onReady?: (
       rend: any,
       toc: { label: string; href: string }[],
-      notes: any[]
+      notes: any[],
     ) => void,
-    openEditModal?: (cfiRange: string, contents: any) => void
+    openEditModal?: (cfiRange: string, contents: any) => void,
   ) => {
     // Sinh location
-    rend.book.ready
-      .then(() => rend.book.locations.generate(1024))
+    rend.book.ready.then(() => rend.book.locations.generate(1024));
     const tocData = rend.book.navigation.toc.map((item: any) => ({
       label: item.label,
       href: item.href,
@@ -275,73 +277,49 @@ export default function CustomEpubReader({
 
   if (error) return <div className="text-center text-red-600">{error}</div>;
   if (!bookData) return <div className="text-center">⏳ Đang tải...</div>;
-  return (
-    isMobile ? (
-
-      <EpubReaderMobile
-        fileUrl={fileUrl}
-        bookId={bookId}
-        bookData={bookData}
-        error={error}
-        location={location}
-        onLocationChange={onLocationChange}
-        setRendition={setRendition}
-        customStyles={customStyles}
-        editingNote={editingNote}
-        setEditingNote={setEditingNote}
-        handleAddNote={handleAddNote}
-        handleUpdateNote={handleUpdateNote}
-        notes={notes}
-        showModal={showModal}
-        setShowModal={setShowModal}
-        resetModal={resetModal}
-        tempCFI={tempCFI}
-        setTempCFI={setTempCFI}
-        tempNote={tempNote}
-        setTempNote={setTempNote}
-        tempColor={tempColor}
-        setTempColor={setTempColor}
-        charCount={charCount}
-        rendition={rendition}
-        setupRendition={setupRendition}
-        onReady={onReady}
-        onNotesLoaded={onNotesLoaded}
-        isGuest={isGuest}
-      />
-    ) : (
-      <EpubReaderPC
-        fileUrl={fileUrl}
-        bookId={bookId}
-        bookData={bookData}
-        error={error}
-        location={location}
-        onLocationChange={onLocationChange}
-        setRendition={setRendition}
-        customStyles={customStyles}
-        showModal={showModal}
-        resetModal={resetModal}
-        editingNote={editingNote}
-        setEditingNote={setEditingNote}
-        setTempCFI={setTempCFI}
-        setShowModal={setShowModal}
-        rendition={rendition}
-        handleUpdateNote={handleUpdateNote}
-        handleAddNote={handleAddNote}
-        tempColor={tempColor}
-        setTempColor={setTempColor}
-        showTextbox={showTextbox}
-        setShowTextbox={setShowTextbox}
-        tempNote={tempNote}
-        setTempNote={setTempNote}
-        charCount={charCount}
-        setupRendition={setupRendition}
-        onReady={onReady}
-        onNotesLoaded={onNotesLoaded}
-        onDeleteNote={handleDeleteNote}
-        isGuest = {isGuest}
-      />
-    )
+  return isMobile ? (
+    <EpubReaderMobile
+      bookData={bookData}
+      error={error}
+      location={location}
+      onLocationChange={onLocationChange}
+      setRendition={setRendition}
+      customStyles={customStyles}
+      setupRendition={setupRendition}
+      onReady={onReady}
+      onNotesLoaded={onNotesLoaded}
+    />
+  ) : (
+    <EpubReaderPC
+      fileUrl={fileUrl}
+      bookId={bookId}
+      bookData={bookData}
+      error={error}
+      location={location}
+      onLocationChange={onLocationChange}
+      setRendition={setRendition}
+      customStyles={customStyles}
+      showModal={showModal}
+      resetModal={resetModal}
+      editingNote={editingNote}
+      setEditingNote={setEditingNote}
+      setTempCFI={setTempCFI}
+      setShowModal={setShowModal}
+      rendition={rendition}
+      handleUpdateNote={handleUpdateNote}
+      handleAddNote={handleAddNote}
+      tempColor={tempColor}
+      setTempColor={setTempColor}
+      showTextbox={showTextbox}
+      setShowTextbox={setShowTextbox}
+      tempNote={tempNote}
+      setTempNote={setTempNote}
+      charCount={charCount}
+      setupRendition={setupRendition}
+      onReady={onReady}
+      onNotesLoaded={onNotesLoaded}
+      onDeleteNote={handleDeleteNote}
+      isGuest={isGuest}
+    />
   );
 }
-
-

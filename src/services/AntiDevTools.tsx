@@ -44,8 +44,8 @@ export default function AntiDevTools() {
       ondevtoolopen: () => nukeEverything(),
       interval: 500, // Check mỗi 500ms
       disableMenu: true, // Chặn chuột phải
-      disableSelect: true, // Chặn bôi đen
-      disableCopy: true, // Chặn copy
+      // disableSelect: true, // Chặn bôi đen
+      // disableCopy: true, // Chặn copy
       disableCut: true, 
       disablePaste: true,
       clearLog: true, // Xóa log liên tục
