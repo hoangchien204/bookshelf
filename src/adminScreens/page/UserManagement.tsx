@@ -5,7 +5,7 @@ import { faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
 import api from '../../types/api';
 import API from '../../services/APIURL';
 import toast from 'react-hot-toast';
-import { useGlobalModal } from '../../components/common/GlobalModal';
+import { useGlobalModal } from '../../components/common/modal/GlobalModal';
 import { useAuth } from '../../components/user/AuthContext';
 
 interface User {

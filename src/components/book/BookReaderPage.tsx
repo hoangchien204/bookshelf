@@ -55,6 +55,7 @@ const BookReaderPage: React.FC<Props> = ({ book }) => {
   const isGuest = !user;
   const [openMenu, setOpenMenu] = useState<"font" | "toc" | null>(null);
   const allowedChapters = 2;
+
   useEffect(() => {
     if (!book) return;
 
@@ -188,7 +189,6 @@ const BookReaderPage: React.FC<Props> = ({ book }) => {
 
   useEffect(() => {
     if (rollbackCfi && rendition) {
-      console.log("🚫 Rollback to:", rollbackCfi);
       isRollbackingRef.current = true;
       rendition.display(rollbackCfi).then(() => {
         setRollbackCfi(null);
@@ -398,7 +398,7 @@ const BookReaderPage: React.FC<Props> = ({ book }) => {
           </button>
         </>
       )}
-      {book.fileType === "epub" && <ChapterProgress rendition={rendition} />}
+      {book.fileType === "epub" && <ChapterProgress rendition={rendition} isGuest={isGuest} />}
     </div>
   );
 };

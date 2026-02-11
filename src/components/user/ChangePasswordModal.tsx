@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import api from "../../types/api";
 import API from "../../services/APIURL";
 import axios from "axios";
-import { useGlobalModal } from "../common/GlobalModal";
+import { useGlobalModal } from "../common/modal/GlobalModal";
 interface ChangePasswordModalProps {
     isOpen: boolean;
     onClose: () => void;

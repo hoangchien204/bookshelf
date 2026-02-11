@@ -7,8 +7,8 @@ export interface HighlightNote {
   note?: string;
   color?: string;
 }
- export interface EpubReaderPCProps extends EpubReaderWrapperProps{
-  bookData: ArrayBuffer | null;
+export interface EpubReaderPCProps extends EpubReaderWrapperProps {
+  bookData: string | ArrayBuffer | null;
   error: string | null;
   setRendition: (rend: any) => void;
   // state + handler cho modal
@@ -33,7 +33,7 @@ export interface HighlightNote {
 
   customStyles: any;
   setupRendition: (
-    rend: any,
+    rend: Rendition,
     onReady?: (rend: any, toc: { label: string; href: string }[], notes: any[]) => void,
     openEditModal?: (cfiRange: string, contents: any) => void
   ) => void;
@@ -41,7 +41,7 @@ export interface HighlightNote {
 }
 
 export interface EpubReaderMobileProps {
-  bookData: ArrayBuffer | null;
+  bookData: string | ArrayBuffer | null;
   error: string | null;
 
   location?: string | number | null;
@@ -51,12 +51,9 @@ export interface EpubReaderMobileProps {
   customStyles: any;
 
   setupRendition: (
-    rend: any,
-    onReady?: (
-      rend: any,
-      toc: { label: string; href: string }[],
-      notes: HighlightNote[]
-    ) => void
+    rend: Rendition,
+    onReady?: (rend: any, toc: { label: string; href: string }[], notes: any[]) => void,
+    openEditModal?: (cfiRange: string, contents: any) => void
   ) => void;
 
   onReady?: (
@@ -64,8 +61,9 @@ export interface EpubReaderMobileProps {
     toc: { label: string; href: string }[],
     notes: HighlightNote[]
   ) => void;
-
   onNotesLoaded?: (notes: HighlightNote[]) => void;
+  isGuest: boolean;
+
 }
 
 export interface EpubReaderWrapperProps {

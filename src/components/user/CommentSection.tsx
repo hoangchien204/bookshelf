@@ -4,7 +4,7 @@ import API from "../../services/APIURL";
 import type { User } from "../../types/user";
 import { FaPen } from "react-icons/fa";
 import api from "../../types/api";
-import { useGlobalModal } from "../common/GlobalModal";
+import { useGlobalModal } from "../common/modal/GlobalModal";
 
 interface Comment {
   id: string;

@@ -9,17 +9,22 @@ import BookReaderPage from "./BookReaderPage";
 import BookReaderMobile from "./BookReaderMobile";
 import { useAuth } from "../user/AuthContext";
 
-
 const BookReaderWrapper: React.FC = () => {
   const { slugAndId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const userId = user?.id;
-  const bookId = slugAndId?.substring(slugAndId.lastIndexOf("-") + 1);
-  const [book, setBook] = useState<Book | null>(null)
+
+  const uuidRegex =
+    /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/;
+
+  const match = slugAndId?.match(uuidRegex);
+  const bookId = match ? match[0] : null;
+  const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [isLaptop, setIsLaptop] = useState(window.innerWidth >= 1024);
+
   const isGuest = !user;
   /** 📌 Responsive check */
   useEffect(() => {
@@ -29,82 +34,77 @@ const BookReaderWrapper: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (!bookId) {
+      navigate("/");
+      return;
+    }
+
     const fetchBook = async () => {
       try {
         setLoading(true);
-        const res = await fetch(API.books, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
 
-        if (!res.ok) {
-          console.error("Fetch error:", res.status);
+        // axios get
+        const res = await api.get(`${API.books}/${bookId}`);
+
+        // axios tự throw error nếu status >= 400
+        const fetchedBook: Book = res.data;
+
+        if (!fetchedBook) {
           navigate("/");
           return;
         }
 
-        const allBooks: Book[] = await res.json();
-        const matched = allBooks.find((b) => b.id.includes(bookId || ""));
+        setBook(fetchedBook);
 
-        if (!matched) {
-          navigate("/");
-          return;
-        }
-        setBook(matched);
-
+        // ===== Sync progress =====
         if (!isGuest) {
-          let restoredPage = parseInt(localStorage.getItem(`book-${matched.id}-page`) || "1", 10);
+          let restoredPage = parseInt(
+            localStorage.getItem(`book-${fetchedBook.id}-page`) || "1",
+            10,
+          );
 
           try {
-            const resAct = await api.get(`${API.activities}/read/${matched.id}`, {
-              headers: {
-                "Content-Type": "application/json",
-              },
-            });
+            const resAct = await api.get(
+              `${API.activities}/read/${fetchedBook.id}`,
+            );
+
             const serverPage = resAct.data?.page;
+
             if (serverPage && serverPage > restoredPage) {
               restoredPage = serverPage;
-              localStorage.setItem(`book-${matched.id}-page`, restoredPage.toString());
-            } else if (serverPage && serverPage < restoredPage) {
-              await api.post(
-                API.read,
-                { bookId: matched.id, page: restoredPage },
-                {
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                }
+              localStorage.setItem(
+                `book-${fetchedBook.id}-page`,
+                restoredPage.toString(),
               );
+            } else if (serverPage && serverPage < restoredPage) {
+              await api.post(API.read, {
+                bookId: fetchedBook.id,
+                page: restoredPage,
+              });
             }
           } catch (err) {
             console.error("Sync error:", err);
           }
-        } else {
-          console.log("Guest → chỉ setBook, không sync progress");
         }
-
       } catch (err) {
         console.error("FetchBook error:", err);
+        navigate("/");
       } finally {
         setLoading(false);
-        console.log("Wrapper fetch done");
       }
     };
 
     fetchBook();
-  }, [bookId, navigate, isGuest]);
+  }, [bookId, isGuest]);
 
   if (loading) return <Loading />;
-  if (!book) return <div className="p-5 text-red-500">Không tìm thấy sách.</div>;
+  if (!book)
+    return <div className="p-5 text-red-500">Không tìm thấy sách.</div>;
 
   return isLaptop ? (
-    <BookReaderPage book={book}/>
+    <BookReaderPage book={book} />
   ) : (
-    <BookReaderMobile
-      book={book}
-      userId={userId}
-    />
+    <BookReaderMobile book={book} userId={userId} />
   );
 };
 

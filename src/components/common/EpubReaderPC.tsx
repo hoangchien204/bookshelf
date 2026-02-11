@@ -3,6 +3,7 @@ import { useState } from "react";
 import LoginModal from "../../screens/login";
 import HighlightNoteModal from "./modal/HighlightNoteModal";
 import type { EpubReaderPCProps } from "../../types/EpubReader";
+import Loading from "./Loading";
 
 export default function EpubReaderPC({
   bookData,
@@ -34,7 +35,7 @@ export default function EpubReaderPC({
   isGuest,
 }: EpubReaderPCProps) {
   if (error) return <div className="text-center text-red-600">{error}</div>;
-  if (!bookData) return <div className="text-center">⏳ Đang tải...</div>;
+  if (!bookData) return <Loading />;
   const [showLogin, setShowLogin] = useState(false);
   return (
     <div className="h-full flex flex-col">

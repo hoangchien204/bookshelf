@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../types/api';
 import API from '../../services/APIURL';
-import { useGlobalModal } from '../../components/common/GlobalModal';
+import { useGlobalModal } from '../../components/common/modal/GlobalModal';
 
 interface Genre {
   id: string;

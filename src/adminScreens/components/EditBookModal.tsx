@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import API from '../../services/APIURL';
 import api from '../../types/api';
-import { useGlobalModal } from '../../components/common/GlobalModal';
+import { useGlobalModal } from '../../components/common/modal/GlobalModal';
 import Select from 'react-select'
 interface Genre {
   id: string;

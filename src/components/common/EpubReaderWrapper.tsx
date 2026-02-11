@@ -6,6 +6,7 @@ import type { EpubReaderWrapperProps } from "../../types/EpubReader";
 import EpubReaderPC from "./EpubReaderPC";
 import EpubReaderMobile from "./EpubReaderMobi";
 import { useAuth } from "../user/AuthContext";
+import type { Rendition } from "epubjs";
 
 export interface HighlightNote {
   id: string;
@@ -27,8 +28,7 @@ export default function CustomEpubReader({
   onReady,
   onNotesLoaded,
 }: EpubReaderWrapperProps) {
-  const [bookData, setBookData] = useState<ArrayBuffer | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
   const [rendition, setRendition] = useState<any>(null);
   const isMobile = window.innerWidth < 1024;
 
@@ -56,86 +56,6 @@ export default function CustomEpubReader({
   };
 
   // Load EPUB file
-  useEffect(() => {
-    if (!fileUrl) return;
-    fetch(fileUrl)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status} - ${res.statusText}`);
-        return res.arrayBuffer();
-      })
-      .then((buffer) => {
-        setBookData(buffer);
-        setError(null);
-      })
-      .catch((err) => {
-        console.error("EPUB load error:", err);
-      });
-  }, [fileUrl]);
-
-  // Load highlights from API
-  useEffect(() => {
-    if (!bookId) return;
-
-    api
-      .get(`${API.highlights}/${bookId}`)
-      .then((res) => {
-        const highlights = Array.isArray(res.data) ? res.data : res.data.data;
-        setNotes(highlights || []);
-        onNotesLoaded?.(highlights || []);
-      })
-      .catch((err) => console.error("❌ Load highlights error:", err));
-  }, [bookId]);
-
-  useEffect(() => {
-    if (!rendition) return;
-    const fixTop = () => {
-      const containers = document.querySelectorAll(".epub-container");
-      containers.forEach((c) => {
-        (c as HTMLElement).style.top = "-54px";
-      });
-    };
-    rendition.on("relocated", fixTop);
-    return () => rendition.off("relocated", fixTop);
-  }, [rendition]);
-
-  useEffect(() => {
-    if (rendition) {
-      rendition.themes.register("custom", {
-        body: {
-          background: background,
-          color: background === "#000000" ? "white" : "black",
-          "line-height": "1.6",
-        },
-      });
-      rendition.themes.select("custom");
-      if (fontSize) {
-        rendition.themes.fontSize(`${fontSize}px`);
-      }
-      if (fontFamily && fontFamily !== "Mặc định") {
-        rendition.themes.font(fontFamily);
-      } else {
-        rendition.themes.font("inherit");
-      }
-    }
-  }, [rendition, fontSize, fontFamily, background]);
-
-  useEffect(() => {
-    if (!rendition) return;
-    rendition.annotations.removeAll?.();
-
-    notes.forEach((n) => {
-      if (!n.cfiRange) return;
-      rendition.annotations.add(
-        "highlight",
-        n.cfiRange,
-        { note: n.note },
-        () => openEditModal(n),
-        `hl-${n.id}`, // class unique
-        { fill: n.color || "#d5b8ff" },
-      );
-    });
-  }, [rendition, notes]);
-
   const loadHighlights = async () => {
     if (!bookId) return;
     try {
@@ -147,18 +67,93 @@ export default function CustomEpubReader({
       console.error("❌ Load highlights error:", err);
     }
   };
-
   useEffect(() => {
     loadHighlights();
   }, [bookId]);
 
   useEffect(() => {
+    if (!rendition) return;
+    const fixTop = () => {
+      const containers = document.querySelectorAll(".epub-container");
+      containers.forEach((c) => {
+        (c as HTMLElement).style.top = "-54px";
+      });
+    };
+    // Gọi ngay lập tức
+    fixTop();
+    // Gọi khi resize hoặc relocate
+    rendition.on("relocated", fixTop);
+    rendition.on("resized", fixTop);
+    return () => {
+      rendition.off("relocated", fixTop);
+      rendition.off("resized", fixTop);
+    };
+  }, [rendition]);
+
+  useEffect(() => {
     if (rendition) {
-      rendition.flow(scrollMode ? "scrolled-doc" : "paginated");
-      rendition.spread(viewMode === "double" ? "always" : "none");
+      rendition.themes.register("custom", {
+        body: {
+          background: background,
+          color: background === "#000000" ? "white" : "black",
+          "line-height": "1.6",
+          "padding-top": "0px !important", // Force fix padding
+        },
+      });
+      rendition.themes.select("custom");
+      if (fontSize) rendition.themes.fontSize(`${fontSize}px`);
+
+      if (fontFamily && fontFamily !== "Mặc định") {
+        rendition.themes.font(fontFamily);
+      } else {
+        rendition.themes.font("inherit");
+      }
+    }
+  }, [rendition, fontSize, fontFamily, background]);
+
+  // Render Highlights
+  useEffect(() => {
+    if (!rendition) return;
+    // Xóa highlight cũ để tránh trùng lặp khi re-render
+    try {
+      rendition.annotations.removeAll?.(); // Dùng try-catch vì đôi khi method chưa sẵn sàng
+    } catch (e) {}
+
+    notes.forEach((n) => {
+      if (!n.cfiRange) return;
+      try {
+        rendition.annotations.add(
+          "highlight",
+          n.cfiRange,
+          { note: n.note },
+          (_e: any) => {
+            openEditModal(n);
+          },
+          `hl-${n.id}`,
+          {
+            fill: n.color || "#d5b8ff",
+            "fill-opacity": "0.5",
+            "mix-blend-mode": "multiply",
+          },
+        );
+      } catch (e) {
+        console.warn("Skipped invalid range", n.cfiRange);
+      }
+    });
+  }, [rendition, notes]);
+
+  // Handle Scroll/View Mode
+  useEffect(() => {
+    if (rendition) {
+      try {
+        rendition.flow(scrollMode ? "scrolled-doc" : "paginated");
+        rendition.spread(viewMode === "double" ? "always" : "none");
+      } catch (e) {
+        console.error("Error setting flow/spread", e);
+      }
     }
   }, [rendition, scrollMode, viewMode]);
-  // Count characters in note
+
   useEffect(() => {
     setCharCount(tempNote.length);
   }, [tempNote]);
@@ -166,7 +161,6 @@ export default function CustomEpubReader({
   const handleAddNote = async (color: string, note?: string) => {
     if (!tempCFI) return;
     const finalColor = color || "#d5b8ff";
-
     try {
       const res = await api.post(API.highlights, {
         bookId,
@@ -174,13 +168,12 @@ export default function CustomEpubReader({
         color: finalColor,
         note,
       });
-
       const savedNote = res.data;
       setNotes((prev) => [
         ...prev.filter((n) => n.cfiRange !== tempCFI),
         savedNote,
       ]);
-      loadHighlights();
+      // Không cần load lại API highlight để tránh giật, update local state là đủ
     } catch (err) {
       console.error("❌ Save highlight error:", err);
     }
@@ -190,39 +183,14 @@ export default function CustomEpubReader({
     try {
       const note = notes.find((n) => n.id === id);
       if (!note) return;
-
       rendition?.annotations.remove(note.cfiRange, "highlight");
       setNotes((prev) => prev.filter((n) => n.id !== id));
-
       await api.delete(`${API.highlights}/${id}`);
-      await loadHighlights();
     } catch (err) {
       console.error("❌ Delete highlight error:", err);
     }
   };
-  const customStyles: IReactReaderStyle = {
-    ...ReactReaderStyle,
-    readerArea: {
-      ...ReactReaderStyle.readerArea,
-      background: background,
-      padding: 0,
-      margin: 0,
-      height: "100%",
-    },
 
-    arrow: {
-      ...ReactReaderStyle.arrow,
-      background: "#313131ff",
-      borderRadius: "100%",
-      width: "34px",
-      height: "34px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: "25px",
-    },
-  };
-  // Update existing highlight
   const handleUpdateNote = async (
     id: string,
     color?: string,
@@ -240,32 +208,45 @@ export default function CustomEpubReader({
       console.error("❌ Update highlight error:", err);
     }
   };
-  const setupRendition = (
-    rend: any,
-    onReady?: (
-      rend: any,
+
+  // --- Setup Rendition & Lazy Location ---
+  const setupRendition = async (
+    rend: Rendition,
+    onReadyCallback?: (
+      rend: Rendition,
       toc: { label: string; href: string }[],
       notes: any[],
     ) => void,
-    openEditModal?: (cfiRange: string, contents: any) => void,
+    onSelectionCallback?: (cfiRange: string, contents: any) => void,
   ) => {
-    // Sinh location
-    rend.book.ready.then(() => rend.book.locations.generate(1024));
+    // 🔥 Đợi book ready hoàn toàn
+    await rend.book.ready;
+    await rend.book.loaded.navigation;
+    await rend.book.loaded.spine;
+
+    console.log("Book fully ready");
+
+    // 🔥 Tạo TOC sau khi navigation load xong
     const tocData = rend.book.navigation.toc.map((item: any) => ({
       label: item.label,
       href: item.href,
     }));
 
-    const notes: any[] = [];
+    // 🔥 Generate locations
+    await rend.book.locations.generate(1024);
+    console.log("Locations generated");
 
-    onReady?.(rend, tocData, notes);
+    onLocationChange?.(rend.location?.start?.cfi);
 
+    // callback ra ngoài
+    onReadyCallback?.(rend, tocData, []);
+
+    // selection event
     rend.on("selected", (cfiRange: string, contents: any) => {
-      openEditModal?.(cfiRange, contents);
+      onSelectionCallback?.(cfiRange, contents);
     });
   };
 
-  // Open modal for editing
   const openEditModal = (n: HighlightNote) => {
     setEditingNote(n);
     setTempCFI(n.cfiRange);
@@ -274,12 +255,35 @@ export default function CustomEpubReader({
     setShowTextbox(false);
     setShowModal(true);
   };
+  const customStyles: IReactReaderStyle = {
+    ...ReactReaderStyle,
+    readerArea: {
+      ...ReactReaderStyle.readerArea,
+      background: background,
+      padding: 0,
+      margin: 0,
+      height: "100%",
+      transition: "background 0.3s ease",
+    },
+
+    arrow: {
+      ...ReactReaderStyle.arrow,
+      background: "#313131ff",
+      borderRadius: "100%",
+      width: "34px",
+      height: "34px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: "25px",
+    },
+  };
+  // Update existing highlight
 
   if (error) return <div className="text-center text-red-600">{error}</div>;
-  if (!bookData) return <div className="text-center">⏳ Đang tải...</div>;
   return isMobile ? (
     <EpubReaderMobile
-      bookData={bookData}
+      bookData={fileUrl}
       error={error}
       location={location}
       onLocationChange={onLocationChange}
@@ -288,12 +292,13 @@ export default function CustomEpubReader({
       setupRendition={setupRendition}
       onReady={onReady}
       onNotesLoaded={onNotesLoaded}
+      isGuest={isGuest}
     />
   ) : (
     <EpubReaderPC
       fileUrl={fileUrl}
       bookId={bookId}
-      bookData={bookData}
+      bookData={fileUrl}
       error={error}
       location={location}
       onLocationChange={onLocationChange}

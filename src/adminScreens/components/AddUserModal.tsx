@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import APIURL from '../../services/APIURL';
 import api from '../../types/api';
 import axios from 'axios';
-import { useGlobalModal } from '../../components/common/GlobalModal';
+import { useGlobalModal } from '../../components/common/modal/GlobalModal';
 interface AddUserModalProps {
   onClose: () => void;
   onUserAdded: () => void;
