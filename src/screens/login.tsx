@@ -66,19 +66,21 @@ const LoginModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
-
     try {
       const res = await api.post(
         API.login,
         { email: emailOrUsername, password },
       );
-
       if (res.data) {
-        localStorage.clear();
+        localStorage.setItem("user", JSON.stringify({
+          userId: res.data.userId,
+          userName: res.data.userName,
+          role: res.data.role
+        }));
+
         onClose();
         navigate("/");
         window.location.reload();
-        
       }
     } catch (error: any) {
       if (axios.isAxiosError(error) && error.response) {

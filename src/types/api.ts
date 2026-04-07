@@ -3,7 +3,7 @@ import API from "../services/APIURL";
 
 const api = axios.create({
   baseURL: API.local,
-  withCredentials: true,
+  withCredentials: true, // Bắt buộc để gửi Cookie
 });
 
 api.interceptors.response.use(
@@ -16,10 +16,8 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // 🔴 2. Không xử lý nếu đang logout hoặc request auth đặc biệt
-    const isLogoutRequest =
-      originalRequest?.url?.includes("/auth/logout") ||
-      originalRequest?.url?.includes("/auth/me");
+    // 🔴 2. Không xử lý nếu đang logout (ĐÃ BỎ /auth/me RA KHỎI ĐÂY)
+    const isLogoutRequest = originalRequest?.url?.includes("/auth/logout");
 
     if (localStorage.getItem("isLoggingOut") === "true" || isLogoutRequest) {
       return Promise.reject(error);
@@ -50,6 +48,5 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
 
 export default api;

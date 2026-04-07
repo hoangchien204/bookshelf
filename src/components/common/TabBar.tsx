@@ -23,7 +23,6 @@ const TabBar = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
-  /** 🔐 AUTH */
   const { user, logout, openLoginModal, setOpenLoginModal } = useAuth();
   const isLoggedIn = !!user;
 
@@ -33,13 +32,10 @@ const TabBar = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
 
-  /** 📚 GENRES */
   const [genres, setGenres] = useState<Genre[]>([]);
   const [showGenreDropdown, setShowGenreDropdown] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  /** 📱 UI */
-  // const [showTabs, setShowTabs] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
   const tabClass = (active: boolean) =>
@@ -85,8 +81,8 @@ const TabBar = () => {
       books.filter(
         (b) =>
           b.name.toLowerCase().includes(lower) ||
-          b.author.toLowerCase().includes(lower)
-      )
+          b.author.toLowerCase().includes(lower),
+      ),
     );
   }, [searchValue, books]);
 
@@ -110,7 +106,6 @@ const TabBar = () => {
 
   return (
     <div className="w-full">
-      {/* ================= DESKTOP ================= */}
       <div className="hidden md:flex items-center justify-between h-16 w-full px-8 fixed top-0 left-0 z-50 bg-black/80">
         {/* LEFT */}
         <div className="flex-1 flex items-center gap-6 relative">
@@ -132,7 +127,7 @@ const TabBar = () => {
             onMouseLeave={() => {
               timeoutRef.current = setTimeout(
                 () => setShowGenreDropdown(false),
-                120
+                120,
               );
             }}
           >
@@ -165,15 +160,21 @@ const TabBar = () => {
             </AnimatePresence>
           </div>
 
-          <Link to="/reading" className={tabClass(pathname === "/reading")}>
-            Đang đọc
-          </Link>
-          <Link to="/favorites" className={tabClass(pathname === "/favorites")}>
-            Yêu thích
-          </Link>
+          {isLoggedIn && (
+            <>
+              <Link to="/reading" className={tabClass(pathname === "/reading")}>
+                Đang đọc
+              </Link>
+              <Link
+                to="/favorites"
+                className={tabClass(pathname === "/favorites")}
+              >
+                Yêu thích
+              </Link>
+            </>
+          )}
         </div>
 
-        {/* RIGHT */}
         <div className="flex items-center gap-6 relative">
           {searchOpen ? (
             <input
@@ -185,23 +186,24 @@ const TabBar = () => {
                 setSearchValue("");
               }}
               placeholder="Tìm sách..."
-              className="px-3 py-1.5 rounded bg-gray-800 text-white"
+              className="px-4 py-3 hover:bg-white/5 cursor-pointer border-b border-white/5 last:border-none transition-colors"
             />
           ) : (
-            <button onClick={() => setSearchOpen(true)}>
+            <button
+              onClick={() => setSearchOpen(!searchOpen)}
+              className="p-2 text-white hover:text-green-400 transition-colors"
+            >
               <FontAwesomeIcon icon={faSearch} />
             </button>
           )}
 
           {searchOpen && filteredBooks.length > 0 && (
-            <ul className="absolute right-0 top-10 bg-gray-800 rounded w-64 max-h-64 overflow-y-auto">
+            <ul className="absolute right-0 top-10 bg-white/10 rounded-full w-64 max-h-64 overflow-y-auto">
               {filteredBooks.map((b) => (
                 <li
                   key={b.id}
-                  onMouseDown={() =>
-                    (window.location.href = `/book/${b.id}`)
-                  }
-                  className="px-3 py-2 hover:bg-gray-700 cursor-pointer"
+                  onMouseDown={() => (window.location.href = `/book/${b.id}`)}
+                  className="px-4 py-3 hover:bg-white/5 cursor-pointer border-b border-white/5 last:border-none transition-colors"
                 >
                   {b.name} — {b.author}
                 </li>

@@ -10,7 +10,6 @@ import api from '../types/api';
 import type { Book } from '../types/Book';
 import { useAuth } from '../components/user/AuthContext';
 
-// Hàm tạo slug cho URL
 const generateSlug = (name: string) => {
   return name
     .toLowerCase()
@@ -24,8 +23,7 @@ const generateSlug = (name: string) => {
 const BookshelfApp: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [bannerData, setBannerData] = useState<Book[]>([]);
-  const [bannerType, setBannerType] = useState<'hot' | 'new'>('new'); // State để quản lý loại banner
-  
+  const [bannerType, setBannerType] = useState<'hot' | 'new'>('new');
   const [loadingBooks, setLoadingBooks] = useState(true);
   const [visibleCount, setVisibleCount] = useState(10);
   
@@ -61,8 +59,6 @@ const BookshelfApp: React.FC = () => {
         const res = await api.get(API.books);
         const allBooks = res.data;
         setBooks(allBooks);
-
-        // b. Tính toán sách MỚI (trong 30 ngày gần đây)
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(new Date().getDate() - 30);
         
@@ -73,19 +69,17 @@ const BookshelfApp: React.FC = () => {
 
         // c. Logic chọn Banner
         if (recentBooks.length >= 5) {
-          // Nếu đủ 5 sách mới -> Dùng Banner Sách Mới
           setBannerData(recentBooks);
           setBannerType('new');
         } else {
-          // Nếu KHÔNG đủ 5 sách mới -> Gọi API Hot -> Dùng Banner Sách Hot
           try {
-            const resHot = await api.get(API.hot); // Giả sử API.hot đã được định nghĩa
-            const hotBooks = resHot.data.slice(0, 7); // Lấy top 7
+            const resHot = await api.get(API.hot);
+            const hotBooks = resHot.data.slice(0, 7);
             setBannerData(hotBooks);
             setBannerType('hot');
           } catch (hotErr) {
             console.error("Lỗi fetch hot books, fallback về recent books dù ít:", hotErr);
-            setBannerData(recentBooks); // Fallback nếu API hot lỗi
+            setBannerData(recentBooks);
             setBannerType('new');
           }
         }
@@ -100,7 +94,6 @@ const BookshelfApp: React.FC = () => {
     fetchBooksAndBanner();
   }, []);
 
-  // 3. Danh sách hiển thị ở lưới bên dưới (Grid)
   const displayedBooks = useMemo(() => {
     return books
       .filter((book) => !book.isSeries || book.volumeNumber === 1)
@@ -108,11 +101,9 @@ const BookshelfApp: React.FC = () => {
   }, [books, visibleCount]);
 
   // 4. Xử lý Đọc sách
-
   const handleRead = async (book: Book) => {
   const slug = generateSlug(book.name);
 
-  // 👀 GUEST MODE
   if (!user) {
     navigate(`/book/${slug}-${book.id}`, {
       state: { startPage: 1, isGuest: true },
@@ -120,7 +111,6 @@ const BookshelfApp: React.FC = () => {
     return;
   }
 
-  // 👤 USER MODE
   try {
     const res = await api.get(`${API.read}/${book.id}`);
     const lastPage = res.data.page || 1;
