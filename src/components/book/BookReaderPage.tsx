@@ -215,6 +215,7 @@ const BookReaderPage: React.FC<Props> = ({ book }) => {
     }
     rendition?.display(href);
   };
+
   const handleSelectNote = (cfi: string) => {
     if (isGuest && toc.length > 0) {
       const targetIndex = toc.findIndex((t) => cfi.includes(t.href));
